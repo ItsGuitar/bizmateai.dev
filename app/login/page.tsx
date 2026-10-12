@@ -3,16 +3,63 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { saveSession } from "@/lib/auth-client";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Signing in with ${email}... (Frontend layout complete)`);
+    setError(null);
+    setSuccess(null);
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setError("Please enter a valid work email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Invalid email or password. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      saveSession(data.token, data.user, rememberMe);
+      setSuccess("Authenticated! Redirecting to dashboard...");
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 500);
+    } catch (err) {
+      console.error("Login client error:", err);
+      setError("Failed to connect to authentication server. Please check your network.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -101,6 +148,22 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3 animate-fade-in-up delay-300">
+            {/* Error Message Alert */}
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                <span className="shrink-0 text-sm">⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Success Message Alert */}
+            {success && (
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+                <span className="shrink-0 text-sm">✓</span>
+                <span>{success}</span>
+              </div>
+            )}
+
             {/* Email Field */}
             <div>
               <label
@@ -113,10 +176,11 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 required
+                disabled={isLoading}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400 disabled:opacity-50"
               />
             </div>
 
@@ -133,7 +197,7 @@ export default function LoginPage() {
                   href="#forgot"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("Password reset flow...");
+                    alert("Password reset instructions have been simulated to your email.");
                   }}
                   className="text-[11px] font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 transition-colors"
                 >
@@ -144,10 +208,11 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 required
+                disabled={isLoading}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400 disabled:opacity-50"
               />
             </div>
 
@@ -156,6 +221,7 @@ export default function LoginPage() {
               <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] text-slate-500 dark:text-slate-400">
                 <input
                   type="checkbox"
+                  disabled={isLoading}
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/40 cursor-pointer"
@@ -167,9 +233,17 @@ export default function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              disabled={isLoading}
+              className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
-              Sign in to Dashboard →
+              {isLoading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign in to Dashboard →</span>
+              )}
             </button>
           </form>
 

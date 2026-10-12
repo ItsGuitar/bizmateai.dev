@@ -3,18 +3,80 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { saveSession } from "@/lib/auth-client";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPdpaModal, setShowPdpaModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Creating account for ${businessName} (${email})... (Frontend layout complete)`);
+    setError(null);
+    setSuccess(null);
+
+    const cleanName = businessName.trim();
+    if (!cleanName) {
+      setError("Please enter your business or company name.");
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setError("Please enter a valid work email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    if (!agreeTerms) {
+      setError("Please accept the PDPA Consent Terms to create your account.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: cleanName,
+          email: cleanEmail,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to create account. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      saveSession(data.token, data.user, true);
+      setSuccess("Account created successfully! Preparing your financial agents...");
+
+      setTimeout(() => {
+        router.push("/onboarding");
+      }, 600);
+    } catch (err) {
+      console.error("Register client error:", err);
+      setError("Failed to reach registration server. Please check your network.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -103,6 +165,22 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-2.5 animate-fade-in-up delay-300">
+            {/* Error Message Alert */}
+            {error && (
+              <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                <span className="shrink-0 text-sm">⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Success Message Alert */}
+            {success && (
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+                <span className="shrink-0 text-sm">✓</span>
+                <span>{success}</span>
+              </div>
+            )}
+
             {/* Business Name Field */}
             <div>
               <label
@@ -115,10 +193,11 @@ export default function RegisterPage() {
                 id="businessName"
                 type="text"
                 required
+                disabled={isLoading}
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="e.g. Ploy Select Co., Ltd."
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400 disabled:opacity-50"
               />
             </div>
 
@@ -134,10 +213,11 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 required
+                disabled={isLoading}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="owner@company.com"
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400 disabled:opacity-50"
               />
             </div>
 
@@ -153,10 +233,11 @@ export default function RegisterPage() {
                 id="password"
                 type="password"
                 required
+                disabled={isLoading}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400 disabled:opacity-50"
               />
             </div>
 
@@ -166,6 +247,7 @@ export default function RegisterPage() {
                 <input
                   type="checkbox"
                   required
+                  disabled={isLoading}
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
                   className="w-3.5 h-3.5 mt-0.5 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500/40 cursor-pointer"
@@ -187,9 +269,17 @@ export default function RegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              disabled={isLoading}
+              className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
-              Get started with BizMate →
+              {isLoading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <span>Get started with BizMate →</span>
+              )}
             </button>
           </form>
 
