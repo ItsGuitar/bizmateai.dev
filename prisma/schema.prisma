@@ -1,0 +1,65 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  businessName  String    @default("Ploy Select Co., Ltd.")
+  role          String    @default("OWNER")
+  createdAt     DateTime  @default(now())
+
+  chats         ChatSession[]
+  inboxItems    InboxApproval[]
+  auditLogs     AuditLog[]
+}
+
+model ChatSession {
+  id          String        @id @default(cuid())
+  userId      String
+  title       String
+  createdAt   DateTime      @default(now())
+  messages    ChatMessage[]
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id          String       @id @default(cuid())
+  sessionId   String
+  senderType  String       // USER | AGENT
+  agentId     String?      // health | cash | funding | collections | true-cost | trust
+  content     String
+  reasoning   String?      // Glass-box deliberation trace
+  actionRoute String?      // Target actionable view route
+  createdAt   DateTime     @default(now())
+  session     ChatSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model InboxApproval {
+  id              String   @id @default(cuid())
+  userId          String
+  agentId         String   // Originating Agent
+  title           String
+  description     String
+  impact          String   // e.g. "+฿35,000 cash balance on 20 Oct"
+  status          String   @default("PENDING") // PENDING | APPROVED | DECLINED
+  requiresFaceId  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  agentId     String
+  action      String
+  status      String   // DONE | SENT | FLAGGED | BLOCKED
+  timestamp   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

@@ -42,3 +42,11 @@ next-env.d.ts
 
 # local IDE and tool config
 .claude
+
+# docs & agent config
+AGENTS.md
+instruction.md
+
+# sqlite dev database
+*.db
+*.db-journal
