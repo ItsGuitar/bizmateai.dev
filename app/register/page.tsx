@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showPdpaModal, setShowPdpaModal] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +18,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="h-dvh h-screen w-full flex overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="h-dvh h-screen w-full flex overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
       {/* LEFT HALF: Full Bleed Artwork - No frame, no border */}
       <div className="hidden md:block md:w-1/2 h-full relative overflow-hidden bg-slate-950">
         <Image
@@ -171,16 +172,13 @@ export default function RegisterPage() {
                 />
                 <span className="leading-tight">
                   I agree to the{" "}
-                  <a
-                    href="#terms"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert("Terms & PDPA Policy");
-                    }}
-                    className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-semibold underline underline-offset-2"
+                  <button
+                    type="button"
+                    onClick={() => setShowPdpaModal(true)}
+                    className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-semibold underline underline-offset-2 cursor-pointer"
                   >
                     PDPA Consent Terms
-                  </a>{" "}
+                  </button>{" "}
                   (read-only bank sync).
                 </span>
               </label>
@@ -209,9 +207,156 @@ export default function RegisterPage() {
 
         {/* Footer info */}
         <div className="w-full max-w-sm mx-auto text-center text-[11px] text-slate-400 shrink-0 relative z-10 animate-fade-in-up delay-500">
-          BizMate MSME Financial Copilot • Zero-Surprise Policy Enforced
+          BizMate MSME Financial Copilot •{" "}
+          <button
+            type="button"
+            onClick={() => setShowPdpaModal(true)}
+            className="underline hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          >
+            PDPA B.E. 2562 Protected
+          </button>
         </div>
       </div>
+
+      {/* POPUP MODAL: Real PDPA Policy Modal */}
+      {showPdpaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in-up">
+          <div className="w-full max-w-xl max-h-[88vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-scale">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base">
+                  🛡️
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    PDPA Consent &amp; Data Governance
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Compliant with Thailand PDPA B.E. 2562 (2019)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPdpaModal(false)}
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body (Real Legal Text) */}
+            <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {/* Highlight Box */}
+              <div className="p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 text-blue-950 dark:text-blue-200">
+                <strong className="block font-bold mb-1 text-blue-800 dark:text-blue-300">
+                  🔒 Core Technical Guarantee: Strictly Read-Only
+                </strong>
+                BizMate operates under deterministic server guardrails. We can{" "}
+                <strong>never initiate transfers, withdraw funds, or alter credentials</strong>. Bank and sales
+                connections are strictly read-only for cash forecasting.
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
+                  1. Data Controller &amp; Statutory Authority
+                </h4>
+                <p>
+                  BizMate Financial Technologies (Thailand) Co., Ltd. (&quot;BizMate&quot;) acts as the Data Controller under
+                  Sections 24 and 19 of Thailand PDPA B.E. 2562. You may contact our Data Protection Officer at{" "}
+                  <span className="font-mono text-blue-600 dark:text-blue-400">dpo@bizmate.co</span>.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
+                  2. Categories of Processed Data
+                </h4>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>
+                    <strong>Commercial Identity:</strong> Business name, Tax ID, authorized owner email, and phone.
+                  </li>
+                  <li>
+                    <strong>Banking Feeds (Read-Only):</strong> Bank balances, historical ledger statements, and daily cash
+                    inflows/outflows.
+                  </li>
+                  <li>
+                    <strong>Sales Channel Feeds:</strong> Shopee, Lazada, TikTok Shop payout settlement reports, and PromptPay QR records.
+                  </li>
+                  <li>
+                    <strong>Invoices &amp; AR Records:</strong> Due dates, amounts owed, and debtor payment history.
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
+                  3. Zero-Surprise Policy &amp; Approval Safeguards
+                </h4>
+                <p>
+                  No customer reminders (via LINE OA or Email) are ever sent, and no financial data is ever shared with
+                  third-party lenders, without your prior explicit review and approval in the Central Inbox (IB-01).
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
+                  4. Your PDPA Rights &amp; 1-Tap Revocation
+                </h4>
+                <p>
+                  Under PDPA Sections 30-36, you have the right to access, rectify, restrict processing, and revoke any
+                  linked data source. All consents can be terminated with 1 tap directly in:
+                </p>
+                <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[10px] text-slate-800 dark:text-slate-200 mt-1">
+                  Dashboard → Trust Agent (TR-01) → Sharing Tab → [Revoke Access]
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">
+                  5. Bank-Grade Encryption
+                </h4>
+                <p>
+                  Data is protected with TLS 1.3 in transit and AES-256 encryption at rest. Audit trails are logged
+                  immutably in the Trust Agent ledger.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <Link
+                href="/pdpa"
+                target="_blank"
+                className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 font-semibold underline underline-offset-2 flex items-center gap-1"
+              >
+                <span>Read Full 6-Section Document</span>
+                <span>↗</span>
+              </Link>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowPdpaModal(false)}
+                  className="w-1/2 sm:w-auto px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAgreeTerms(true);
+                    setShowPdpaModal(false);
+                  }}
+                  className="w-1/2 sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all cursor-pointer"
+                >
+                  I Accept &amp; Agree
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

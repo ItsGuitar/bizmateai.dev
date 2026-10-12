@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { AGENTS, AgentDefinition } from "./data/agents";
 import { ThemeToggle } from "./components/ThemeToggle";
 
@@ -36,35 +37,39 @@ export default function WelcomePage() {
       </header>
 
       {/* SCREEN 1: Hero Section (Full Viewport Height) */}
-      <section className="min-h-[calc(100vh-80px)] w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center z-10 py-10">
+      <section className="min-h-[calc(100vh-80px)] w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center z-10 py-4 sm:py-6">
         {/* Prominent Centered Brand Logo with smooth scale entrance */}
-        <div className="flex flex-col items-center mb-6 cursor-default">
-          <div className="relative mb-4 flex items-center justify-center animate-fade-in-scale">
+        <div className="flex flex-col items-center mb-3 cursor-default">
+          <div className="relative mb-2 flex items-center justify-center animate-fade-in-scale">
             {/* Ambient Background Glow */}
-            <div className="absolute -inset-6 bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 rounded-full blur-3xl opacity-35 dark:opacity-50 pointer-events-none" />
+            <div className="absolute -inset-6 sm:-inset-8 bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 rounded-full blur-2xl opacity-35 dark:opacity-50 pointer-events-none" />
 
-            <span
-              style={{ fontFamily: "var(--font-logo)" }}
-              className="relative inline-block px-4 py-1 text-6xl sm:text-8xl md:text-9xl font-black tracking-normal select-none bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-400 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent drop-shadow-sm transition-transform duration-500 hover:scale-[1.02] cursor-default"
-            >
-              Biz<span className="bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-sky-300 dark:to-cyan-300 bg-clip-text text-transparent">Mate</span>
-            </span>
+            <div className="relative w-72 sm:w-[480px] md:w-[620px] lg:w-[700px] aspect-[21/8] flex items-center justify-center transition-transform duration-500 hover:scale-[1.02]">
+              <Image
+                src="/images/logo.png"
+                alt="BizMate Logo"
+                fill
+                priority
+                unoptimized
+                className="object-contain drop-shadow-md select-none"
+              />
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-2 text-slate-900 dark:text-white leading-tight max-w-2xl animate-fade-in-up delay-100">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mt-1 text-slate-900 dark:text-white leading-tight max-w-2xl animate-fade-in-up delay-100">
             Never run out of cash. <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent">
               Built for cross-border MSMEs.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 font-normal max-w-lg mt-4 leading-relaxed animate-fade-in-up delay-200">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal max-w-lg mt-2 leading-relaxed animate-fade-in-up delay-200">
             Your unified financial copilot. Radar liquidity projections, lowest-cost capital, and zero surprise payments.
           </p>
         </div>
 
         {/* 3 Core Trust Proofs with stagger */}
-        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-xs sm:text-sm text-slate-600 dark:text-slate-400 my-6 font-medium animate-fade-in-up delay-300">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-slate-600 dark:text-slate-400 my-4 font-medium animate-fade-in-up delay-300">
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">
               ✓
@@ -86,17 +91,17 @@ export default function WelcomePage() {
         </div>
 
         {/* Call to Actions on Screen 1 with stagger */}
-        <div className="w-full max-w-xs flex flex-col gap-3 mt-2 animate-fade-in-up delay-400">
+        <div className="w-full max-w-xs flex flex-col gap-2.5 mt-1 animate-fade-in-up delay-400">
           <Link
             href="/register"
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
           >
             <span>Get started</span>
             <span className="text-lg">→</span>
           </Link>
           <Link
             href="/login"
-            className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            className="w-full py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             I already have an account
           </Link>
@@ -105,7 +110,7 @@ export default function WelcomePage() {
         {/* Smooth Scroll Cue */}
         <button
           onClick={scrollToAgents}
-          className="mt-10 sm:mt-12 flex flex-col items-center gap-2 text-xs font-medium text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group animate-bounce animate-fade-in-up delay-500"
+          className="mt-4 sm:mt-6 flex flex-col items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group animate-bounce animate-fade-in-up delay-500"
         >
           <span>Explore how BizMate works</span>
           <svg
