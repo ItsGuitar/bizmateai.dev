@@ -46,6 +46,7 @@ next-env.d.ts
 # docs & agent config
 AGENTS.md
 instruction.md
+DESIGN_SYSTEM.md
 
 # sqlite dev database
 *.db

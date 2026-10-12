@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,18 +13,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const montserrat = Montserrat({
+  variable: "--font-logo",
+  subsets: ["latin"],
+  weight: ["800", "900"],
+});
+
 export const metadata: Metadata = {
   title: "BizMate • AI Financial Copilot for MSMEs",
   description: "Autonomous financial department for cross-border and omnichannel MSMEs operating under strict deterministic guardrails.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col transition-colors">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
