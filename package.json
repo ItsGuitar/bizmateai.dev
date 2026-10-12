@@ -15,7 +15,8 @@
     "next": "16.4.0",
     "prisma": "6.19.3",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "thai-banks-logo": "^1.0.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

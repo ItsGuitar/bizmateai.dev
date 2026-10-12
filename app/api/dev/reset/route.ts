@@ -72,7 +72,7 @@ export async function POST(request: Request) {
           {
             userId,
             agentId: "cash",
-            action: "Ingested bank feed: Kasikornbank Main (฿245,000)",
+            action: "Ingested bank feed: Kasikornbank Main (฿145,628) from 12-month statement",
             status: "DONE",
           },
           {

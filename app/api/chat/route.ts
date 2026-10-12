@@ -2,40 +2,46 @@ import { NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Autonomous multi-agent response logic based on PRD instruction.md
+import { getFinancialSummary } from "@/lib/financial-service";
+
+// Autonomous multi-agent response logic referencing mock_financial_statement_365d.json
 function generateAgentResponse(userQuery: string) {
   const query = userQuery.toLowerCase();
+  const summary = getFinancialSummary();
+  const conflictWeek = summary.cashRadarWeeks.find((w) => w.status === "below") || summary.cashRadarWeeks[2];
 
   if (query.includes("cash") || query.includes("buffer") || query.includes("balance") || query.includes("radar")) {
     return {
       agentId: "cash",
       content:
-        "Based on your 13-week Cash Radar, your current balance is ฿245,000. However, on the week of 26 Oct 2026, the ¥100,000 supplier invoice to Shenzhen Chen Tech will cause your cash to dip below the ฿80,000 safety buffer (projected balance: ~฿54,000) unless we take action.",
+        `Based on your 13-week Cash Radar (analyzed from ${summary.totalTransactionsInStatement} statement transactions), your current cash balance today is ${summary.formattedCurrentCash}. On ${conflictWeek.date} 2026 (${conflictWeek.week}), the ¥100,000 supplier invoice to Shenzhen Chen Tech will cause your cash to dip to ฿${conflictWeek.balance.toLocaleString()}, breaching your ฿${summary.safetyBuffer.toLocaleString()} safety buffer unless remediated.`,
       reasoning:
-        "Cash Agent parsed bank balances and projected daily inflows/outflows across Shopee, Lazada, and TikTok Shop. Triggered buffer deficit alert.",
-      actionRoute: "/cash-radar",
+        `Cash Agent ingested daily rolling transactions across Shopee, TikTok Shop, Lazada, and PromptPay QR from bank statement. Flagged ฿${conflictWeek.balance.toLocaleString()} deficit breach on ${conflictWeek.date}.`,
+      actionRoute: "/dashboard#joint-plan",
     };
   }
 
   if (query.includes("supplier") || query.includes("chen") || query.includes("loan") || query.includes("fund")) {
+    const supplier = summary.supplierHistory;
     return {
       agentId: "funding",
       content:
-        "I have evaluated 6 financing options. The cheapest path is requesting 60-day supplier credit terms directly from Mr. Chen (Shenzhen Chen Tech) with a 1.1% trade fee (~฿5,000), compared to commercial bank lines (7.5% - 14% APR). I have prepared a bilingual negotiation draft in Inbox for your sign-off.",
+        `Your statement confirms ${supplier.monthsActive} months of verified trade with ${supplier.name} (${supplier.totalTransfersCount} historical transfers totaling ¥${supplier.totalCnySpent.toLocaleString()}). For the pending ¥${supplier.pendingOrderCny.toLocaleString()} order due on 26 Oct, the cheapest remedy is requesting 60-day deferred terms at a 1.1% fee (~฿5,000), avoiding high-interest bank debt (7.5% - 14% APR).`,
       reasoning:
-        "Funding Agent evaluated total cost of capital. Identified Chinese export credit route as lowest APR option. Prepared inbox approval item.",
-      actionRoute: "/inbox",
+        "Funding Agent cross-referenced verified cross-border ledger rails with export credit terms. Drafted bilingual term negotiation in Inbox.",
+      actionRoute: "/dashboard#joint-plan",
     };
   }
 
   if (query.includes("invoice") || query.includes("owed") || query.includes("collect") || query.includes("remind")) {
+    const overdueDebtor = summary.buyerHabits.find((b) => b.habit === "HABITUAL_LATE") || summary.buyerHabits[1];
     return {
       agentId: "collections",
       content:
-        "Boutique Siam owes ฿35,000, now 21 days past due. Their historical profile indicates they always pay after a polite follow-up. I've drafted a friendly LINE reminder in your Inbox for your OK.",
+        `${overdueDebtor.name} has 1 overdue invoice of ฿${overdueDebtor.currentOverdueAmount.toLocaleString()} (${Math.round(overdueDebtor.averageDelayDays)} days past due). Statement history shows they habitually settle after a polite reminder. I have drafted a LINE follow-up in your Inbox awaiting your approval.`,
       reasoning:
-        "Collections Agent evaluated AR aging ledger and customer habit profile. Zero-Surprise policy strictly holds outbound reminder dispatch until approved.",
-      actionRoute: "/inbox",
+        `Collections Agent profiled payment latency from 12-month statement history (average delay ${overdueDebtor.averageDelayDays.toFixed(1)} days). Zero-Surprise policy requires owner sign-off.`,
+      actionRoute: "/dashboard#inbox-approvals",
     };
   }
 
@@ -43,20 +49,20 @@ function generateAgentResponse(userQuery: string) {
     return {
       agentId: "true-cost",
       content:
-        "I unpack hidden costs and inspect risks. Any external financing offers claiming '1% per day' have an actual APR of 365%/year and are automatically flagged as predatory. For Chen Tech, verified payment rails lock bank account details to prevent tampering.",
+        `True Cost Agent inspected your transactions and intercepted ${summary.anomaliesCount} security threats: 1) A predatory loan solicitation advertising '1%/day' was calculated at 365%/year APR and blocked. 2) A spoofed offshore Hong Kong bank account attempting to impersonate Shenzhen Chen Tech was intercepted and blocked.`,
       reasoning:
-        "True Cost Agent calculates effective annualized percentage rates and verifies bank recipient authenticity against trade records.",
-      actionRoute: "/true-cost",
+        "True Cost Agent calculates effective APR and verifies recipient BIC/SWIFT against registered supplier registry.",
+      actionRoute: "/dashboard#activity-stream",
     };
   }
 
   return {
     agentId: "health",
     content:
-      "Your current Financial Health Score is 78/100 (Grade B+). All 6 agents are collaborating to protect your ฿80,000 liquidity buffer and optimize supplier financing with Shenzhen Chen Tech.",
+      `Your Financial Health Score is ${summary.healthScore.overallScore}/100 (${summary.healthScore.ratingGrade}). Key strengths: Zero overdraft incidents across 366 days and 12-month verified trade history with Shenzhen Chen Tech. Primary drag: Boutique Siam late payments.`,
     reasoning:
-      "Health Agent aggregated 7 business dimensions: credit history, sales stability, and supplier verification.",
-    actionRoute: "/health",
+      "Health Agent aggregated 7 dimensions from statement transactions: liquidity hygiene, debtor habits, and cross-border trade longevity.",
+    actionRoute: "/dashboard#health-score",
   };
 }
 

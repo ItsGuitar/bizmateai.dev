@@ -1,19 +1,195 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { getSession, clearSession, AuthUser } from "@/lib/auth-client";
 
+// The 6 Autonomous Agents Metadata matching DESIGN_SYSTEM.md & instruction.md
+const AGENTS_LIST = [
+  {
+    id: "cash",
+    name: "Cash Agent",
+    role: "13-Week Cash Radar",
+    emoji: "📊",
+    color: "#0284C7",
+    badge: "Radar Live",
+    stat: "฿80,000 Safety Buffer",
+    insight: "Low cash week flagged: 26 Oct (Chen Tech ¥100k due)",
+    actionLabel: "View Radar",
+    href: "#cash-radar",
+  },
+  {
+    id: "health",
+    name: "Health Agent",
+    role: "Financial Health Score",
+    emoji: "🩺",
+    color: "#2563EB",
+    badge: "Grade B+",
+    stat: "78 / 100 Health Score",
+    insight: "Prime credit eligible • 7-factor hygiene sound",
+    actionLabel: "Score Breakdown",
+    href: "#health-score",
+  },
+  {
+    id: "funding",
+    name: "Funding Agent",
+    role: "Working Capital & Terms",
+    emoji: "💰",
+    color: "#EAB308",
+    badge: "1.1% Rate",
+    stat: "60 Days Terms Match",
+    insight: "Chen Tech deferral saves ฿80k buffer on 26 Oct",
+    actionLabel: "Compare 6 Options",
+    href: "#funding-options",
+  },
+  {
+    id: "collections",
+    name: "Collections Agent",
+    role: "Smart AR Follow-ups",
+    emoji: "🔔",
+    color: "#F97316",
+    badge: "Automated",
+    stat: "฿35,000 Owed (1 Invoice)",
+    insight: "Boutique Siam 21 days late • Polite LINE ready",
+    actionLabel: "Review Draft",
+    href: "#inbox-approvals",
+  },
+  {
+    id: "true-cost",
+    name: "True Cost Agent",
+    role: "APR & Fraud Shield",
+    emoji: "🔍",
+    color: "#EF4444",
+    badge: "Protected",
+    stat: "0% Traps Detected",
+    insight: "Shenzhen recipient registry verified • 0% fraud",
+    actionLabel: "Inspect Rail",
+    href: "#true-cost",
+  },
+  {
+    id: "trust",
+    name: "Trust Agent",
+    role: "Security Gatekeeper",
+    emoji: "🛡️",
+    color: "#6366F1",
+    badge: "Enforced",
+    stat: "Face ID Required",
+    insight: "Zero-Surprise Guardrail armed • 3 pending approvals",
+    actionLabel: "Audit Ledger",
+    href: "#audit-ledger",
+  },
+];
+
+// 13-Week Cash Radar Mock Projections (Ploy Select Co., Ltd.)
+// Baseline Buffer: ฿80,000. Critical conflict week: Week 3 (26 Oct).
+interface WeekData {
+  week: string;
+  date: string;
+  balance: number;
+  status: "safe" | "below" | "short";
+  heightPercent: number;
+  inflow: number;
+  outflow: number;
+  note?: string;
+}
+
+const WEEKS_DATA: WeekData[] = [
+  { week: "W1", date: "12 Oct", balance: 245000, status: "safe", heightPercent: 78, inflow: 85000, outflow: 42000 },
+  { week: "W2", date: "19 Oct", balance: 215000, status: "safe", heightPercent: 68, inflow: 62000, outflow: 92000 },
+  { week: "W3", date: "26 Oct", balance: 64000, status: "below", heightPercent: 26, inflow: 45000, outflow: 196000, note: "Below ฿80k Buffer (Chen Tech ¥100k due)" },
+  { week: "W4", date: "02 Nov", balance: 112000, status: "safe", heightPercent: 44, inflow: 98000, outflow: 50000 },
+  { week: "W5", date: "09 Nov", balance: 148000, status: "safe", heightPercent: 52, inflow: 76000, outflow: 40000 },
+  { week: "W6", date: "16 Nov", balance: 135000, status: "safe", heightPercent: 48, inflow: 55000, outflow: 68000 },
+  { week: "W7", date: "23 Nov", balance: 160000, status: "safe", heightPercent: 56, inflow: 80000, outflow: 55000 },
+  { week: "W8", date: "30 Nov", balance: 182000, status: "safe", heightPercent: 62, inflow: 92000, outflow: 70000 },
+  { week: "W9", date: "07 Dec", balance: 195000, status: "safe", heightPercent: 65, inflow: 88000, outflow: 75000 },
+  { week: "W10", date: "14 Dec", balance: 210000, status: "safe", heightPercent: 70, inflow: 95000, outflow: 80000 },
+  { week: "W11", date: "21 Dec", balance: 228000, status: "safe", heightPercent: 74, inflow: 102000, outflow: 84000 },
+  { week: "W12", date: "28 Dec", balance: 240000, status: "safe", heightPercent: 77, inflow: 115000, outflow: 103000 },
+  { week: "W13", date: "04 Jan", balance: 265000, status: "safe", heightPercent: 84, inflow: 120000, outflow: 95000 },
+];
+
+interface FinancialSummaryState {
+  company: string;
+  referenceDate: string;
+  currentCashToday: number;
+  formattedCurrentCash: string;
+  safetyBuffer: number;
+  cashRadarWeeks: WeekData[];
+  buyerHabits: Array<{
+    name: string;
+    habit: string;
+    averageDelayDays: number;
+    totalPaidPastYear: number;
+    currentOverdueAmount: number;
+    invoiceStatus: string;
+  }>;
+  supplierHistory: {
+    name: string;
+    supplierId: string;
+    totalTransfersCount: number;
+    totalCnySpent: number;
+    totalThbSpent: number;
+    monthsActive: number;
+    verifiedRail: boolean;
+    pendingOrderCny: number;
+    pendingOrderThb: number;
+    pendingDueDate: string;
+  };
+  healthScore: {
+    overallScore: number;
+    ratingGrade: string;
+    creditStatus: string;
+    factors: Array<{
+      name: string;
+      score: number;
+      weight: number;
+      status: string;
+      evidence: string;
+    }>;
+  };
+  anomaliesCount: number;
+  totalTransactionsInStatement: number;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
+  const [, startTransition] = useTransition();
+
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Bank Connection State (Simulates connected bank vs fresh/reset user)
+  const [isBankConnected, setIsBankConnected] = useState(true);
+  const [weeksData, setWeeksData] = useState<WeekData[]>(WEEKS_DATA);
+  const [selectedWeek, setSelectedWeek] = useState<WeekData>(WEEKS_DATA[2]); // Default focus on conflict week 26 Oct
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(2);
+
+  // Real data state
+  const [financialSummary, setFinancialSummary] = useState<FinancialSummaryState | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<Array<{
+    txn_id: string;
+    datetime: string;
+    channel: string;
+    counterparty_name: string;
+    type: string;
+    amount: number;
+    balance_after: number;
+    category: string;
+    metadata?: { notes?: string; core_conflict_trigger?: boolean };
+  }>>([]);
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>("ALL");
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(3);
+  const [recentAuditLogs, setRecentAuditLogs] = useState<Array<{ id: string; agentId: string; action: string; status: string; timestamp: string }>>([]);
+
+  // Dev reset modal state
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // Load Session and verify data
   useEffect(() => {
     const session = getSession();
     if (!session) {
@@ -21,14 +197,86 @@ export default function DashboardPage() {
       return;
     }
     setUser(session.user);
+
+    // Fetch live financial summary computed from mock_financial_statement_365d.json
+    fetch("/api/financial/summary")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.cashRadarWeeks) {
+          setFinancialSummary(data);
+          setWeeksData(data.cashRadarWeeks);
+          const conflictIdx = data.cashRadarWeeks.findIndex((w: WeekData) => w.status === "below");
+          const targetIdx = conflictIdx !== -1 ? conflictIdx : 2;
+          setSelectedWeek(data.cashRadarWeeks[targetIdx]);
+          setSelectedWeekIndex(targetIdx);
+        }
+      })
+      .catch((err) => console.error("Error loading financial summary:", err));
+
+    // Fetch initial sample transactions from statement
+    fetch("/api/financial/transactions?limit=8")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.transactions) {
+          setRecentTransactions(data.transactions);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch inbox items count
+    fetch("/api/inbox", {
+      headers: { Authorization: `Bearer ${session.token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.items) {
+          setPendingApprovalsCount(data.items.filter((i: { status: string }) => i.status === "PENDING").length);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch audit logs
+    fetch("/api/trust/audit", {
+      headers: { Authorization: `Bearer ${session.token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.logs) {
+          setRecentAuditLogs(data.logs.slice(0, 4));
+        }
+      })
+      .catch(() => {});
+
     setIsLoading(false);
   }, [router]);
+
+  // Filter transactions dynamically
+  const handleFilterTransactions = (filterType: string) => {
+    setSelectedFilterCategory(filterType);
+    let url = "/api/financial/transactions?limit=8";
+    if (filterType === "SHOPEE") url += "&channel=Shopee";
+    else if (filterType === "TIKTOK") url += "&channel=TikTok";
+    else if (filterType === "LAZADA") url += "&channel=Lazada";
+    else if (filterType === "QR") url += "&channel=PromptPay";
+    else if (filterType === "CHEN") url += "&channel=Cross-Border";
+    else if (filterType === "ANOMALY") url += "&category=SECURITY_ANOMALY_BLOCKED";
+
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && data.transactions) {
+          setRecentTransactions(data.transactions);
+        }
+      })
+      .catch(() => {});
+  };
 
   const handleLogout = () => {
     clearSession();
     router.push("/");
   };
 
+  // Developer Reset Handler
   const handleDeveloperReset = async () => {
     const session = getSession();
     if (!session?.token) {
@@ -53,9 +301,23 @@ export default function DashboardPage() {
         throw new Error(data.error || "Failed to reset");
       }
 
-      setResetMessage("Database reset successfully to baseline demo state!");
+      // Toggle state: when dev reset, simulate fresh user without bank connection
+      setIsBankConnected(false);
+      setPendingApprovalsCount(3);
+      setResetMessage("Database reset to initial demo baseline! (Bank linkage simulated as pending)");
       setShowConfirmModal(false);
-      setTimeout(() => setResetMessage(null), 4000);
+
+      // Re-fetch audit logs
+      fetch("/api/trust/audit", {
+        headers: { Authorization: `Bearer ${session.token}` },
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.logs) setRecentAuditLogs(d.logs.slice(0, 4));
+        })
+        .catch(() => {});
+
+      setTimeout(() => setResetMessage(null), 5000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error resetting database";
       setResetMessage(message);
@@ -76,31 +338,35 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {/* Top Navigation */}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col pb-16">
+      {/* Top Navigation Bar (Header) */}
       <header className="sticky top-0 z-30 w-full backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <span
-              style={{ fontFamily: "var(--font-logo)" }}
-              className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent"
-            >
-              BizMate
-            </span>
-          </Link>
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col text-right">
-              <span className="text-xs font-bold text-slate-900 dark:text-white">
-                {user?.businessName || "Your Company"}
+            <Link href="/" className="inline-flex items-center gap-2">
+              <span
+                style={{ fontFamily: "var(--font-logo)" }}
+                className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent"
+              >
+                BizMate
               </span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                {user?.email}
-              </span>
-            </div>
+            </Link>
+            <span className="hidden sm:inline-block text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+              {user?.businessName || "Ploy Select Co., Ltd."}
+            </span>
+          </div>
 
-            <ThemeToggle />
+          <div className="flex items-center gap-3">
+            {/* Quick Toggle Simulated Bank State for Demo Testing */}
+            <button
+              onClick={() => setIsBankConnected(!isBankConnected)}
+              className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-pointer transition-colors"
+              title="Toggle between First-time setup vs Connected Bank state"
+            >
+              <span>{isBankConnected ? "🟢 Bank: Connected" : "⚪ Bank: Not Linked"}</span>
+            </button>
 
+            {/* Developer Reset Button */}
             <button
               onClick={() => setShowConfirmModal(true)}
               className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800/80 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
@@ -110,6 +376,19 @@ export default function DashboardPage() {
               <span>Dev Reset</span>
             </button>
 
+            <ThemeToggle />
+
+            {/* Notification Bell */}
+            <div className="relative p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-50">
+              <span>🔔</span>
+              {pendingApprovalsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                  {pendingApprovalsCount}
+                </span>
+              )}
+            </div>
+
+            {/* Log out */}
             <button
               onClick={handleLogout}
               className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
@@ -120,71 +399,11 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Main Dashboard Preview */}
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        {/* Welcome Banner */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 text-white shadow-xl mb-8 relative overflow-hidden">
-          <div className="relative z-10 max-w-xl">
-            <span className="text-xs font-mono uppercase tracking-widest text-blue-200 font-bold">
-              Account Active • Authenticated
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight mt-1">
-              Welcome, {user?.businessName}!
-            </h1>
-            <p className="text-xs sm:text-sm text-blue-100 mt-2">
-              Your financial copilot session is secure. 6 autonomous agents are standing by under deterministic guardrails.
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link
-                href="/onboarding"
-                className="px-4 py-2 rounded-xl bg-white text-blue-700 font-bold text-xs shadow-md hover:bg-blue-50 transition-colors"
-              >
-                Configure Bank &amp; Channels →
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Status Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cash Radar</span>
-              <span className="text-lg">📊</span>
-            </div>
-            <p className="text-2xl font-black mt-2 text-slate-900 dark:text-white">฿245,000</p>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1">
-              +฿35,000 incoming via Boutique Siam
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Health Score</span>
-              <span className="text-lg">🩺</span>
-            </div>
-            <p className="text-2xl font-black mt-2 text-slate-900 dark:text-white">78 / 100</p>
-            <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-1">
-              Grade B+ • Prime Credit Eligible
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Approval Inbox</span>
-              <span className="text-lg">📥</span>
-            </div>
-            <p className="text-2xl font-black mt-2 text-slate-900 dark:text-white">3 Pending</p>
-            <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
-              Zero-surprise actions awaiting your sign-off
-            </p>
-          </div>
-        </div>
-
-        {/* Developer Reset Success/Error Toast Banner */}
+      {/* Main Dashboard Hub (HM-01) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1">
+        {/* Reset Notification Toast */}
         {resetMessage && (
-          <div className="mt-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center gap-2.5">
               <span>✅</span>
               <span>{resetMessage}</span>
@@ -197,6 +416,589 @@ export default function DashboardPage() {
             </button>
           </div>
         )}
+
+        {/* ========================================================
+            HERO CARD (The Big Box):
+            State A: Connected Bank -> Cash Radar (Cash Today + 13 Weeks)
+            State B: First-time / Dev Reset -> Onboarding CTA Card
+        ======================================================== */}
+        <section className="mb-8">
+          {isBankConnected ? (
+            /* STATE A: THE BIG HERO BOX - CASH TODAY & 13-WEEK RADAR */
+            <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-700 dark:via-indigo-800 dark:to-slate-900 text-white shadow-2xl border border-blue-500/30 dark:border-slate-800 relative overflow-hidden transition-all duration-300 animate-fade-in-up">
+              {/* Subtle ambient gradient aura */}
+              <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/10 dark:bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-white/20 dark:border-white/10">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-sky-200 dark:text-sky-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                      Live Cash Today • Kasikornbank Main
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/15 dark:bg-slate-800/80 text-white dark:text-slate-200 border border-white/20 dark:border-slate-700">
+                      Read-Only Sync
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline gap-3 mt-2">
+                    <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-mono drop-shadow-sm">
+                      {financialSummary?.formattedCurrentCash || "฿145,628"}
+                    </h1>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                      +฿35,000 incoming via Boutique Siam
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-blue-100 dark:text-slate-300 mt-2 max-w-lg leading-relaxed">
+                    Default Safety Buffer: <strong className="text-white font-bold">฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"}</strong>. Earliest projected low-cash threshold:{" "}
+                    <span
+                      className="text-amber-300 dark:text-amber-400 font-bold underline cursor-pointer hover:text-white transition-colors"
+                      onClick={() => {
+                        const target = weeksData[2] || WEEKS_DATA[2];
+                        setSelectedWeek(target);
+                        setSelectedWeekIndex(2);
+                      }}
+                    >
+                      Week 3 (26 Oct)
+                    </span>{" "}
+                    due to Chen Tech ¥100,000 payment.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <Link
+                    href="/onboarding"
+                    className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    Manage Banks &amp; Feeds ⚙️
+                  </Link>
+                  <Link
+                    href="#joint-plan"
+                    className="px-4 py-2.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white text-xs font-bold shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    View Joint Remedy Plan →
+                  </Link>
+                </div>
+              </div>
+
+              {/* 13-Week Interactive Mini Spark-Bars */}
+              <div className="relative z-10 pt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-sky-100 dark:text-sky-200">13-Week Cash Radar Forecast</span>
+                    <span className="text-[11px] font-mono text-blue-200/80 dark:text-slate-400">(Live statement-backed rolling liquidity)</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] font-mono">
+                    <span className="flex items-center gap-1.5 text-blue-100 dark:text-slate-300">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-white dark:bg-sky-400" /> Safe (&ge; ฿80k)
+                    </span>
+                    <span className="flex items-center gap-1.5 text-amber-200 dark:text-amber-300">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-amber-300" /> Below Buffer
+                    </span>
+                    <span className="flex items-center gap-1.5 text-rose-200 dark:text-rose-300">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-rose-400" /> Short (&le; 0)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bars Grid */}
+                <div className="grid grid-cols-13 gap-1.5 sm:gap-2.5 h-32 items-end bg-black/25 dark:bg-black/40 p-3 sm:p-4 rounded-2xl border border-white/15 dark:border-slate-800 backdrop-blur-xs">
+                  {weeksData.map((w, idx) => {
+                    const isFocus = selectedWeekIndex === idx;
+                    const barColor =
+                      w.status === "below"
+                        ? "bg-amber-300 hover:bg-amber-200"
+                        : w.status === "short"
+                        ? "bg-rose-400 hover:bg-rose-300"
+                        : "bg-white hover:bg-white/90";
+
+                    return (
+                      <div
+                        key={w.week}
+                        onClick={() => {
+                          setSelectedWeek(w);
+                          setSelectedWeekIndex(idx);
+                        }}
+                        className="group flex flex-col items-center justify-end h-full cursor-pointer relative"
+                      >
+                        {/* Selected Indicator Pin */}
+                        {isFocus && (
+                          <div className="absolute -top-3 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-xs animate-bounce" />
+                        )}
+
+                        <div
+                          style={{ height: `${w.heightPercent}%` }}
+                          className={`w-full rounded-t-md transition-all duration-300 ${barColor} ${
+                            isFocus ? "ring-2 ring-white shadow-lg" : "opacity-85 group-hover:opacity-100"
+                          }`}
+                        />
+                        <span
+                          className={`text-[10px] font-mono mt-1.5 transition-colors ${
+                            isFocus ? "font-bold text-white" : "text-blue-100/70 dark:text-slate-400 group-hover:text-white"
+                          }`}
+                        >
+                          {w.week}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Week Inspector Strip */}
+                {selectedWeek && (
+                  <div className="mt-3 p-3.5 rounded-xl bg-black/25 dark:bg-black/40 border border-white/15 dark:border-slate-800 backdrop-blur-xs flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-bold text-slate-900 px-2 py-0.5 rounded bg-white text-[11px]">
+                        {selectedWeek.week} ({selectedWeek.date})
+                      </span>
+                      <span className="text-white dark:text-slate-200">
+                        Projected End-of-Week:{" "}
+                        <strong className="text-white font-mono font-bold">
+                          ฿{selectedWeek.balance.toLocaleString()}
+                        </strong>
+                      </span>
+                      {selectedWeek.note && (
+                        <span className="text-amber-200 dark:text-amber-300 font-semibold flex items-center gap-1">
+                          ⚠️ {selectedWeek.note}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] font-mono text-blue-100 dark:text-slate-300 flex items-center gap-3">
+                      <span>Inflow: +฿{selectedWeek.inflow.toLocaleString()}</span>
+                      <span>•</span>
+                      <span>Outflow: -฿{selectedWeek.outflow.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* STATE B: FIRST-TIME USER / DEV RESET - BIG WELCOME ONBOARDING HERO BOX */
+            <div className="rounded-3xl p-6 sm:p-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-700 dark:via-indigo-800 dark:to-slate-900 text-white shadow-2xl border border-blue-500/30 dark:border-slate-800 relative overflow-hidden transition-all duration-300 animate-fade-in-up">
+              <div className="relative z-10 max-w-2xl">
+                <span className="text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/20 dark:bg-white/10 text-white backdrop-blur-sm inline-block mb-3 border border-white/20 dark:border-white/10">
+                  ⚡ Setup Required • First-Time Deployment
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
+                  Welcome to BizMate, {user?.businessName}!
+                </h1>
+                <p className="text-xs sm:text-sm text-blue-100 mt-2.5 leading-relaxed">
+                  Your autonomous multi-agent financial team is ready. To unlock the <strong>13-Week Cash Radar</strong>, <strong>Real-Time Cash Today</strong>, and <strong>Automated AR Follow-ups</strong>, connect your read-only operating account.
+                </p>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/onboarding"
+                    className="px-6 py-3.5 rounded-2xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-xs shadow-lg shadow-black/10 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-2"
+                  >
+                    <span>Connect Bank &amp; Sales Channels →</span>
+                  </Link>
+
+                  <button
+                    onClick={() => setIsBankConnected(true)}
+                    className="px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/25 font-semibold text-xs transition-colors cursor-pointer"
+                  >
+                    Demo Mock: Sim Connected Bank
+                  </button>
+                </div>
+              </div>
+
+              {/* Illustration Accent */}
+              <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            </div>
+          )}
+        </section>
+
+        {/* ========================================================
+            QUICK METRICS BAR (HM-01 Quick Metrics)
+        ======================================================== */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+          {/* Quick Metric 1: Owed to you (CO-01) */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Owed to You (AR)
+              </span>
+              <span className="text-lg">🔔</span>
+            </div>
+            <div className="my-2">
+              <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">
+                ฿{financialSummary?.buyerHabits?.[1]?.currentOverdueAmount?.toLocaleString() || "35,000"}
+              </p>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5 font-medium">
+                1 invoice • Boutique Siam (21 days overdue)
+              </p>
+            </div>
+            <Link
+              href="#inbox-approvals"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+            >
+              <span>Review polite reminder draft</span>
+              <span>→</span>
+            </Link>
+          </div>
+
+          {/* Quick Metric 2: Health Score (HE-01) */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Health Score
+              </span>
+              <span className="text-lg">🩺</span>
+            </div>
+            <div className="my-2">
+              <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">
+                {financialSummary?.healthScore?.overallScore || 78} / 100
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 font-medium">
+                {financialSummary?.healthScore?.ratingGrade || "Grade B+"} • Prime Credit Eligible
+              </p>
+            </div>
+            <Link
+              href="#health-score"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+            >
+              <span>Inspect 7-part breakdown</span>
+              <span>→</span>
+            </Link>
+          </div>
+
+          {/* Quick Metric 3: For your OK (IB-01) */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                For Your OK (Approval Queue)
+              </span>
+              <span className="text-lg">📥</span>
+            </div>
+            <div className="my-2">
+              <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">
+                {pendingApprovalsCount} Pending
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 font-medium">
+                Zero-surprise actions awaiting your sign-off
+              </p>
+            </div>
+            <Link
+              href="#inbox-approvals"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+            >
+              <span>Open Central Approval Inbox</span>
+              <span>→</span>
+            </Link>
+          </div>
+        </section>
+
+        {/* ========================================================
+            THE AGENTS' JOINT PLAN CARD (PL-01 Highlight Card)
+        ======================================================== */}
+        <section id="joint-plan" className="mb-8">
+          <div className="p-6 sm:p-7 rounded-3xl bg-amber-50/50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/60 shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center text-xl font-bold shadow-xs">
+                  ⚡
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                    The Agents&apos; Joint Plan: Resolve 26 Oct Cash Dip
+                  </h2>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    6 agents synchronized a 3-step remedy to safeguard the ฿80k safety buffer.
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 self-start sm:self-center">
+                Explainable AI (Glass Box)
+              </span>
+            </div>
+
+            {/* The 3 Synchronized Steps */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 my-4">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">
+                    Step 1 • Collections
+                  </span>
+                  <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                    +฿35,000
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                  Chase Overdue Invoice - Boutique Siam
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Drafted friendly reminder for ฿35k (21 days past due) to recover cash by 20 Oct.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono font-bold text-yellow-600 dark:text-yellow-400">
+                    Step 2 • Funding
+                  </span>
+                  <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                    Preserves Buffer
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                  Request 60-Day Supplier Terms
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Proposal to defer ¥100,000 Chen Tech invoice to 25 Dec at 1.1% fee financing.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono font-bold text-red-600 dark:text-red-400">
+                    Step 3 • True Cost &amp; Trust
+                  </span>
+                  <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                    Biometric Lock
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                  Pay Chen Tech via Partner FX Rail
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  Direct bank rail locked to verified registry account. Protected by Face ID.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 text-xs text-slate-500 dark:text-slate-400 border-t border-amber-200/60 dark:border-amber-800/40">
+              <span className="flex items-center gap-1.5">
+                <span>🛡️</span>
+                <span>Deterministic Rule: No action is executed without your explicit sign-off in Central Inbox.</span>
+              </span>
+              <span className="font-mono text-[11px]">System Clock: 12 Oct 2026</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            THE 6 AGENT TILES GRID (HM-01 Agent Grid)
+        ======================================================== */}
+        <section className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Autonomous Agent Team (6 Active)
+            </h2>
+            <span className="text-xs font-mono text-slate-500">Live Telemetry</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {AGENTS_LIST.map((agent) => (
+              <div
+                key={agent.id}
+                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60"
+                      >
+                        {agent.emoji}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                          {agent.name}
+                        </h3>
+                        <p className="text-[11px] text-slate-500">{agent.role}</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      {agent.badge}
+                    </span>
+                  </div>
+
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-2 font-mono">
+                    {agent.stat}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    {agent.insight}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase text-slate-400">Zero-Surprise OK</span>
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                    {agent.actionLabel} →
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ========================================================
+            STATEMENT LEDGER FEED (Ingested from mock_financial_statement_365d.json)
+        ======================================================== */}
+        <section className="mb-8">
+          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl">
+                  📑
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Statement Ledger Ingestion</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      366-Day Verified
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Analyzing {financialSummary?.totalTransactionsInStatement || 1030} records across Omnichannel platforms and Shenzhen Chen Tech cross-border rails.
+                  </p>
+                </div>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 font-mono text-xs">
+                {[
+                  { key: "ALL", label: "All Feeds" },
+                  { key: "SHOPEE", label: "Shopee" },
+                  { key: "TIKTOK", label: "TikTok" },
+                  { key: "LAZADA", label: "Lazada" },
+                  { key: "QR", label: "PromptPay QR" },
+                  { key: "CHEN", label: "Chen Tech" },
+                  { key: "ANOMALY", label: "Red Flags" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => handleFilterTransactions(tab.key)}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                      selectedFilterCategory === tab.key
+                        ? "bg-blue-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Transactions List Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-400 uppercase">
+                    <th className="py-2.5 px-3">Txn ID</th>
+                    <th className="py-2.5 px-3">Date / Time</th>
+                    <th className="py-2.5 px-3">Channel / Counterparty</th>
+                    <th className="py-2.5 px-3">Category</th>
+                    <th className="py-2.5 px-3 text-right">Amount</th>
+                    <th className="py-2.5 px-3 text-right">Balance After</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+                  {recentTransactions.map((tx) => {
+                    const isCredit = tx.type === "CREDIT";
+                    const isConflict = tx.metadata?.core_conflict_trigger;
+                    return (
+                      <tr
+                        key={tx.txn_id}
+                        className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                          isConflict ? "bg-amber-50/60 dark:bg-amber-950/20 font-bold" : ""
+                        }`}
+                      >
+                        <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
+                          {tx.txn_id}
+                          {isConflict && (
+                            <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-rose-500 text-white">
+                              CONFLICT
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400">
+                          {tx.datetime.replace("+07:00", "").replace("T", " ")}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-800 dark:text-slate-200 font-sans">
+                          <div className="font-medium">{tx.counterparty_name}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{tx.channel}</div>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            {tx.category}
+                          </span>
+                        </td>
+                        <td
+                          className={`py-2.5 px-3 text-right font-bold ${
+                            isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                          }`}
+                        >
+                          {isCredit ? "+" : "-"}฿{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-white">
+                          ฿{tx.balance_after.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+              <span>Showing statement records from data/mock_financial_statement_365d.json</span>
+              <span>100% Deterministic Engine</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            ACTIVITY STREAM (Latest from your agents • TR-01 Audit Log)
+        ======================================================== */}
+        <section id="audit-ledger" className="mb-8">
+          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg">📜</span>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                  Latest from Your Agents (Immutable Audit Stream)
+                </h2>
+              </div>
+              <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                ● Real-time Verifiable Ledger
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {recentAuditLogs.length > 0 ? (
+                recentAuditLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between text-xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono uppercase font-bold text-blue-600 dark:text-blue-400 text-[11px] px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900">
+                        {log.agentId}
+                      </span>
+                      <span className="text-slate-800 dark:text-slate-200 font-medium">
+                        {log.action}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                        {log.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-xs text-slate-500">
+                  Audit log records ready. Activity will stream here automatically.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Developer Reset Confirmation Modal */}
@@ -224,6 +1026,7 @@ export default function DashboardPage() {
               <li>Clear chat message history</li>
               <li>Re-seed 3 PRD Approval Inbox items</li>
               <li>Re-seed baseline Trust Agent audit logs</li>
+              <li>Simulate unlinked bank state for First-Time User view</li>
             </ul>
 
             <div className="mt-6 flex items-center justify-end gap-3">

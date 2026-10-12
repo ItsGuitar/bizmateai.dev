@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" rx="20" fill="#1E3A8A"/>
+  <!-- Bangkok Bank Lotus Bloom symbol -->
+  <g fill="#F59E0B">
+    <path d="M50 20 L66 42 L50 78 L34 42 Z"/>
+    <path d="M50 28 L60 44 L50 70 L40 44 Z" fill="#FFFFFF"/>
+    <path d="M50 36 L56 46 L50 62 L44 46 Z" fill="#1E3A8A"/>
+  </g>
+  <path d="M26 44 L34 42 L42 66 L28 54 Z" fill="#F59E0B" opacity="0.9"/>
+  <path d="M74 44 L66 42 L58 66 L72 54 Z" fill="#F59E0B" opacity="0.9"/>
+</svg>

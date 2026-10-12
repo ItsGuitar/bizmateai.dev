@@ -386,7 +386,7 @@ export default function RegisterPage() {
                 </h4>
                 <p>
                   No customer reminders (via LINE OA or Email) are ever sent, and no financial data is ever shared with
-                  third-party lenders, without your prior explicit review and approval in the Central Inbox (IB-01).
+                  third-party lenders, without your prior explicit review and approval in the Central Approval Inbox.
                 </p>
               </div>
 
@@ -399,7 +399,7 @@ export default function RegisterPage() {
                   linked data source. All consents can be terminated with 1 tap directly in:
                 </p>
                 <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[10px] text-slate-800 dark:text-slate-200 mt-1">
-                  Dashboard → Trust Agent (TR-01) → Sharing Tab → [Revoke Access]
+                  Dashboard → Trust Agent Security Controls → Sharing Tab → [Revoke Access]
                 </div>
               </div>
 

@@ -1,13 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AGENTS, AgentDefinition } from "./data/agents";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { getSession, AuthUser } from "@/lib/auth-client";
 
 export default function WelcomePage() {
   const [activeAgent, setActiveAgent] = useState<AgentDefinition | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const session = getSession();
+    if (session?.user) {
+      setUser(session.user);
+    }
+  }, []);
 
   const scrollToAgents = () => {
     const el = document.getElementById("agents-section");
@@ -27,12 +38,30 @@ export default function WelcomePage() {
         <div className="flex items-center gap-2.5">
           <ThemeToggle />
 
-          <Link
-            href="/login"
-            className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-4 py-2 rounded-xl bg-white dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80 transition-all cursor-pointer shadow-xs hover:shadow-sm"
-          >
-            Sign in
-          </Link>
+          {isMounted && user ? (
+            <div className="flex items-center gap-2.5">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                <span className="font-semibold text-slate-700 dark:text-slate-300 max-w-[180px] truncate">
+                  {user.businessName || user.email}
+                </span>
+              </div>
+              <Link
+                href="/dashboard"
+                className="text-xs font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Go to Dashboard</span>
+                <span>→</span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-4 py-2 rounded-xl bg-white dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80 transition-all cursor-pointer shadow-xs hover:shadow-sm"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </header>
 
@@ -92,19 +121,31 @@ export default function WelcomePage() {
 
         {/* Call to Actions on Screen 1 with stagger */}
         <div className="w-full max-w-xs flex flex-col gap-2.5 mt-1 animate-fade-in-up delay-400">
-          <Link
-            href="/register"
-            className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span>Get started</span>
-            <span className="text-lg">→</span>
-          </Link>
-          <Link
-            href="/login"
-            className="w-full py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
-          >
-            I already have an account
-          </Link>
+          {isMounted && user ? (
+            <Link
+              href="/dashboard"
+              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Go to Dashboard</span>
+              <span className="text-lg">→</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/register"
+                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Get started</span>
+                <span className="text-lg">→</span>
+              </Link>
+              <Link
+                href="/login"
+                className="w-full py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                I already have an account
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Smooth Scroll Cue */}
@@ -211,10 +252,10 @@ export default function WelcomePage() {
 
         {/* Secondary CTA below cards */}
         <Link
-          href="/register"
+          href={isMounted && user ? "/dashboard" : "/register"}
           className="py-3.5 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
         >
-          Get started with BizMate →
+          {isMounted && user ? "Go to Dashboard →" : "Get started with BizMate →"}
         </Link>
       </section>
 

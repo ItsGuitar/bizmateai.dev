@@ -220,7 +220,7 @@ export default function PdpaPolicyPage() {
               inspect active authorizations and terminate access at any time via:
             </p>
             <p className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 font-mono text-xs text-blue-600 dark:text-blue-400">
-              BizMate Dashboard → Trust Agent (TR-01) → Tab 2: Sharing &amp; Consents → Tap [Revoke Access]
+              BizMate Dashboard → Trust Agent Security Controls → Tab 2: Sharing &amp; Consents → Tap [Revoke Access]
             </p>
           </section>
         </div>

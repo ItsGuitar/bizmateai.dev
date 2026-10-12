@@ -73,3 +73,54 @@ body {
 .delay-500 { animation-delay: 500ms; }
 .delay-600 { animation-delay: 600ms; }
 .delay-700 { animation-delay: 700ms; }
+
+/* Smooth Step Slide Transitions */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmerPulse {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.shimmer-active {
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.05) 0%,
+    rgba(59, 130, 246, 0.22) 50%,
+    rgba(59, 130, 246, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerPulse 2s infinite ease-in-out;
+}
