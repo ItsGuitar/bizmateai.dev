@@ -51,3 +51,8 @@ DESIGN_SYSTEM.md
 # sqlite dev database
 *.db
 *.db-journal
+
+# Agent memory & notes
+AGENT_MEMORY.md
+MEMORY.md
+.agent_memory.md
