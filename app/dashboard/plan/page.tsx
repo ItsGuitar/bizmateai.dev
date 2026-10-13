@@ -223,7 +223,14 @@ export default function CollaborativePlanPage() {
       .catch(() => {});
   };
 
-  const debtor = summary?.buyerHabits?.[0];
+  const rawDebtor = summary?.buyerHabits?.[0];
+  const debtor = rawDebtor
+    ? {
+        name: rawDebtor.name || "Counterparty",
+        amount: Number(rawDebtor.currentOverdueAmount ?? rawDebtor.overdueAmount ?? 0),
+        days: Math.round(Number(rawDebtor.averageDelayDays ?? rawDebtor.overdueDays ?? 0)),
+      }
+    : null;
   const supplier = summary?.supplierHistory;
   const safetyBuffer = summary?.safetyBuffer || 80000;
   const company = summary?.company || "Your Business";
@@ -263,17 +270,17 @@ export default function CollaborativePlanPage() {
       agentColor: "#F97316",
       title: debtor ? `Accelerate ${debtor.name} Receivables Recovery` : "Receivables & Inflow Watch",
       actionSummary: debtor
-        ? `Audited debtor ledger and surfaced ฿${debtor.overdueAmount.toLocaleString()} overdue invoice (${debtor.overdueDays} days late). Courtesy reminder drafted.`
+        ? `Audited debtor ledger and surfaced ฿${debtor.amount.toLocaleString()} overdue invoice (${debtor.days} days late). Courtesy reminder drafted.`
         : "All counterparty accounts receivable verified current and settled.",
-      keyMetric: debtor ? `+฿${debtor.overdueAmount.toLocaleString()} Inflow` : "AR Clean",
+      keyMetric: debtor ? `+฿${debtor.amount.toLocaleString()} Inflow` : "AR Clean",
       metricType: "success",
       detailedReasoning: debtor
         ? `${debtor.name} habit analysis indicates positive recovery upon polite follow-up. Recovering internal receivables eliminates outside financing friction.`
         : "Zero aged invoices overdue across trade counterparties.",
       dataPoints: [
         { label: "Debtor", value: debtor?.name || "None Overdue" },
-        { label: "Amount", value: debtor ? `฿${debtor.overdueAmount.toLocaleString()}` : "฿0" },
-        { label: "Overdue Days", value: debtor ? `${debtor.overdueDays} Days` : "0 Days" },
+        { label: "Amount", value: debtor ? `฿${debtor.amount.toLocaleString()}` : "฿0" },
+        { label: "Overdue Days", value: debtor ? `${debtor.days} Days` : "0 Days" },
         { label: "Action", value: debtor ? "LINE Draft Ready" : "Standby" },
       ],
     },
@@ -374,7 +381,7 @@ export default function CollaborativePlanPage() {
       badgeStyle: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-800",
       cost: "2.5% factoring fee",
       apr: "15.0% APR equivalent",
-      verdict: debtor ? `Advances 80% of ฿${debtor.overdueAmount.toLocaleString()} AR immediately.` : "Partial capital advance option.",
+      verdict: debtor ? `Advances 80% of ฿${debtor.amount.toLocaleString()} AR immediately.` : "Partial capital advance option.",
     },
     {
       id: "opt-4",
@@ -439,7 +446,7 @@ export default function CollaborativePlanPage() {
                   )}
                 </div>
                 <p className="text-[11px] text-blue-200 mt-0.5">
-                  {debtor ? `Recover ฿${debtor.overdueAmount.toLocaleString()} overdue AR from ${debtor.name}. ` : "AR ledger clean. "}
+                  {debtor ? `Recover ฿${debtor.amount.toLocaleString()} overdue AR from ${debtor.name}. ` : "AR ledger clean. "}
                   {supplier && supplier.pendingOrderAmount > 0 ? `Defer ${supplier.name} order with 0 bank debt.` : `Safeguard ฿${safetyBuffer.toLocaleString()} cash reserve.`}
                 </p>
               </div>
@@ -670,10 +677,10 @@ export default function CollaborativePlanPage() {
                   Step 1 • Collections
                 </span>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white mt-2">
-                  {debtor ? `Follow Up ฿${debtor.overdueAmount.toLocaleString()} AR (${debtor.name})` : "Receivables Monitor"}
+                  {debtor ? `Follow Up ฿${debtor.amount.toLocaleString()} AR (${debtor.name})` : "Receivables Monitor"}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  {debtor ? `Polite reminder draft (${debtor.overdueDays} days late).` : "All invoices settled."}
+                  {debtor ? `Polite reminder draft (${debtor.days} days late).` : "All invoices settled."}
                 </p>
               </div>
               <Link
