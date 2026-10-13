@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      businessName: summary.company,
+      statementCompany: summary.company,
       proposalsCount: newProposals.length,
     });
   } catch (error) {
