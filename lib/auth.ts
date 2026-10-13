@@ -22,9 +22,21 @@ export function verifyToken(token: string): TokenPayload | null {
 
 export function getUserFromRequest(request: Request): TokenPayload | null {
   const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    const verified = verifyToken(token);
+    if (verified) return verified;
   }
-  const token = authHeader.substring(7);
-  return verifyToken(token);
+
+  // Cookie fallback (e.g. browser page navigation, SSR, or standard GET requests)
+  const cookieHeader = request.headers.get("cookie");
+  if (cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)bizmate_token=([^;]+)/);
+    if (match?.[1]) {
+      const verified = verifyToken(decodeURIComponent(match[1]));
+      if (verified) return verified;
+    }
+  }
+
+  return null;
 }

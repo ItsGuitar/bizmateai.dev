@@ -146,7 +146,7 @@ export async function callGeminiOrFallback(
             return {
               agentId: validAgent,
               content: parsed.content,
-              reasoning: parsed.reasoning || `Analyzed with Gemini 3.5 Flash Lite across live telemetry`,
+              reasoning: parsed.reasoning || `Analyzed across live ledger telemetry and agent signals`,
               actionRoute: parsed.actionRoute || "/dashboard#joint-plan",
             };
           }

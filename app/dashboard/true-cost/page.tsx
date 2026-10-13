@@ -158,16 +158,41 @@ export default function TrueCostHubPage() {
   const [calcDailyRate, setCalcDailyRate] = useState<number>(1.0);
   const [calcTenorDays, setCalcTenorDays] = useState<number>(30);
 
-  // Check cooldown status on load
-  const checkCooldownStatus = async (token: string) => {
+  // Check cooldown status on load and sync with localStorage
+  const checkCooldownStatus = async (token?: string) => {
+    // 1. Immediately read cached cooldown from localStorage so refresh doesn't flash 0s
+    if (typeof window !== "undefined") {
+      const cachedUntil = localStorage.getItem("bizmate_scanner_cooldown_until");
+      if (cachedUntil) {
+        const remaining = Math.ceil((new Date(cachedUntil).getTime() - Date.now()) / 1000);
+        if (remaining > 0) {
+          setCooldownSeconds(remaining);
+        } else {
+          localStorage.removeItem("bizmate_scanner_cooldown_until");
+        }
+      }
+    }
+
+    // 2. Fetch authoritative status from database API
     try {
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch("/api/true-cost/analyze", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers,
       });
       if (res.ok) {
         const data = await res.json();
         if (data.remainingSeconds > 0) {
           setCooldownSeconds(data.remainingSeconds);
+          if (data.cooldownUntil && typeof window !== "undefined") {
+            localStorage.setItem("bizmate_scanner_cooldown_until", data.cooldownUntil);
+          }
+        } else {
+          setCooldownSeconds(0);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("bizmate_scanner_cooldown_until");
+          }
         }
       }
     } catch (err) {
@@ -198,6 +223,9 @@ export default function TrueCostHubPage() {
       setCooldownSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("bizmate_scanner_cooldown_until");
+          }
           return 0;
         }
         return prev - 1;
@@ -234,6 +262,9 @@ export default function TrueCostHubPage() {
         setErrorMessage(data.error || "Rate limited. Please wait.");
         if (data.remainingSeconds) {
           setCooldownSeconds(data.remainingSeconds);
+          if (data.cooldownUntil && typeof window !== "undefined") {
+            localStorage.setItem("bizmate_scanner_cooldown_until", data.cooldownUntil);
+          }
         }
         return;
       }
@@ -248,6 +279,9 @@ export default function TrueCostHubPage() {
       }
       if (data.cooldownSeconds) {
         setCooldownSeconds(data.cooldownSeconds);
+        if (data.cooldownUntil && typeof window !== "undefined") {
+          localStorage.setItem("bizmate_scanner_cooldown_until", data.cooldownUntil);
+        }
       }
     } catch (err) {
       console.error("Scanner scan request error:", err);
@@ -425,7 +459,7 @@ export default function TrueCostHubPage() {
         ======================================================== */}
         {activeTab === "analyzer" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up duration-200">
-            {/* Text Input Sandbox with Gemini Scan & Cooldown */}
+            {/* Text Input Sandbox with Security Scan & Cooldown */}
             <div className="lg:col-span-6 space-y-4">
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
@@ -449,7 +483,7 @@ export default function TrueCostHubPage() {
                 <div className="mb-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
                   <span className="text-sm mt-0.5">🛡️</span>
                   <p className="leading-snug">
-                    <strong>Deterministic Sandbox:</strong> Analyzed by True Cost Agent (Gemini 3.1 Flash Lite). Parses text strictly as inert data; prompt injection, non-financial queries, or instructions inside input are safely neutralized.
+                    <strong>Deterministic Sandbox:</strong> Evaluated by True Cost Agent. Parses text strictly as inert data; prompt injection, non-financial queries, or instructions inside input are safely neutralized.
                   </p>
                 </div>
 
@@ -494,7 +528,7 @@ export default function TrueCostHubPage() {
                     {isAnalyzing ? (
                       <>
                         <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Scanning with Gemini...</span>
+                        <span>Auditing Telemetry...</span>
                       </>
                     ) : cooldownSeconds > 0 ? (
                       <>
