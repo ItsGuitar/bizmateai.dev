@@ -202,7 +202,7 @@ export function AppHeader({
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
               }`}
             >
-              <span>TC-01 Analyzer</span>
+              <span>Risk &amp; Fee Shield</span>
             </Link>
 
             <Link

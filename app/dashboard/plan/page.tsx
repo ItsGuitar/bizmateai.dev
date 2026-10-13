@@ -652,13 +652,13 @@ export default function CollaborativePlanPage() {
                 {opt.status === "BLOCKED" && (
                   <div className="mt-3 pt-2.5 border-t border-rose-200 dark:border-rose-900/60 flex items-center justify-between">
                     <span className="text-[10px] font-mono text-rose-700 dark:text-rose-400 font-bold">
-                      TC-01 Risk Analyzer
+                      Risk &amp; Fee Analyzer
                     </span>
                     <Link
                       href="/dashboard/true-cost"
                       className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1"
                     >
-                      <span>Analyze in TC-01</span>
+                      <span>Inspect in Analyzer</span>
                       <span>→</span>
                     </Link>
                   </div>
