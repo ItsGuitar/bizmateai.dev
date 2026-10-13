@@ -102,8 +102,8 @@ export async function callGeminiOrFallback(
   if (keyToUse && keyToUse.trim() !== "" && keyToUse !== "abcde") {
     try {
       const systemPrompt = getAgentSystemPrompt(userProfile, summary);
-      // Strictly use ONLY gemini-3.5-flash-lite (15 RPM, 250k TPM, 500 RPD free tier)
-      const model = "gemini-3.5-flash-lite";
+      // Use gemini-3.1-flash-lite
+      const model = "gemini-3.1-flash-lite";
 
       const contents = [
         {
