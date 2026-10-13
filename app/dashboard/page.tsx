@@ -4,6 +4,7 @@ import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { UserProfileMenu } from "@/app/components/UserProfileMenu";
 import { getSession, clearSession, AuthUser } from "@/lib/auth-client";
 
 // The 6 Autonomous Agents Metadata matching DESIGN_SYSTEM.md & instruction.md
@@ -188,6 +189,7 @@ export default function DashboardPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
   // Load Session and verify data
   useEffect(() => {
@@ -388,13 +390,12 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Log out */}
-            <button
-              onClick={handleLogout}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-            >
-              Log out
-            </button>
+            {/* User Profile Avatar Menu */}
+            <UserProfileMenu
+              user={user}
+              onLogout={handleLogout}
+              showAccountModal={() => setShowAccountModal(true)}
+            />
           </div>
         </div>
       </header>
@@ -710,9 +711,19 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 self-start sm:self-center">
-                Explainable AI (Glass Box)
-              </span>
+              <div className="flex items-center gap-2.5 self-start sm:self-center">
+                <Link
+                  href="/dashboard/plan"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                  title="View transparent deliberation trace showing how the 6 agents synchronized this plan"
+                >
+                  <span>How they decided</span>
+                  <span>→</span>
+                </Link>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800">
+                  Explainable AI (Glass Box)
+                </span>
+              </div>
             </div>
 
             {/* The 3 Synchronized Steps */}
@@ -769,12 +780,21 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 text-xs text-slate-500 dark:text-slate-400 border-t border-amber-200/60 dark:border-amber-800/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 text-xs text-slate-500 dark:text-slate-400 border-t border-amber-200/60 dark:border-amber-800/40">
               <span className="flex items-center gap-1.5">
                 <span>🛡️</span>
                 <span>Deterministic Rule: No action is executed without your explicit sign-off in Central Inbox.</span>
               </span>
-              <span className="font-mono text-[11px]">System Clock: 12 Oct 2026</span>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/dashboard/plan"
+                  className="font-bold text-amber-800 dark:text-amber-400 hover:underline flex items-center gap-1"
+                >
+                  <span>Read full trace</span>
+                  <span>→</span>
+                </Link>
+                <span className="font-mono text-[11px]">System Clock: 12 Oct 2026</span>
+              </div>
             </div>
           </div>
         </section>
@@ -1052,6 +1072,79 @@ export default function DashboardPage() {
                 ) : (
                   <span>Yes, Reset Database</span>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Account Details Modal */}
+      {showAccountModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+            <button
+              onClick={() => setShowAccountModal(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 text-white font-black text-2xl flex items-center justify-center shadow-md">
+                {(user?.businessName || user?.email || "U").trim().charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {user?.businessName || "Business Account"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {user?.email || "Authenticated User"}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Account ID:</span>
+                <span className="font-mono font-medium text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
+                  {user?.id || "usr_demo_ploy"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Role:</span>
+                <span className="font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[11px]">
+                  Business Owner
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Security Gatekeeper:</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span>🛡️</span> Zero-Surprise Active
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Bank Integration:</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {isBankConnected ? "🟢 Connected (Kasikornbank)" : "⚪ Not Connected"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <span>🚪</span>
+                <span>Log Out</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAccountModal(false)}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

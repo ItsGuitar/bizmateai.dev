@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AGENTS, AgentDefinition } from "./data/agents";
 import { ThemeToggle } from "./components/ThemeToggle";
+import { UserProfileMenu } from "./components/UserProfileMenu";
 import { getSession, AuthUser } from "@/lib/auth-client";
 
 export default function WelcomePage() {
@@ -40,19 +41,19 @@ export default function WelcomePage() {
 
           {isMounted && user ? (
             <div className="flex items-center gap-2.5">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                <span className="font-semibold text-slate-700 dark:text-slate-300 max-w-[180px] truncate">
-                  {user.businessName || user.email}
-                </span>
-              </div>
               <Link
                 href="/dashboard"
-                className="text-xs font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                className="text-xs font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <span>Go to Dashboard</span>
+                <span>Dashboard</span>
                 <span>→</span>
               </Link>
+              <UserProfileMenu
+                user={user}
+                onLogout={() => {
+                  setUser(null);
+                }}
+              />
             </div>
           ) : (
             <Link
