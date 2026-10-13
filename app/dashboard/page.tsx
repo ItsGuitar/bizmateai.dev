@@ -68,8 +68,8 @@ const AGENTS_LIST = [
     badge: "Protected",
     stat: "0% Traps Detected",
     insight: "Shenzhen recipient registry verified • 0% fraud",
-    actionLabel: "Inspect Rail",
-    href: "#true-cost",
+    actionLabel: "Risk Analyzer",
+    href: "/dashboard/true-cost",
   },
   {
     id: "trust",

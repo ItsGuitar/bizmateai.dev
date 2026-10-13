@@ -219,7 +219,7 @@ function fallbackAgentReasoning(
     return {
       agentId: "cash",
       content: isSafe
-        ? `ไม่ต้องกังวลครับ จากการคำนวณ 13-Week Cash Radar ของ ${businessName} สภาพคล่องยัง "ปลอดภัย" ครับ! เงินสดปัจจุบันมี ${summary.formattedCurrentCash} สูงกว่า Safety Buffer (${summary.formattedSafetyBuffer}) และยังไม่มีสัปดาห์ใดที่เงินสดต่ำกว่าเกณฑ์ แต่ถ้าต้องการเสริมเกราะป้องกัน แนะนำเร่งเก็บหนี้ค้างจาก ${debtor ? debtor.name : "ลูกหนี้"} ครับ`
+        ? `ไม่ต้องกังวลครับ จากการคำนวณ 13-Week Cash Radar ของ ${businessName} สภาพคล่องยัง "ปลอดภัย" ครับ! เงินสดปัจจุบันมี ${summary.formattedCurrentCash} สูงกว่า Safety Buffer (฿${summary.safetyBuffer.toLocaleString()}) และยังไม่มีสัปดาห์ใดที่เงินสดต่ำกว่าเกณฑ์ แต่ถ้าต้องการเสริมเกราะป้องกัน แนะนำเร่งเก็บหนี้ค้างจาก ${debtor ? debtor.name : "ลูกหนี้"} ครับ`
         : `มีจุดที่ต้องระวังครับ! ในสัปดาห์ที่ ${conflictWeek.week} (${conflictWeek.date}) คาดว่าเงินสดจะลดลงเหลือ ฿${conflictWeek.balance.toLocaleString()} ซึ่งต่ำกว่า Safety Buffer ที่ตั้งไว้ ฿${summary.safetyBuffer.toLocaleString()} แนะนำเปิดดู "Joint Remedy Plan" เพื่อเลื่อนจ่ายคู่ค้าหรือเร่งทวงหนี้ทันทีครับ`,
       reasoning: `Cash Agent ตรวจจับคำถามความเสี่ยงสภาพคล่อง และประเมินผ่าน Cash Flow Projection 13 สัปดาห์`,
       actionRoute: "/dashboard#joint-plan",
@@ -270,7 +270,7 @@ function fallbackAgentReasoning(
       agentId: "true-cost",
       content: `True Cost Agent ตรวจสอบและสกัดกั้นภัยคุกคามทางการเงินแล้ว ${summary.anomaliesCount} รายการ รวมถึงการดักจับและบล็อกโฆษณาสินเชื่อเงินด่วนคิดดอกเบี้ยเกินจริง (APR เกินเกณฑ์กำกับ) และตรวจสอบบัญชีคู่ค้าของ ${businessName} ผ่าน Registry ปลอดภัย 100% ครับ`,
       reasoning: "True Cost Agent คำนวณดอกเบี้ยที่แท้จริงและยืนยันความถูกต้องของบัญชีคู่ค้าผ่าน Registry ตรวจสอบ",
-      actionRoute: "/dashboard#activity-stream",
+      actionRoute: "/dashboard/true-cost",
     };
   }
 

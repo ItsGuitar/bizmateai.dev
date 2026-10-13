@@ -195,6 +195,17 @@ export function AppHeader({
             </Link>
 
             <Link
+              href="/dashboard/true-cost"
+              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
+                pathname.includes("/true-cost")
+                  ? "bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <span>TC-01 Analyzer</span>
+            </Link>
+
+            <Link
               href="/docs"
               className={`px-3 py-1.5 rounded-xl transition-all ${
                 currentNav === "docs"

@@ -641,6 +641,21 @@ export default function CollaborativePlanPage() {
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                   {opt.verdict}
                 </p>
+
+                {opt.status === "BLOCKED" && (
+                  <div className="mt-3 pt-2.5 border-t border-rose-200 dark:border-rose-900/60 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-rose-700 dark:text-rose-400 font-bold">
+                      TC-01 Risk Analyzer
+                    </span>
+                    <Link
+                      href="/dashboard/true-cost"
+                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>Analyze in TC-01</span>
+                      <span>→</span>
+                    </Link>
+                  </div>
+                )}
               </div>
             ))}
           </div>
