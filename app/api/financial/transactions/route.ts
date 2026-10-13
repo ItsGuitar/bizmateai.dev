@@ -10,7 +10,9 @@ export async function GET(request: Request) {
     const category = searchParams.get("category");
     const scope = searchParams.get("scope"); // "past" | "future" | "all"
 
-    let txns = getTransactions();
+    const bankId = searchParams.get("bankId") || undefined;
+
+    let txns = getTransactions(bankId);
 
     if (scope === "past") {
       txns = txns.filter((t) => t.datetime <= REFERENCE_DATE_ISO);

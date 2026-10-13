@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { getSession } from "@/lib/auth-client";
 
@@ -167,25 +168,28 @@ export function ChatWidget() {
   return (
     <>
       {/* ========================================================
-          FLOATING CHAT TRIGGER BUTTON (Bottom-Right)
+          FLOATING CHAT TRIGGER BUTTON (Bottom-Right Circular Avatar)
       ======================================================== */}
       <div className="fixed bottom-6 right-6 z-50 flex items-center">
         {!isOpen && (
           <button
             onClick={() => setIsOpen(true)}
-            className="group relative flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
-            aria-label="Open AI Financial Copilot Chat"
+            className="group relative w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-blue-600 via-indigo-500 to-sky-400 hover:from-blue-500 hover:to-indigo-600 shadow-xl shadow-blue-500/35 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-108 active:scale-95 transition-all duration-300 cursor-pointer overflow-visible"
+            aria-label="Open BizMate Copilot Chat"
           >
-            {/* Pulsing beacon glow */}
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white animate-ping" />
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+            {/* Online beacon pulse indicator */}
+            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-ping z-20 pointer-events-none" />
+            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 z-20" />
 
-            <div className="w-6 h-6 flex items-center justify-center text-lg animate-bounce">
-              🤖
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-bold leading-none">BizMate AI Copilot</span>
-              <span className="text-[10px] text-blue-100/90 font-mono font-normal">6 Agents Active</span>
+            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-slate-900 flex items-center justify-center border border-white/60 dark:border-slate-700 shadow-inner">
+              <Image
+                src="/images/bot1.png"
+                alt="BizMate Copilot"
+                width={56}
+                height={56}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                priority
+              />
             </div>
           </button>
         )}
@@ -199,18 +203,24 @@ export function ChatWidget() {
           {/* Header */}
           <div className="px-5 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 text-white flex items-center justify-between shrink-0 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-lg border border-white/20">
-                🤖
+              <div className="w-10 h-10 rounded-2xl overflow-hidden border border-white/30 bg-white/10 shadow-sm shrink-0">
+                <Image
+                  src="/images/bot1.png"
+                  alt="BizMate Copilot"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold leading-tight">AI Financial Copilot</h3>
+                  <h3 className="text-sm font-bold tracking-tight">BizMate Copilot</h3>
                   <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
-                    {activeApiKey && activeApiKey !== "abcde" ? "Gemini 3.5 Flash Lite" : "Rule Engine"}
+                    Online
                   </span>
                 </div>
-                <p className="text-[11px] text-blue-100 font-mono">
-                  Autonomous Multi-Agent Copilot
+                <p className="text-[11px] text-blue-100 font-sans opacity-90">
+                  Your Financial Department
                 </p>
               </div>
             </div>

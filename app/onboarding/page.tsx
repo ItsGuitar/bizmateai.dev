@@ -21,12 +21,12 @@ interface BankOption {
 
 const BANKS: BankOption[] = [
   {
-    id: "partner-bank",
+    id: "kbank",
     name: "Kasikornbank (Partner Bank)",
     code: "KBANK",
     bg: "bg-[#138f2d]",
     text: "text-white",
-    desc: "Direct statement ingestion • Instant 13-week sync",
+    desc: "Ploy Select Co., Ltd. • 12-Month SME Account",
     logoUrl: "/logos/KBANK.png",
     badge: "Recommended Partner",
     isPartner: true,
@@ -37,7 +37,7 @@ const BANKS: BankOption[] = [
     code: "SCB",
     bg: "bg-[#4e2a84]",
     text: "text-white",
-    desc: "Open Banking API • Read-Only feed",
+    desc: "Apex Craft Furniture • 12-Month B2B Export Gateway",
     logoUrl: "/logos/SCB.png",
   },
   {
@@ -46,17 +46,18 @@ const BANKS: BankOption[] = [
     code: "BBL",
     bg: "bg-[#1e3a8a]",
     text: "text-white",
-    desc: "Open Banking Corporate • Read-Only",
+    desc: "BioHarvest Agro Tech • 12-Month Agri-Tech Gateway",
     logoUrl: "/logos/BBL.png",
   },
   {
-    id: "krungthai",
-    name: "Krungthai Bank",
-    code: "KTB",
-    bg: "bg-[#00a3e0]",
+    id: "personal",
+    name: "Personal / Freelancer Account",
+    code: "INDIVIDUAL",
+    bg: "bg-emerald-600",
     text: "text-white",
-    desc: "PromptPay & Transaction feed • Read-Only",
-    logoUrl: "/logos/KTB.png",
+    desc: "Kittisak Somchai • 3-Month Individual Cash Flow",
+    logoUrl: "/logos/PromptPay.png",
+    badge: "Individual / 3M",
   },
 ];
 
@@ -255,6 +256,9 @@ export default function OnboardingPage() {
     }
 
     setTimeout(() => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("bizmate_selected_bank", selectedBankId);
+      }
       setIsLinkingBank(false);
       setShowConsentSheet(false);
       setBankToast("Bank account linked with verified Read-Only scope 👍");

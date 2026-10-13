@@ -18,6 +18,7 @@ export interface TransactionMetadata {
   delay_days?: number;
   supplier_id?: string;
   cny_amount?: number;
+  jpy_amount?: number;
   fx_rate?: number;
   recipient_bank?: string;
   verified_registry?: boolean;
@@ -72,11 +73,14 @@ export interface SupplierHistory {
   name: string;
   supplierId: string;
   totalTransfersCount: number;
+  totalOrdersCount: number;
   totalCnySpent: number;
   totalThbSpent: number;
   monthsActive: number;
   verifiedRail: boolean;
   pendingOrderCny: number;
+  pendingOrderCurrency: string;
+  pendingOrderAmount: number;
   pendingOrderThb: number;
   pendingDueDate: string;
 }
@@ -89,18 +93,59 @@ export interface HealthScoreFactor {
   evidence: string;
 }
 
-// Global cache for parsed statement
-let cachedTransactions: Transaction[] | null = null;
+// Dataset mapping per connected bank
+export const BANK_DATASETS: Record<string, { file: string; defaultBuffer: number; defaultCompany: string; bankName: string }> = {
+  kbank: {
+    file: "mock_financial_statement_365d.json",
+    defaultBuffer: 80000.0,
+    defaultCompany: "Ploy Select Co., Ltd.",
+    bankName: "Kasikornbank Operating Account",
+  },
+  scb: {
+    file: "mock_statement_scb_apex.json",
+    defaultBuffer: 150000.0,
+    defaultCompany: "Apex Craft Furniture & Interior Co., Ltd.",
+    bankName: "Siam Commercial Bank Corporate",
+  },
+  bbl: {
+    file: "mock_statement_bbl_bioharvest.json",
+    defaultBuffer: 100000.0,
+    defaultCompany: "BioHarvest Agro Tech Co., Ltd.",
+    bankName: "Bangkok Bank iCash Operating",
+  },
+  personal: {
+    file: "mock_statement_personal_3m.json",
+    defaultBuffer: 15000.0,
+    defaultCompany: "Kittisak Somchai (Freelance Creator)",
+    bankName: "Kasikornbank Personal Savings (3 Months)",
+  },
+};
 
-export function getTransactions(): Transaction[] {
-  if (cachedTransactions) return cachedTransactions;
-  const filePath = path.join(process.cwd(), "data", "mock_financial_statement_365d.json");
+// Global cache for parsed statements by bank
+const cachedTransactionsByBank: Record<string, Transaction[]> = {};
+
+export function normalizeBankId(bankId?: string | null): string {
+  if (!bankId) return "kbank";
+  const lower = bankId.toLowerCase();
+  if (lower.includes("scb") || lower.includes("siam")) return "scb";
+  if (lower.includes("bbl") || lower.includes("bangkok")) return "bbl";
+  if (lower.includes("personal") || lower.includes("mock4") || lower.includes("indiv") || lower.includes("3m")) return "personal";
+  return "kbank";
+}
+
+export function getTransactions(bankId?: string | null): Transaction[] {
+  const key = normalizeBankId(bankId);
+  if (cachedTransactionsByBank[key]) return cachedTransactionsByBank[key];
+
+  const config = BANK_DATASETS[key] || BANK_DATASETS.kbank;
+  const filePath = path.join(process.cwd(), "data", config.file);
   if (!fs.existsSync(filePath)) {
-    throw new Error(`mock_financial_statement_365d.json not found at ${filePath}`);
+    throw new Error(`${config.file} not found at ${filePath}`);
   }
   const raw = fs.readFileSync(filePath, "utf8");
-  cachedTransactions = JSON.parse(raw) as Transaction[];
-  return cachedTransactions;
+  const parsed = JSON.parse(raw) as Transaction[];
+  cachedTransactionsByBank[key] = parsed;
+  return parsed;
 }
 
 // PRD Reference Date: Monday, 12 October 2026, 09:41 AM ICT
@@ -110,31 +155,38 @@ export const SAFETY_BUFFER_THB = 80000.0;
 /**
  * Returns latest transaction before or at reference date
  */
-export function getCurrentStateAtReferenceDate() {
-  const all = getTransactions();
+export function getCurrentStateAtReferenceDate(bankId?: string | null) {
+  const all = getTransactions(bankId);
+  const key = normalizeBankId(bankId);
+  const config = BANK_DATASETS[key] || BANK_DATASETS.kbank;
   const pastTxns = all.filter((t) => t.datetime <= REFERENCE_DATE_ISO);
   const latest = pastTxns[pastTxns.length - 1];
 
   return {
     referenceDate: REFERENCE_DATE_ISO,
-    currentCashBalance: latest ? latest.balance_after : 145000.0,
+    currentCashBalance: latest ? latest.balance_after : (all[all.length - 1]?.balance_after || 145000.0),
     formattedBalance: latest ? `฿${latest.balance_after.toLocaleString("th-TH", { maximumFractionDigits: 0 })}` : "฿145,000",
-    safetyBuffer: SAFETY_BUFFER_THB,
+    safetyBuffer: config.defaultBuffer,
     latestTransaction: latest,
     totalPastTransactionsCount: pastTxns.length,
+    bankName: config.bankName,
+    company: config.defaultCompany,
   };
 }
 
 /**
  * Calculates 13-Week Cash Radar Forecast from 12 Oct 2026 to 10 Jan 2027
  */
-export function calculate13WeekCashRadar(): WeekForecast[] {
-  const all = getTransactions();
+export function calculate13WeekCashRadar(bankId?: string | null): WeekForecast[] {
+  const all = getTransactions(bankId);
+  const key = normalizeBankId(bankId);
+  const config = BANK_DATASETS[key] || BANK_DATASETS.kbank;
+  const safetyBuffer = config.defaultBuffer;
   const weeks: WeekForecast[] = [];
 
   // Week 1 starts Monday 12 Oct 2026
   const w1Start = new Date("2026-10-12T00:00:00+07:00");
-  let runningBal = getCurrentStateAtReferenceDate().currentCashBalance;
+  let runningBal = getCurrentStateAtReferenceDate(bankId).currentCashBalance;
 
   for (let w = 0; w < 13; w++) {
     const start = new Date(w1Start.getTime() + w * 7 * 24 * 60 * 60 * 1000);
@@ -211,64 +263,100 @@ export function calculate13WeekCashRadar(): WeekForecast[] {
 }
 
 /**
- * Calculates B2B Buyer Habits
+ * Calculates B2B Buyer Habits dynamically from statement transactions
  */
-export function getBuyerHabits(): DebtorHabit[] {
-  const all = getTransactions();
+export function getBuyerHabits(bankId?: string | null): DebtorHabit[] {
+  const all = getTransactions(bankId);
+  const key = normalizeBankId(bankId);
 
-  // 1. Siam Gadget Hub
-  const siamTxns = all.filter((t) => t.counterparty_name.includes("Siam Gadget Hub"));
-  const siamTotal = siamTxns.reduce((sum, t) => sum + t.amount, 0);
+  // Filter transactions categorized as B2B_RECEIVABLE or FREELANCE_PAYMENT
+  const receivableTxns = all.filter(
+    (t) => t.category === "B2B_RECEIVABLE" || t.category === "FREELANCE_PAYMENT"
+  );
 
-  // 2. Boutique Siam
-  const boutiqueTxns = all.filter((t) => t.counterparty_name.includes("Boutique Siam"));
-  const boutiqueTotal = boutiqueTxns.reduce((sum, t) => sum + t.amount, 0);
+  const counterpartyGroups = new Map<string, Transaction[]>();
+  receivableTxns.forEach((t) => {
+    const list = counterpartyGroups.get(t.counterparty_name) || [];
+    list.push(t);
+    counterpartyGroups.set(t.counterparty_name, list);
+  });
 
-  return [
-    {
-      name: "Siam Gadget Hub Co., Ltd.",
-      habit: "EXCELLENT",
-      averageDelayDays: 0,
-      totalPaidPastYear: Math.round(siamTotal),
-      currentOverdueAmount: 0,
-      invoiceStatus: "PAID_ON_TIME",
-    },
-    {
-      name: "Boutique Siam Partnership",
-      habit: "HABITUAL_LATE",
-      averageDelayDays: 21.4,
-      totalPaidPastYear: Math.round(boutiqueTotal),
-      currentOverdueAmount: 35000.0,
-      invoiceStatus: "OVERDUE_21_DAYS",
-    },
-  ];
+  const habits: DebtorHabit[] = [];
+  counterpartyGroups.forEach((txns, name) => {
+    const totalPaid = txns.filter((t) => t.datetime <= REFERENCE_DATE_ISO).reduce((s, t) => s + t.amount, 0);
+    const overdueTxns = txns.filter((t) => t.metadata?.invoice_no || t.metadata?.payment_habit === "HABITUAL_LATE" || t.counterparty_name.includes("Boutique") || t.counterparty_name.includes("Tokyo") || t.counterparty_name.includes("Chao Phraya"));
+    
+    const isLate = overdueTxns.length > 0;
+    const overdueAmt = isLate ? (overdueTxns[0].amount || (key === "scb" ? 78000 : key === "bbl" ? 54000 : 35000)) : 0;
+    const avgDelay = isLate ? (overdueTxns[0].metadata?.delay_days || 21.4) : 0;
+
+    habits.push({
+      name,
+      habit: isLate ? "HABITUAL_LATE" : "EXCELLENT",
+      averageDelayDays: avgDelay,
+      totalPaidPastYear: Math.round(totalPaid),
+      currentOverdueAmount: overdueAmt,
+      invoiceStatus: isLate ? `OVERDUE_${Math.round(avgDelay)}_DAYS` : "PAID_ON_TIME",
+    });
+  });
+
+  // Fallback defaults if dataset has no B2B debtors (e.g. personal account)
+  if (habits.length === 0) {
+    if (key === "personal") {
+      return [
+        {
+          name: "Client Web Development Transfer",
+          habit: "EXCELLENT",
+          averageDelayDays: 0,
+          totalPaidPastYear: 145000,
+          currentOverdueAmount: 0,
+          invoiceStatus: "PAID_ON_TIME",
+        },
+      ];
+    }
+  }
+
+  return habits;
 }
 
 /**
- * Analyzes Cross-Border Supplier Verified Trade (Shenzhen Chen Tech)
+ * Analyzes Cross-Border Supplier Verified Trade dynamically from statement
  */
-export function getSupplierHistory(): SupplierHistory {
-  const all = getTransactions();
-  const chenTxns = all.filter(
-    (t) => t.counterparty_name.includes("Shenzhen Chen Tech") && t.category === "SUPPLIER_PURCHASE"
-  );
+export function getSupplierHistory(bankId?: string | null): SupplierHistory {
+  const all = getTransactions(bankId);
+  const key = normalizeBankId(bankId);
 
-  const completed = chenTxns.filter((t) => t.datetime <= REFERENCE_DATE_ISO);
-  const pending = chenTxns.find((t) => t.datetime > REFERENCE_DATE_ISO);
+  const supplierTxns = all.filter((t) => t.category === "SUPPLIER_PURCHASE");
+  const completed = supplierTxns.filter((t) => t.datetime <= REFERENCE_DATE_ISO);
+  const pending = supplierTxns.find((t) => t.datetime > REFERENCE_DATE_ISO);
 
   const totalThb = completed.reduce((sum, t) => sum + t.amount, 0);
-  const totalCny = completed.reduce((sum, t) => sum + (t.metadata?.cny_amount || 0), 0);
+  const totalCny = completed.reduce((sum, t) => sum + (t.metadata?.cny_amount || t.metadata?.jpy_amount || 0), 0);
+
+  // Resolve main supplier name from dataset
+  const mainSupplierName = pending?.counterparty_name || completed[0]?.counterparty_name || (
+    key === "scb" ? "Osaka Timber & Veneer Mills Co., Ltd." :
+    key === "bbl" ? "Heilongjiang AgroChem Precision Ltd." :
+    key === "personal" ? "None (Individual Account)" :
+    "Shenzhen Chen Tech Electronics Co., Ltd."
+  );
+
+  const pendingAmt = pending?.metadata?.cny_amount || pending?.metadata?.jpy_amount || (key === "scb" ? 320000 : key === "bbl" ? 180000 : key === "personal" ? 0 : 100000.0);
+  const currencySymbol = key === "scb" ? "¥" : key === "bbl" ? "¥" : key === "personal" ? "฿" : "¥";
 
   return {
-    name: "Shenzhen Chen Tech Electronics Co., Ltd.",
-    supplierId: "CHEN-TECH-SZ",
+    name: mainSupplierName,
+    supplierId: pending?.metadata?.supplier_id || (key === "scb" ? "OSAKA-TIMBER-JP" : key === "bbl" ? "AGROCHEM-HLJ" : "CHEN-TECH-SZ"),
     totalTransfersCount: completed.length,
+    totalOrdersCount: supplierTxns.length,
     totalCnySpent: Math.round(totalCny),
     totalThbSpent: Math.round(totalThb),
-    monthsActive: 12,
-    verifiedRail: true,
-    pendingOrderCny: pending?.metadata?.cny_amount || 100000.0,
-    pendingOrderThb: pending?.amount || 482500.0,
+    monthsActive: key === "personal" ? 3 : 12,
+    verifiedRail: key !== "personal",
+    pendingOrderCny: pendingAmt,
+    pendingOrderCurrency: currencySymbol,
+    pendingOrderAmount: pendingAmt,
+    pendingOrderThb: pending?.amount || (key === "scb" ? 590000 : key === "bbl" ? 420000 : key === "personal" ? 0 : 482500.0),
     pendingDueDate: pending?.datetime || "2026-10-26T10:00:00+07:00",
   };
 }
@@ -276,8 +364,10 @@ export function getSupplierHistory(): SupplierHistory {
 /**
  * Computes 7-factor Financial Health Score from ledger signals
  */
-export function getHealthScoreBreakdown() {
-  const all = getTransactions();
+export function getHealthScoreBreakdown(bankId?: string | null) {
+  const all = getTransactions(bankId);
+  const key = normalizeBankId(bankId);
+  const config = BANK_DATASETS[key] || BANK_DATASETS.kbank;
 
   // Factor 1: Overdraft / Bounced check occurrences
   const overdraftIncidents = all.filter((t) => t.balance_after < 0).length;
@@ -287,35 +377,36 @@ export function getHealthScoreBreakdown() {
   const credits = all.filter((t) => t.type === "CREDIT").reduce((s, t) => s + t.amount, 0);
   const debits = all.filter((t) => t.type === "DEBIT").reduce((s, t) => s + t.amount, 0);
   const ratio = credits / (debits || 1);
-  const f2Score = ratio >= 1.0 ? 82 : 60;
+  const f2Score = ratio >= 1.0 ? 84 : 60;
 
   // Factor 3: Verified Supplier Trade longevity
-  const chenCount = all.filter((t) => t.counterparty_name.includes("Shenzhen Chen Tech")).length;
-  const f3Score = chenCount >= 5 ? 90 : 70;
+  const supplierTxns = all.filter((t) => t.category === "SUPPLIER_PURCHASE");
+  const f3Score = supplierTxns.length >= 5 ? 90 : (key === "personal" ? 75 : 70);
 
   // Factor 4: Sales Channel Diversification
   const channels = new Set(all.map((t) => t.channel));
-  const f4Score = channels.size >= 5 ? 88 : 75;
+  const f4Score = channels.size >= 4 ? 88 : 72;
 
   // Factor 5: Debtor Payment Collection Regularity
-  const f5Score = 68; // Pulled down by Boutique Siam habitual late payments
+  const lateDebtors = all.filter((t) => t.metadata?.payment_habit === "HABITUAL_LATE" || t.counterparty_name.includes("Boutique") || t.counterparty_name.includes("Tokyo") || t.counterparty_name.includes("Chao Phraya"));
+  const f5Score = lateDebtors.length > 0 ? 68 : 92;
 
   // Factor 6: Cash Flow Buffer Adherence
-  const bufferBreaches = all.filter((t) => t.balance_after < SAFETY_BUFFER_THB).length;
-  const f6Score = bufferBreaches <= 15 ? 78 : 50;
+  const bufferBreaches = all.filter((t) => t.balance_after < config.defaultBuffer).length;
+  const f6Score = bufferBreaches <= 15 ? 80 : 55;
 
   // Factor 7: Risk & Fraud Defense
   const blockedAnomalies = all.filter((t) => t.category === "SECURITY_ANOMALY_BLOCKED").length;
-  const f7Score = blockedAnomalies >= 2 ? 95 : 80;
+  const f7Score = blockedAnomalies >= 2 ? 95 : 85;
 
   const factors: HealthScoreFactor[] = [
-    { name: "Zero Overdraft / Hygiene", score: f1Score, weight: 0.15, status: "EXCELLENT", evidence: "0 bounced checks or overdrafts in 366 days" },
-    { name: "Debt-to-Income Stability", score: f2Score, weight: 0.15, status: "GOOD", evidence: `Operating ratio ${ratio.toFixed(2)}x across 12 months` },
-    { name: "Verified Cross-Border Trade", score: f3Score, weight: 0.15, status: "EXCELLENT", evidence: "12-month unbroken trade history with Shenzhen Chen Tech" },
-    { name: "Omnichannel Revenue Spread", score: f4Score, weight: 0.15, status: "EXCELLENT", evidence: `${channels.size} active sales channels (Shopee, TikTok, Lazada, QR)` },
-    { name: "Debtor Regularity & Recovery", score: f5Score, weight: 0.15, status: "ATTENTION", evidence: "Boutique Siam 21-day average delay lowers score" },
-    { name: "Operating Buffer Discipline", score: f6Score, weight: 0.15, status: "GOOD", evidence: "Preserves ฿80k buffer across routine cycles" },
-    { name: "Risk Defense & Verification", score: f7Score, weight: 0.1, status: "EXCELLENT", evidence: "2 phishing and predatory loan attempts hard-blocked" },
+    { name: "Zero Overdraft / Hygiene", score: f1Score, weight: 0.15, status: "EXCELLENT", evidence: `0 overdrafts in ${all.length} transactions recorded` },
+    { name: "Debt-to-Income Stability", score: f2Score, weight: 0.15, status: "GOOD", evidence: `Operating ratio ${ratio.toFixed(2)}x cash generation` },
+    { name: "Verified Trade Activity", score: f3Score, weight: 0.15, status: "EXCELLENT", evidence: `${supplierTxns.length} verified trade invoices processed` },
+    { name: "Channel Revenue Spread", score: f4Score, weight: 0.15, status: "EXCELLENT", evidence: `${channels.size} active operational payment channels` },
+    { name: "Debtor Regularity & Recovery", score: f5Score, weight: 0.15, status: lateDebtors.length > 0 ? "ATTENTION" : "EXCELLENT", evidence: lateDebtors.length > 0 ? "Flagged delayed receivables lowering collection score" : "All customer receivables settle within term" },
+    { name: "Operating Buffer Discipline", score: f6Score, weight: 0.15, status: "GOOD", evidence: `Preserves ฿${config.defaultBuffer.toLocaleString()} buffer across baseline cycles` },
+    { name: "Risk Defense & Verification", score: f7Score, weight: 0.1, status: "EXCELLENT", evidence: "No unauthorized payment rails or security breaches" },
   ];
 
   const overallScore = Math.round(
@@ -323,9 +414,9 @@ export function getHealthScoreBreakdown() {
   );
 
   return {
-    overallScore, // 78
-    ratingGrade: "Grade B+",
-    creditStatus: "Prime MSME Credit Line Eligible",
+    overallScore,
+    ratingGrade: overallScore >= 80 ? "Grade A" : "Grade B+",
+    creditStatus: overallScore >= 75 ? "Prime MSME Credit Line Eligible" : "Standard Tier",
     factors,
   };
 }
@@ -333,24 +424,28 @@ export function getHealthScoreBreakdown() {
 /**
  * Returns security anomalies and intercepted scams
  */
-export function getSecurityAnomalies() {
-  const all = getTransactions();
+export function getSecurityAnomalies(bankId?: string | null) {
+  const all = getTransactions(bankId);
   return all.filter((t) => t.category === "SECURITY_ANOMALY_BLOCKED");
 }
 
 /**
- * Full aggregated financial package
+ * Full aggregated financial package per connected bank
  */
-export function getFinancialSummary() {
-  const state = getCurrentStateAtReferenceDate();
-  const cashRadarWeeks = calculate13WeekCashRadar();
-  const buyerHabits = getBuyerHabits();
-  const supplierHistory = getSupplierHistory();
-  const healthScore = getHealthScoreBreakdown();
-  const anomalies = getSecurityAnomalies();
+export function getFinancialSummary(bankId?: string | null) {
+  const state = getCurrentStateAtReferenceDate(bankId);
+  const cashRadarWeeks = calculate13WeekCashRadar(bankId);
+  const buyerHabits = getBuyerHabits(bankId);
+  const supplierHistory = getSupplierHistory(bankId);
+  const healthScore = getHealthScoreBreakdown(bankId);
+  const anomalies = getSecurityAnomalies(bankId);
+  const key = normalizeBankId(bankId);
+  const config = BANK_DATASETS[key] || BANK_DATASETS.kbank;
 
   return {
-    company: "Ploy Select Co., Ltd.",
+    bankId: key,
+    bankName: config.bankName,
+    company: config.defaultCompany,
     referenceDate: state.referenceDate,
     currentCashToday: state.currentCashBalance,
     formattedCurrentCash: state.formattedBalance,
@@ -360,6 +455,7 @@ export function getFinancialSummary() {
     supplierHistory,
     healthScore,
     anomaliesCount: anomalies.length,
-    totalTransactionsInStatement: getTransactions().length,
+    totalTransactionsInStatement: getTransactions(bankId).length,
+    isPersonal: key === "personal",
   };
 }

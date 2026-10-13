@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { UserProfileMenu } from "@/app/components/UserProfileMenu";
@@ -137,6 +138,8 @@ interface FinancialSummaryState {
     monthsActive: number;
     verifiedRail: boolean;
     pendingOrderCny: number;
+    pendingOrderCurrency: string;
+    pendingOrderAmount: number;
     pendingOrderThb: number;
     pendingDueDate: string;
   };
@@ -192,11 +195,15 @@ export default function DashboardPage() {
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [selectedBank, setSelectedBank] = useState<string>("kbank");
 
-  // Check stored bank connection state on mount
+  // Check stored bank connection state and selected bank on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedBankState = localStorage.getItem("bizmate_bank_connected");
+      const storedBankChoice = localStorage.getItem("bizmate_selected_bank") || "kbank";
+      setSelectedBank(storedBankChoice);
+
       // Default to true if already connected or previously set, false if explicitly reset or first run
       if (storedBankState === "true") {
         setIsBankConnected(true);
@@ -209,7 +216,14 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Fetch live statement data (mock_financial_statement_365d.json) ONLY when bank is connected
+  const handleSelectBank = (bankId: string) => {
+    setSelectedBank(bankId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bizmate_selected_bank", bankId);
+    }
+  };
+
+  // Fetch live statement data ONLY when bank is connected
   useEffect(() => {
     if (!isBankConnected) {
       setFinancialSummary(null);
@@ -221,23 +235,23 @@ export default function DashboardPage() {
       return;
     }
 
-    // Fetch live financial summary computed from mock_financial_statement_365d.json
-    fetch("/api/financial/summary")
+    // Fetch live financial summary computed for selectedBank
+    fetch(`/api/financial/summary?bankId=${selectedBank}`)
       .then((r) => r.json())
       .then((data) => {
         if (data && data.cashRadarWeeks) {
           setFinancialSummary(data);
           setWeeksData(data.cashRadarWeeks);
-          const conflictIdx = data.cashRadarWeeks.findIndex((w: WeekData) => w.status === "below");
+          const conflictIdx = data.cashRadarWeeks.findIndex((w: WeekData) => w.status === "below" || w.status === "short");
           const targetIdx = conflictIdx !== -1 ? conflictIdx : 2;
-          setSelectedWeek(data.cashRadarWeeks[targetIdx]);
+          setSelectedWeek(data.cashRadarWeeks[targetIdx] || data.cashRadarWeeks[0]);
           setSelectedWeekIndex(targetIdx);
         }
       })
       .catch((err) => console.error("Error loading financial summary:", err));
 
-    // Fetch initial sample transactions from statement
-    fetch("/api/financial/transactions?limit=8")
+    // Fetch initial sample transactions from statement for selectedBank
+    fetch(`/api/financial/transactions?limit=8&bankId=${selectedBank}`)
       .then((r) => r.json())
       .then((data) => {
         if (data && data.transactions) {
@@ -249,7 +263,7 @@ export default function DashboardPage() {
     // Fetch inbox items count & items
     const session = getSession();
     if (session?.token) {
-      fetch(`/api/inbox?bankConnected=true`, {
+      fetch(`/api/inbox?bankConnected=true&bankId=${selectedBank}`, {
         headers: { Authorization: `Bearer ${session.token}` },
       })
         .then((r) => r.json())
@@ -261,7 +275,7 @@ export default function DashboardPage() {
         })
         .catch(() => {});
     }
-  }, [isBankConnected]);
+  }, [isBankConnected, selectedBank]);
 
   // Load Session and verify data
   useEffect(() => {
@@ -397,6 +411,8 @@ export default function DashboardPage() {
         activeNav="dashboard"
         onDevReset={() => setShowConfirmModal(true)}
         isBankConnected={isBankConnected}
+        selectedBank={selectedBank}
+        onSelectBank={handleSelectBank}
         onToggleBank={() => {
           const nextState = !isBankConnected;
           setIsBankConnected(nextState);
@@ -441,7 +457,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2.5">
                     <span className="text-xs font-mono font-bold uppercase tracking-wider text-sky-200 dark:text-sky-300 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-                      Live Cash Today • Kasikornbank Main
+                      Live Cash Today • {financialSummary?.company || "Operating Account"}
                     </span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/15 dark:bg-slate-800/80 text-white dark:text-slate-200 border border-white/20 dark:border-slate-700">
                       Read-Only Sync
@@ -452,40 +468,70 @@ export default function DashboardPage() {
                     <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-mono drop-shadow-sm">
                       {financialSummary?.formattedCurrentCash || "฿145,628"}
                     </h1>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
-                      +฿35,000 incoming via Boutique Siam
-                    </span>
+                    {financialSummary?.buyerHabits?.[0] && (
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                        +฿{financialSummary.buyerHabits[0].currentOverdueAmount.toLocaleString()} incoming via {financialSummary.buyerHabits[0].name}
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-xs text-blue-100 dark:text-slate-300 mt-2 max-w-lg leading-relaxed">
-                    Default Safety Buffer: <strong className="text-white font-bold">฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"}</strong>. Earliest projected low-cash threshold:{" "}
-                    <span
-                      className="text-amber-300 dark:text-amber-400 font-bold underline cursor-pointer hover:text-white transition-colors"
-                      onClick={() => {
-                        const target = weeksData[2] || WEEKS_DATA[2];
-                        setSelectedWeek(target);
-                        setSelectedWeekIndex(2);
-                      }}
-                    >
-                      Week 3 (26 Oct)
-                    </span>{" "}
-                    due to Chen Tech ¥100,000 payment.
+                    Default Safety Buffer: <strong className="text-white font-bold">฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"}</strong>.
+                    {(() => {
+                      const conflictWeek = weeksData.find((w) => w.status === "below" || w.status === "short");
+                      if (conflictWeek) {
+                        return (
+                          <>
+                            {" "}Earliest projected low-cash threshold:{" "}
+                            <span
+                              className="text-amber-300 dark:text-amber-400 font-bold underline cursor-pointer hover:text-white transition-colors"
+                              onClick={() => {
+                                const idx = weeksData.indexOf(conflictWeek);
+                                setSelectedWeek(conflictWeek);
+                                setSelectedWeekIndex(idx !== -1 ? idx : 0);
+                              }}
+                            >
+                              {conflictWeek.week} ({conflictWeek.date})
+                            </span>{" "}
+                            {financialSummary?.supplierHistory?.name && financialSummary.supplierHistory.pendingOrderAmount > 0
+                              ? `due to ${financialSummary.supplierHistory.name} ${financialSummary.supplierHistory.pendingOrderCurrency || "¥"}${financialSummary.supplierHistory.pendingOrderAmount.toLocaleString()} payment.`
+                              : "due to planned operational expenses."}
+                          </>
+                        );
+                      }
+                      return (
+                        <> Liquidity buffer maintained safely across all projected weeks.</>
+                      );
+                    })()}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
-                  <Link
-                    href="/onboarding"
-                    className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                  >
-                    Manage Banks &amp; Feeds ⚙️
-                  </Link>
-                  <Link
-                    href="#joint-plan"
-                    className="px-4 py-2.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white text-xs font-bold shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer"
-                  >
-                    View Joint Remedy Plan →
-                  </Link>
+                <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                    <Link
+                      href="/onboarding"
+                      className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer text-center"
+                    >
+                      Manage Banks &amp; Feeds ⚙️
+                    </Link>
+                    <Link
+                      href="#joint-plan"
+                      className="px-4 py-2.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white text-xs font-bold shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer text-center"
+                    >
+                      View Joint Remedy Plan →
+                    </Link>
+                  </div>
+
+                  {/* Mascot Bot2 sitting inside hero card */}
+                  <div className="hidden md:block relative w-20 h-20 lg:w-24 lg:h-24 shrink-0 drop-shadow-xl hover:scale-105 transition-transform duration-300">
+                    <Image
+                      src="/images/bot2.png"
+                      alt="BizMate Mascot Bot"
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)]"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -616,8 +662,17 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Illustration Accent */}
+              {/* Illustration Accent & Sitting Bot2 Mascot */}
               <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="hidden sm:block absolute bottom-4 right-8 w-28 h-28 lg:w-36 lg:h-36 drop-shadow-2xl pointer-events-none">
+                <Image
+                  src="/images/bot2.png"
+                  alt="BizMate Mascot Bot"
+                  width={144}
+                  height={144}
+                  className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.3)] animate-float"
+                />
+              </div>
             </div>
           )}
         </section>
@@ -637,13 +692,17 @@ export default function DashboardPage() {
             <div className="my-2">
               <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">
                 {isBankConnected ? (
-                  `฿${financialSummary?.buyerHabits?.[1]?.currentOverdueAmount?.toLocaleString() || "35,000"}`
+                  `฿${financialSummary?.buyerHabits?.[0]?.currentOverdueAmount?.toLocaleString() || "0"}`
                 ) : (
                   <span className="text-slate-400 font-normal text-xl">฿--</span>
                 )}
               </p>
               <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5 font-medium">
-                {isBankConnected ? "Boutique Siam (21 days overdue)" : "Awaiting Bank & AR Ledger sync"}
+                {isBankConnected
+                  ? financialSummary?.buyerHabits?.[0]
+                    ? `${financialSummary.buyerHabits[0].name} (${financialSummary.buyerHabits[0].averageDelayDays}d avg delay)`
+                    : "No overdue receivables"
+                  : "Awaiting Bank & AR Ledger sync"}
               </p>
             </div>
             {isBankConnected ? (
@@ -677,7 +736,7 @@ export default function DashboardPage() {
               </p>
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 font-medium">
                 {isBankConnected
-                  ? `${financialSummary?.healthScore?.ratingGrade || "Grade B+"} • Prime Credit Eligible`
+                  ? `${financialSummary?.healthScore?.ratingGrade || "Grade B+"} • ${financialSummary?.healthScore?.creditStatus || "Prime Credit Eligible"}`
                   : "Awaiting 365-day cash flow history"}
               </p>
             </div>
@@ -733,10 +792,10 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                      The Agents&apos; Joint Plan: Resolve 26 Oct Cash Dip
+                      The Agents&apos; Joint Plan: Liquidity &amp; Safety Optimization
                     </h2>
                     <p className="text-xs text-slate-600 dark:text-slate-400">
-                      3-step remedy to safeguard your ฿80k safety buffer with zero debt.
+                      Synchronized remedy safeguarding your ฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"} cash buffer.
                     </p>
                   </div>
                 </div>
@@ -751,7 +810,7 @@ export default function DashboardPage() {
                     <span>→</span>
                   </Link>
                   <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-2.5 py-1 rounded-xl border border-amber-300 dark:border-amber-800">
-                    Glass Box
+                    Transparent Deliberation
                   </span>
                 </div>
               </div>
@@ -764,14 +823,16 @@ export default function DashboardPage() {
                       Step 1 • Collections
                     </span>
                     <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
-                      +฿35,000
+                      {financialSummary?.buyerHabits?.[0] ? `+฿${financialSummary.buyerHabits[0].currentOverdueAmount.toLocaleString()}` : "AR Clean"}
                     </span>
                   </div>
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                    Recover ฿35k Overdue AR
+                    {financialSummary?.buyerHabits?.[0] ? `Recover AR from ${financialSummary.buyerHabits[0].name}` : "Monitor Inflow Settlement"}
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Polite LINE reminder ready for Boutique Siam.
+                    {financialSummary?.buyerHabits?.[0]
+                      ? `Automated polite reminder prepared (${financialSummary.buyerHabits[0].invoiceStatus}).`
+                      : "All receivables currently settled on schedule."}
                   </p>
                 </div>
 
@@ -785,10 +846,14 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                    60-Day Supplier Terms
+                    {financialSummary?.supplierHistory && financialSummary.supplierHistory.pendingOrderAmount > 0
+                      ? `Terms with ${financialSummary.supplierHistory.name}`
+                      : "Working Capital Optimization"}
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Defer ¥100k Chen Tech invoice to 25 Dec @ 1.1% fee.
+                    {financialSummary?.supplierHistory && financialSummary.supplierHistory.pendingOrderAmount > 0
+                      ? `Extend ${financialSummary.supplierHistory.pendingOrderCurrency || "¥"}${financialSummary.supplierHistory.pendingOrderAmount.toLocaleString()} payment terms to protect safety buffer.`
+                      : "Maintain emergency cash reserve and sweep excess yield."}
                   </p>
                 </div>
 
@@ -802,10 +867,12 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                    Verified FX Rail Transfer
+                    Verified Disbursement Rail
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Locked CCB rail with Face ID biometric check.
+                    {financialSummary?.supplierHistory?.name
+                      ? `Locked verified rail to ${financialSummary.supplierHistory.name} with biometric step-up.`
+                      : "Protected transfers with biometric step-up and anti-phishing rail."}
                   </p>
                 </div>
               </div>

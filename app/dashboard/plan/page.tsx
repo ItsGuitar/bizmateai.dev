@@ -191,6 +191,8 @@ export default function CollaborativePlanPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [expandedStepId, setExpandedStepId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"trace" | "comparison" | "actions">("trace");
+  const [selectedBank, setSelectedBank] = useState<string>("kbank");
+  const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
     const session = getSession();
@@ -199,7 +201,192 @@ export default function CollaborativePlanPage() {
       return;
     }
     setUser(session.user);
+
+    if (typeof window !== "undefined") {
+      const storedBank = localStorage.getItem("bizmate_selected_bank") || "kbank";
+      setSelectedBank(storedBank);
+      fetch(`/api/financial/summary?bankId=${storedBank}`)
+        .then((r) => r.json())
+        .then((d) => setSummary(d))
+        .catch(() => {});
+    }
   }, [router]);
+
+  const handleSelectBank = (bankId: string) => {
+    setSelectedBank(bankId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bizmate_selected_bank", bankId);
+    }
+    fetch(`/api/financial/summary?bankId=${bankId}`)
+      .then((r) => r.json())
+      .then((d) => setSummary(d))
+      .catch(() => {});
+  };
+
+  const debtor = summary?.buyerHabits?.[0];
+  const supplier = summary?.supplierHistory;
+  const safetyBuffer = summary?.safetyBuffer || 80000;
+  const company = summary?.company || "Your Business";
+
+  const dynamicSteps: DeliberationStep[] = [
+    {
+      id: "step-1-cash",
+      stepNumber: 1,
+      agentId: "cash",
+      agentName: "Cash Agent",
+      agentEmoji: "📊",
+      agentRole: "13-Week Cash Radar",
+      agentColor: "#0284C7",
+      title: supplier && supplier.pendingOrderAmount > 0 ? `Flagged Low Cash Week (${supplier.pendingDueDate})` : "Rolling Liquidity Optimization",
+      actionSummary: supplier && supplier.pendingOrderAmount > 0
+        ? `Projected ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} order to ${supplier.name} threatens ฿${safetyBuffer.toLocaleString()} buffer.`
+        : `Monitored 13-week rolling cash flow for ${company} with ฿${safetyBuffer.toLocaleString()} buffer threshold.`,
+      keyMetric: `฿${safetyBuffer.toLocaleString()} Buffer Active`,
+      metricType: "warning",
+      detailedReasoning: supplier && supplier.pendingOrderAmount > 0
+        ? `Outflow to ${supplier.name} due on ${supplier.pendingDueDate} requires collaborative planning across all agents to prevent buffer breach without predatory debt.`
+        : `Autonomous analysis confirms healthy liquidity trajectory under current operating profile.`,
+      dataPoints: [
+        { label: "Company", value: company },
+        { label: "Buffer", value: `฿${safetyBuffer.toLocaleString()}` },
+        { label: "Supplier", value: supplier?.name || "N/A" },
+        { label: "Status", value: "Active Telemetry" },
+      ],
+    },
+    {
+      id: "step-2-collections",
+      stepNumber: 2,
+      agentId: "collections",
+      agentName: "Collections Agent",
+      agentEmoji: "🔔",
+      agentRole: "Smart AR Follow-ups",
+      agentColor: "#F97316",
+      title: debtor ? `Accelerate ${debtor.name} Receivables Recovery` : "Receivables & Inflow Watch",
+      actionSummary: debtor
+        ? `Audited debtor ledger and surfaced ฿${debtor.overdueAmount.toLocaleString()} overdue invoice (${debtor.overdueDays} days late). Courtesy reminder drafted.`
+        : "All counterparty accounts receivable verified current and settled.",
+      keyMetric: debtor ? `+฿${debtor.overdueAmount.toLocaleString()} Inflow` : "AR Clean",
+      metricType: "success",
+      detailedReasoning: debtor
+        ? `${debtor.name} habit analysis indicates positive recovery upon polite follow-up. Recovering internal receivables eliminates outside financing friction.`
+        : "Zero aged invoices overdue across trade counterparties.",
+      dataPoints: [
+        { label: "Debtor", value: debtor?.name || "None Overdue" },
+        { label: "Amount", value: debtor ? `฿${debtor.overdueAmount.toLocaleString()}` : "฿0" },
+        { label: "Overdue Days", value: debtor ? `${debtor.overdueDays} Days` : "0 Days" },
+        { label: "Action", value: debtor ? "LINE Draft Ready" : "Standby" },
+      ],
+    },
+    {
+      id: "step-3-funding",
+      stepNumber: 3,
+      agentId: "funding",
+      agentName: "Funding Agent",
+      agentEmoji: "💰",
+      agentRole: "Working Capital & Terms",
+      agentColor: "#EAB308",
+      title: supplier && supplier.pendingOrderAmount > 0 ? `Negotiate Terms with ${supplier.name}` : "Capital Allocation Strategy",
+      actionSummary: supplier && supplier.pendingOrderAmount > 0
+        ? `Leveraged verified trade track record to extend ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} invoice terms at 1.1% fee.`
+        : "Deploy cash surplus towards operational yield while safeguarding safety buffer.",
+      keyMetric: "Zero High-Cost Debt",
+      metricType: "info",
+      detailedReasoning: supplier && supplier.pendingOrderAmount > 0
+        ? `Supplier terms preserve 100% of buffer liquidity at lowest capital cost (~1.1% fee), outperforming commercial bank loans.`
+        : "Organic cash flow provides full coverage without external credit facilities.",
+      dataPoints: [
+        { label: "Terms Rate", value: "1.1% flat" },
+        { label: "Buffer Impact", value: "100% Preserved" },
+        { label: "Partner Bank", value: "KBANK / SCB / BBL" },
+        { label: "Recommendation", value: "Organic / Low Cost" },
+      ],
+    },
+    {
+      id: "step-4-true-cost",
+      stepNumber: 4,
+      agentId: "true-cost",
+      agentName: "True Cost Agent",
+      agentEmoji: "🔍",
+      agentRole: "APR & Fraud Shield",
+      agentColor: "#EF4444",
+      title: "Blocked Deceptive APRs & Verified Bank Rails",
+      actionSummary: "Intercepted predatory credit solicitations and verified payment routing against counterparty registries.",
+      keyMetric: "365% APR Blocked",
+      metricType: "shield",
+      detailedReasoning:
+        "Evaluated financing advertisements. Flagged illegal daily-rate loans exceeding the 15% statutory APR ceiling. Verified bank settlement rails to eliminate interception fraud.",
+      dataPoints: [
+        { label: "Predatory Rate", value: "1% / day ad" },
+        { label: "Effective APR", value: "365.0% / yr" },
+        { label: "BOT Legal Cap", value: "15.0% max" },
+        { label: "Rail Security", value: "Verified Registry" },
+      ],
+    },
+    {
+      id: "step-5-trust",
+      stepNumber: 5,
+      agentId: "trust",
+      agentName: "Trust Agent",
+      agentEmoji: "🛡️",
+      agentRole: "Security Gatekeeper",
+      agentColor: "#6366F1",
+      title: "Packaged Approval Cards with Biometric Step-Up",
+      actionSummary: "Enforced Zero-Surprise policy. Generated non-destructive inbox items requiring explicit sign-off and Face ID for large disbursements.",
+      keyMetric: "Face ID Required",
+      metricType: "shield",
+      detailedReasoning:
+        "Zero automated executions occur without explicit owner approval. Biometric step-up is strictly enforced on cross-border disbursements.",
+      dataPoints: [
+        { label: "Policy", value: "Zero-Surprise" },
+        { label: "Approvals", value: "Inbox Queued" },
+        { label: "Auth Level", value: "Face ID Step-Up" },
+        { label: "Audit Ledger", value: "SHA-256 Logged" },
+      ],
+    },
+  ];
+
+  const dynamicOptions: OptionComparison[] = [
+    {
+      id: "opt-1",
+      title: supplier && supplier.name ? `60-Day Terms (${supplier.name})` : "Organic Cash Flow Pacing",
+      status: "RECOMMENDED",
+      badgeText: "Recommended (Rank 1)",
+      badgeStyle: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800",
+      cost: "1.1% one-time fee",
+      apr: "6.6% APR equivalent",
+      verdict: "Cheapest capital. Defers major outflows while preserving operating buffer with 0 bank debt.",
+    },
+    {
+      id: "opt-2",
+      title: "Commercial Bank SME Revolver",
+      status: "BACKUP",
+      badgeText: "Evaluated Backup (Rank 2)",
+      badgeStyle: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800",
+      cost: "8.5% - 9.5% APR interest",
+      apr: "9.0% APR per annum",
+      verdict: `Strong fallback. Pre-qualified under Grade ${summary?.healthScore?.ratingGrade || "B+"} credit rating.`,
+    },
+    {
+      id: "opt-3",
+      title: debtor ? `Invoice Factoring (${debtor.name})` : "Invoice Factoring",
+      status: "PARTIAL",
+      badgeText: "Evaluated Partial (Rank 3)",
+      badgeStyle: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-800",
+      cost: "2.5% factoring fee",
+      apr: "15.0% APR equivalent",
+      verdict: debtor ? `Advances 80% of ฿${debtor.overdueAmount.toLocaleString()} AR immediately.` : "Partial capital advance option.",
+    },
+    {
+      id: "opt-4",
+      title: "'Fast Cash 1% a Day' Loan Ad",
+      status: "BLOCKED",
+      badgeText: "BLOCKED - PREDATORY",
+      badgeStyle: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-800",
+      cost: "Deceptive: 'Only 1% / day'",
+      apr: "365.0% Compounded APR",
+      verdict: "Exceeds 15% Bank of Thailand statutory ceiling by 24x. Flagged and rejected.",
+    },
+  ];
 
   const toggleExpand = (id: string) => {
     setExpandedStepId((prev) => (prev === id ? null : id));
@@ -208,7 +395,12 @@ export default function CollaborativePlanPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col pb-16">
       {/* Universal Top Navigation Header */}
-      <AppHeader user={user} activeNav="plan" />
+      <AppHeader
+        user={user}
+        activeNav="plan"
+        selectedBank={selectedBank}
+        onSelectBank={handleSelectBank}
+      />
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full flex-1">
@@ -219,16 +411,16 @@ export default function CollaborativePlanPage() {
               The Agents&apos; Joint Plan
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              How 6 agents synchronized to resolve the 26 Oct cash dip while protecting your ฿80,000 buffer.
+              Liquidity synchronization for {company} protecting your ฿{safetyBuffer.toLocaleString()} safety buffer.
             </p>
           </div>
 
           <Link
-            href="/dashboard#inbox-approvals"
+            href="/inbox"
             className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs self-start sm:self-center flex items-center gap-1.5"
           >
             <span>📬</span>
-            <span>Approval Inbox (3)</span>
+            <span>Approval Inbox</span>
           </Link>
         </div>
 
@@ -241,13 +433,16 @@ export default function CollaborativePlanPage() {
               </div>
               <div>
                 <div className="text-xs font-bold text-white flex items-center gap-2">
-                  <span>Target: 26 Oct Liquidity Dip</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-blue-100">
-                    ¥100k Order
-                  </span>
+                  <span>Target: {company} Liquidity Stabilization</span>
+                  {supplier && supplier.pendingOrderAmount > 0 && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/20 text-blue-100">
+                      {supplier.pendingOrderCurrency || "¥"}{supplier.pendingOrderAmount.toLocaleString()} Pending Order
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-blue-200 mt-0.5">
-                  Recover ฿35k overdue AR + Defer ¥100k for 60 days @ 1.1% fee. 0 bank debt.
+                  {debtor ? `Recover ฿${debtor.overdueAmount.toLocaleString()} overdue AR from ${debtor.name}. ` : "AR ledger clean. "}
+                  {supplier && supplier.pendingOrderAmount > 0 ? `Defer ${supplier.name} order with 0 bank debt.` : `Safeguard ฿${safetyBuffer.toLocaleString()} cash reserve.`}
                 </p>
               </div>
             </div>
@@ -304,7 +499,7 @@ export default function CollaborativePlanPage() {
         {/* TAB 1: DELIBERATION TRACE (Progressive Disclosure / Smooth Accordions) */}
         {activeTab === "trace" && (
           <div className="space-y-3 animate-fade-in-up duration-300">
-            {DELIBERATION_STEPS.map((step, idx) => {
+            {dynamicSteps.map((step, idx) => {
               const isExpanded = expandedStepId === step.id;
               const delayClass =
                 idx === 0
@@ -382,7 +577,7 @@ export default function CollaborativePlanPage() {
                       <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs">
                         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 my-2 shadow-2xs">
                           <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
-                            Glass-Box Reasoning:
+                            Autonomous Reasoning Trace:
                           </span>
                           <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                             {step.detailedReasoning}
@@ -416,7 +611,7 @@ export default function CollaborativePlanPage() {
         {/* TAB 2: COMPARISON (Crisp Visual Cards with Smooth Hover) */}
         {activeTab === "comparison" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 animate-fade-in-up duration-300">
-            {COMPARISON_OPTIONS.map((opt, idx) => (
+            {dynamicOptions.map((opt, idx) => (
               <div
                 key={opt.id}
                 className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg animate-fade-in-up delay-${(idx + 1) * 100} ${
@@ -462,17 +657,17 @@ export default function CollaborativePlanPage() {
                   Step 1 • Collections
                 </span>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white mt-2">
-                  Follow Up ฿35k AR (Boutique Siam)
+                  {debtor ? `Follow Up ฿${debtor.overdueAmount.toLocaleString()} AR (${debtor.name})` : "Receivables Monitor"}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Polite LINE reminder for Invoice #BS-8820 (21.4 days overdue).
+                  {debtor ? `Polite reminder draft (${debtor.overdueDays} days late).` : "All invoices settled."}
                 </p>
               </div>
               <Link
                 href="/inbox?item=collections"
                 className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group-hover:gap-1.5 transition-all"
               >
-                <span>Review Draft in Inbox</span>
+                <span>Review draft in Inbox</span>
                 <span>→</span>
               </Link>
             </div>
@@ -483,38 +678,38 @@ export default function CollaborativePlanPage() {
                   Step 2 • Funding
                 </span>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white mt-2">
-                  Request 60-Day Supplier Terms
+                  {supplier && supplier.pendingOrderAmount > 0 ? `60-Day Terms (${supplier.name})` : "Cash Allocation Pacing"}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Bilingual proposal to defer ¥100k to 25 Dec at 1.1% fee with Mr. Chen.
+                  {supplier && supplier.pendingOrderAmount > 0 ? `Preserves ฿${safetyBuffer.toLocaleString()} buffer at 1.1% fee.` : "Organic liquidity monitoring."}
                 </p>
               </div>
               <Link
                 href="/inbox?item=funding"
                 className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group-hover:gap-1.5 transition-all"
               >
-                <span>Inspect Proposal in Inbox</span>
+                <span>Review terms in Inbox</span>
                 <span>→</span>
               </Link>
             </div>
 
             <div className="group p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
               <div>
-                <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 px-2 py-0.5 rounded">
                   Step 3 • Security &amp; Trust
                 </span>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white mt-2">
-                  Authorize Verified FX Rail
+                  {supplier?.name ? `Disburse Payment to ${supplier.name}` : "Verified Rail Transfer"}
                 </h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Locked to verified CCB recipient account. Requires Face ID sign-off.
+                  Enforces biometric Face ID step-up and verified counterparty rail.
                 </p>
               </div>
               <Link
                 href="/inbox?item=true-cost"
                 className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group-hover:gap-1.5 transition-all"
               >
-                <span>Authorize with Face ID in Inbox</span>
+                <span>Authorize with Face ID</span>
                 <span>→</span>
               </Link>
             </div>
