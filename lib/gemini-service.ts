@@ -51,7 +51,7 @@ REAL-TIME 6-AGENT TELEMETRY & LEDGER SIGNALS:
   }
 
   return `You are BizMate, an autonomous multi-agent financial copilot for MSMEs (operating for the business: "${businessName}").
-You coordinate 6 specialized financial agents under strict Glass-Box AI principles:
+You coordinate 6 specialized financial agents under strict explainable AI principles:
 1. "cash": 13-Week Cash Radar, rolling buffer projections, liquidity stress-testing (Action: /dashboard#joint-plan).
 2. "health": Financial Health Score (0-100), 7-factor hygiene evaluation, credit readiness (Action: /dashboard#health-score).
 3. "funding": Working capital matching, supplier payment term extensions (60 days), cheapest non-bank credit (Action: /dashboard#joint-plan).
@@ -76,13 +76,13 @@ INSTRUCTIONS & STRICT GUARDRAILS:
    - Ground all insights strictly on the 6 Agent telemetry provided above. NEVER hallucinate or assume unverified corporate names or numbers.
 4. AGENT CITATION & ACTION:
    - Select the MOST relevant agent ("cash" | "health" | "funding" | "collections" | "true-cost" | "trust").
-   - Provide transparent glass-box reasoning explaining WHICH data points were inspected.
+   - Provide transparent reasoning explaining WHICH data points were inspected.
    - Provide the native action route corresponding to the workflow.
 5. Return YOUR RESPONSE STRICTLY AS A VALID JSON OBJECT without markdown backticks or commentary with this schema:
 {
   "agentId": "cash" | "health" | "funding" | "collections" | "true-cost" | "trust",
   "content": "Your clear, concise, actionable answer in user's language (English or Thai)",
-  "reasoning": "Glass-box trace explaining what telemetry was analyzed",
+  "reasoning": "Trace explaining what telemetry was analyzed",
   "actionRoute": "/dashboard#joint-plan" | "/dashboard#inbox-approvals" | "/dashboard#health-score" | "/inbox" | "/dashboard"
 }`;
 }
@@ -100,12 +100,8 @@ export async function callGeminiOrFallback(
     try {
       const summary = getFinancialSummary();
       const systemPrompt = getAgentSystemPrompt(userProfile, summary);
-      const modelCandidates = [
-        "gemini-3.5-flash-lite",
-        "gemini-3.8-flash",
-        "gemini-3.5-flash",
-        "gemini-flash-latest"
-      ];
+      // Strictly use ONLY gemini-3.5-flash-lite (15 RPM, 250k TPM, 500 RPD free tier)
+      const model = "gemini-3.5-flash-lite";
 
       const contents = [
         {
@@ -122,52 +118,46 @@ export async function callGeminiOrFallback(
         },
       ];
 
-      for (const model of modelCandidates) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(keyToUse.trim())}`;
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents,
-              generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 800,
-                responseMimeType: "application/json",
-              },
-            }),
-          });
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(keyToUse.trim())}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents,
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 800,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
 
-          if (res.ok) {
-            const data = await res.json();
-            const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (candidateText) {
-              const parsed = JSON.parse(candidateText);
-              if (parsed.content) {
-                const validAgent = ["health", "cash", "funding", "collections", "true-cost", "trust"].includes(parsed.agentId)
-                  ? parsed.agentId
-                  : "trust";
-                return {
-                  agentId: validAgent,
-                  content: parsed.content,
-                  reasoning: parsed.reasoning || `วิเคราะห์ด้วย Google Gemini AI (${model}) ผ่าน Live Financial Statement`,
-                  actionRoute: parsed.actionRoute || "/dashboard#joint-plan",
-                };
-              }
-            }
-          } else {
-            console.warn(`Gemini API (${model}) returned status ${res.status}`);
+      if (res.ok) {
+        const data = await res.json();
+        const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidateText) {
+          const parsed = JSON.parse(candidateText);
+          if (parsed.content) {
+            const validAgent = ["health", "cash", "funding", "collections", "true-cost", "trust"].includes(parsed.agentId)
+              ? parsed.agentId
+              : "trust";
+            return {
+              agentId: validAgent,
+              content: parsed.content,
+              reasoning: parsed.reasoning || `Analyzed with Gemini 3.5 Flash Lite across live telemetry`,
+              actionRoute: parsed.actionRoute || "/dashboard#joint-plan",
+            };
           }
-        } catch (errModel) {
-          console.warn(`Gemini model ${model} error:`, errModel);
         }
+      } else {
+        console.warn(`Gemini API (${model}) returned status ${res.status}`);
       }
     } catch (err) {
-      console.error("Gemini API call failed, gracefully falling back to deterministic agent reasoning:", err);
+      console.error("Gemini API call failed, falling back to deterministic agent reasoning:", err);
     }
   }
 
-  // Graceful deterministic agent reasoning fallback (Glass-Box Axiom 1 & 2)
+  // Graceful deterministic agent reasoning fallback
   return fallbackAgentReasoning(userQuery, userProfile);
 }
 

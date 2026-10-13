@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { getSession } from "@/lib/auth-client";
 
 interface ChatMessage {
@@ -31,6 +32,7 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export function ChatWidget() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -72,7 +74,7 @@ export function ChatWidget() {
           senderType: "AGENT",
           agentId: "trust",
           content: `Hello ${displayName}! Our 6 Autonomous Financial Agents are on standby to monitor your cash liquidity, credit health, accounts receivable, and trade risks. Feel free to ask any financial question in English or ภาษาไทย!`,
-          reasoning: "Glass-Box Collective AI: Synchronized with live operational bank ledger and multi-agent signals.",
+          reasoning: "Collective Multi-Agent Intelligence: Synchronized with live operational bank ledger and multi-agent signals.",
           actionRoute: "/dashboard#joint-plan",
           createdAt: new Date().toISOString(),
         },
@@ -157,6 +159,11 @@ export function ChatWidget() {
     }
   };
 
+  // Hide AI chat and floating button on the Welcome / landing page ('/')
+  if (pathname === "/") {
+    return null;
+  }
+
   return (
     <>
       {/* ========================================================
@@ -199,11 +206,11 @@ export function ChatWidget() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold leading-tight">AI Financial Copilot</h3>
                   <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
-                    {activeApiKey && activeApiKey !== "abcde" ? "Gemini 1.5 Flash" : "Glass Box Engine"}
+                    {activeApiKey && activeApiKey !== "abcde" ? "Gemini 3.5 Flash Lite" : "Rule Engine"}
                   </span>
                 </div>
                 <p className="text-[11px] text-blue-100 font-mono">
-                  Autonomous Multi-Agent Glass Box
+                  Autonomous Multi-Agent Copilot
                 </p>
               </div>
             </div>
@@ -247,7 +254,7 @@ export function ChatWidget() {
                 </a>
               </div>
               <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
-                ใส่ Google Gemini API Key ของคุณที่นี่เพื่อเปิดใช้ AI เต็มรูปแบบ (ใช้ Gemini 1.5 Flash ฟรี 1,500 requests/วัน)
+                Provide your Google Gemini API key here to activate Gemini 3.5 Flash Lite (Free tier: 15 RPM, 250k TPM, 500 RPD).
               </p>
               <div className="flex items-center gap-2">
                 <input

@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       select: { businessName: true, email: true },
     });
 
-    // 2. Multi-Agent Reasoning via Google Gemini AI / Glass Box Fallback (Axiom 1 & 4)
+    // 2. Multi-Agent Reasoning via Google Gemini AI / Deterministic Multi-Agent Fallback (Axiom 1 & 4)
     const agentResult = await callGeminiOrFallback(message, previousMessages, apiKey, {
       businessName: dbUser?.businessName || auth.businessName,
       email: dbUser?.email || auth.email,
