@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { ChatWidget } from "./components/ChatWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col transition-colors" suppressHydrationWarning>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <ChatWidget />
+        </ThemeProvider>
       </body>
     </html>
   );
