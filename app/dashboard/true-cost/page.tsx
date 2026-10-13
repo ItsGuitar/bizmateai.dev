@@ -139,7 +139,8 @@ export default function TrueCostHubPage() {
   const [inputText, setInputText] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
 
   // Payment Confirmation & Biometric Dispatch State
   const [paymentSchedule, setPaymentSchedule] = useState<"due-date" | "today">("due-date");
@@ -157,6 +158,23 @@ export default function TrueCostHubPage() {
   const [calcDailyRate, setCalcDailyRate] = useState<number>(1.0);
   const [calcTenorDays, setCalcTenorDays] = useState<number>(30);
 
+  // Check cooldown status on load
+  const checkCooldownStatus = async (token: string) => {
+    try {
+      const res = await fetch("/api/true-cost/analyze", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.remainingSeconds > 0) {
+          setCooldownSeconds(data.remainingSeconds);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to check cooldown status:", err);
+    }
+  };
+
   useEffect(() => {
     const session = getSession();
     if (!session) {
@@ -164,6 +182,7 @@ export default function TrueCostHubPage() {
       return;
     }
     setUser(session.user);
+    checkCooldownStatus(session.token);
 
     if (typeof window !== "undefined") {
       const storedBank = localStorage.getItem("bizmate_selected_bank") || "kbank";
@@ -172,174 +191,70 @@ export default function TrueCostHubPage() {
     }
   }, [router]);
 
-  // Dynamic presets that adapt to the active bank account's actual supplier
-  const getDynamicPresets = (cfg: BankSupplierConfig) => [
-    {
-      id: "predatory-loan",
-      label: "🚨 '1% per day' Fast Cash Loan Ad",
-      category: "Predatory APR / Loan Shark",
-      text: `⚡ Fast SME Loan! No collateral needed. Get ฿100,000 cash instantly in 15 minutes! Daily fee only 1% per day (฿1,000/day). Easy daily repayment terms. Apply via LINE @fastcash999`,
-    },
-    {
-      id: "invoice-tampering",
-      label: `⚠️ Spoofed Account Phishing (${cfg.supplierName.split(" ")[0]})`,
-      category: "Invoice Hijacking / Phishing",
-      text: `URGENT NOTICE: Regarding your upcoming payment for Order to ${cfg.supplierName} (${cfg.currency}${cfg.orderAmountForeign.toLocaleString()}). Our regular ${cfg.verifiedBankName} account is under annual bank audit. Please redirect all wire transfers to our new manager account at Bangkok Bank Account: 142-9-88310-2 (Name: Global Trading Offshore Ltd.). Failure to pay today will halt delivery.`,
-    },
-    {
-      id: "legitimate-supplier",
-      label: `✅ Verified Invoice (${cfg.supplierName.split(" ")[0]})`,
-      category: "Authenticated Trade Registry",
-      text: `Commercial Invoice #INV-2026-10-TRADE. Beneficiary: ${cfg.supplierName}. Total amount: ${cfg.currency}${cfg.orderAmountForeign.toLocaleString()} ${cfg.currencyCode}. Payment Due Date: ${cfg.dueDate}. Clearing Bank: ${cfg.verifiedBankName}, Account #${cfg.supplierAccount}. Certified Registry Rail: BizMate Partner Rail verified.`,
-    },
-    {
-      id: "bank-micro-loan",
-      label: "🏦 Regulated SME Credit Line (9.5% APR)",
-      category: "Regulated Commercial Bank",
-      text: `Commercial Bank SME Business Facility: ฿100,000 credit line for 12 months. Interest rate 9.5% per annum. Approved based on operating ledger cash flow and 12-month transaction stability.`,
-    },
-  ];
-
-  const presets = getDynamicPresets(currentConfig);
-
-  // Set default preset on load or bank change
+  // Countdown timer effect
   useEffect(() => {
-    const defaultPreset = presets[0];
-    setSelectedPresetId(defaultPreset.id);
-    setInputText(defaultPreset.text);
-    analyzeText(defaultPreset.text, currentConfig);
-  }, [selectedBankId]);
+    if (cooldownSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownSeconds]);
 
-  const handleSelectPreset = (preset: typeof presets[0]) => {
-    setSelectedPresetId(preset.id);
-    setInputText(preset.text);
-    analyzeText(preset.text, currentConfig);
-  };
+  const handleRunSecurityScan = async () => {
+    if (!inputText.trim() || isAnalyzing || cooldownSeconds > 0) return;
 
-  const analyzeText = (rawText: string, cfg: BankSupplierConfig) => {
+    const session = getSession();
+    if (!session?.token) {
+      router.push("/login");
+      return;
+    }
+
     setIsAnalyzing(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
-      const lower = rawText.toLowerCase();
+    try {
+      const res = await fetch("/api/true-cost/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
 
-      // 1. Predatory loan detection
-      if (
-        lower.includes("1% per day") ||
-        lower.includes("1% a day") ||
-        lower.includes("1% ต่อวัน") ||
-        lower.includes("วันละ 1%") ||
-        (lower.includes("daily") && lower.includes("1%"))
-      ) {
-        setAnalysisResult({
-          headline: "BLOCKED: Predatory Interest Trap Detected (365% APR)",
-          verdict: "PREDATORY",
-          effectiveApr: 365.0,
-          legalCeilingApr: 15.0,
-          exceedsLegalCeiling: true,
-          redFlags: [
-            "Deceptive daily framing: 1% per day compounds to 365.0% annually (24.3x above Bank of Thailand 15% statutory ceiling).",
-            "Unlicensed lender rail: Directing to informal messaging channels (@fastcash999) rather than regulated financial institution.",
-            "Predatory collection risk: Daily installment pressure compromises business operating cash flow.",
-          ],
-          recommendation:
-            `Do NOT proceed. The True Cost Agent has marked this lender as BLOCKED. Use your verified supplier deferral or regulated commercial bank credit instead.`,
-          calculatedMetrics: {
-            principal: "฿100,000",
-            statedRate: "1.0% / day",
-            actualAnnualCost: "฿365,000 / year (Interest only)",
-            totalPayback: "฿130,000 in 30 days",
-          },
-        });
-      }
-      // 2. Account hijacking / phishing
-      else if (
-        lower.includes("audit") ||
-        lower.includes("redirect") ||
-        lower.includes("manager account") ||
-        lower.includes("offshore") ||
-        lower.includes("เปลี่ยนบัญชี") ||
-        lower.includes("บัญชีใหม่") ||
-        lower.includes("bangkok bank account: 142")
-      ) {
-        setAnalysisResult({
-          headline: `CRITICAL ALERT: Unauthorized Account Change (Phishing / Hijacking)`,
-          verdict: "SUSPICIOUS",
-          effectiveApr: null,
-          legalCeilingApr: 15.0,
-          exceedsLegalCeiling: false,
-          redFlags: [
-            `Payee Discrepancy: Verified registry holds ${cfg.verifiedBankName} (#${cfg.supplierAccount}). The text demands redirection to an unverified third-party account.`,
-            "Urgency Trigger: Threatening to halt shipment today is a signature social engineering tactic used in CEO fraud.",
-            "Unverified Intermediary: Recipient name differs from verified corporate counterparty.",
-          ],
-          recommendation:
-            `TRANSFER HARD-BLOCKED. The Trust Agent has frozen disbursement to this account. Verify independently with ${cfg.supplierName} via authenticated voice channel before updating registry records.`,
-          calculatedMetrics: {
-            principal: `${cfg.currency}${cfg.orderAmountForeign.toLocaleString()} (~฿${cfg.orderAmountThb.toLocaleString()})`,
-            statedRate: "N/A (Wire Transfer)",
-            actualAnnualCost: "100% Capital Loss Risk (Phishing)",
-            totalPayback: "฿0 Recoverable if sent",
-          },
-        });
-      }
-      // 3. Legitimate supplier invoice
-      else if (
-        lower.includes(cfg.supplierName.split(" ")[0].toLowerCase()) ||
-        lower.includes(cfg.supplierAccount.slice(-4)) ||
-        lower.includes("certified registry") ||
-        lower.includes("inv-2026-10-trade")
-      ) {
-        setAnalysisResult({
-          headline: `VERIFIED: Authentic Trade Invoice for ${cfg.supplierName}`,
-          verdict: "SAFE",
-          effectiveApr: null,
-          legalCeilingApr: 15.0,
-          exceedsLegalCeiling: false,
-          redFlags: [],
-          recommendation:
-            `Invoice matches historical trade ledger records for ${cfg.supplierName}. The recipient account is 100% verified in ${cfg.verifiedBankName}. Safe to disburse via BizMate Partner Rail.`,
-          calculatedMetrics: {
-            principal: `${cfg.currency}${cfg.orderAmountForeign.toLocaleString()} ${cfg.currencyCode}`,
-            statedRate: `FX Margin: ${cfg.partnerMarginPct}%`,
-            actualAnnualCost: `฿${cfg.orderAmountThb.toLocaleString()} (Saves ฿${(cfg.swiftFeeThb + cfg.swiftSpreadThb).toLocaleString()} vs SWIFT)`,
-            totalPayback: `${cfg.currency}${cfg.orderAmountForeign.toLocaleString()} delivered to supplier`,
-          },
-        });
-      }
-      // 4. Regulated bank loan
-      else if (lower.includes("9.5%") || lower.includes("credit line") || lower.includes("commercial bank")) {
-        setAnalysisResult({
-          headline: "COMPLIANT: Regulated Bank Facility (9.50% APR)",
-          verdict: "SAFE",
-          effectiveApr: 9.5,
-          legalCeilingApr: 15.0,
-          exceedsLegalCeiling: false,
-          redFlags: [],
-          recommendation:
-            "Fully compliant with Bank of Thailand lending guidelines. Effective APR (9.5%) is well below the 15% statutory ceiling. Approved as viable financing.",
-          calculatedMetrics: {
-            principal: "฿100,000",
-            statedRate: "9.5% APR per annum",
-            actualAnnualCost: "฿5,250 interest over 12 months",
-            totalPayback: "฿105,750 (with ฿500 fee)",
-          },
-        });
-      }
-      // Generic fallback
-      else {
-        setAnalysisResult({
-          headline: "Data Ingested: General Financial Terms",
-          verdict: "SAFE",
-          effectiveApr: 12.0,
-          legalCeilingApr: 15.0,
-          exceedsLegalCeiling: false,
-          redFlags: ["Always verify recipient bank account before confirming transfer dispatches."],
-          recommendation: "Terms appear within regulated bounds. Verify contract documentation before signing.",
-        });
+      const data = await res.json();
+
+      if (res.status === 429) {
+        setErrorMessage(data.error || "Rate limited. Please wait.");
+        if (data.remainingSeconds) {
+          setCooldownSeconds(data.remainingSeconds);
+        }
+        return;
       }
 
+      if (!res.ok) {
+        setErrorMessage(data.error || "Analysis failed. Please try again.");
+        return;
+      }
+
+      if (data.analysis) {
+        setAnalysisResult(data.analysis);
+      }
+      if (data.cooldownSeconds) {
+        setCooldownSeconds(data.cooldownSeconds);
+      }
+    } catch (err) {
+      console.error("Scanner scan request error:", err);
+      setErrorMessage("Network error during security scan. Please check connection.");
+    } finally {
       setIsAnalyzing(false);
-    }, 350);
+    }
   };
 
   // Face ID Biometric Trigger
@@ -510,57 +425,50 @@ export default function TrueCostHubPage() {
         ======================================================== */}
         {activeTab === "analyzer" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up duration-200">
-            {/* Presets & Text Input */}
+            {/* Text Input Sandbox with Gemini Scan & Cooldown */}
             <div className="lg:col-span-6 space-y-4">
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-                <span className="text-[11px] font-mono font-bold uppercase text-slate-500 block mb-2">
-                  Select Presets for {currentConfig.companyName}:
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {presets.map((preset) => (
-                    <button
-                      key={preset.id}
-                      onClick={() => handleSelectPreset(preset)}
-                      className={`p-2.5 rounded-xl text-left transition-all border text-xs cursor-pointer ${
-                        selectedPresetId === preset.id
-                          ? "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-950 dark:text-rose-200 font-bold shadow-2xs"
-                          : "border-slate-200 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      }`}
-                    >
-                      <div className="font-semibold truncate">{preset.label}</div>
-                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">{preset.category}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Textarea Sandbox with Safety Disclaimer */}
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <label htmlFor="scan-text" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     Input Text Sandbox
                   </label>
-                  <span className="text-[10px] font-mono text-slate-400">
-                    Strict Input Isolation Active
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {cooldownSeconds > 0 ? (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                        Cooldown: {cooldownSeconds}s
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                        ● Scanner Ready
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-3 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
                   <span className="text-sm mt-0.5">🛡️</span>
                   <p className="leading-snug">
-                    <strong>Deterministic Sandbox:</strong> Agent parses text strictly as inert data; will never execute instructions or code contained inside input.
+                    <strong>Deterministic Sandbox:</strong> Analyzed by True Cost Agent (Gemini 3.1 Flash Lite). Parses text strictly as inert data; prompt injection, non-financial queries, or instructions inside input are safely neutralized.
                   </p>
                 </div>
 
+                {errorMessage && (
+                  <div className="mb-3 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-[11px] text-rose-800 dark:text-rose-300 flex items-start gap-2">
+                    <span className="text-sm mt-0.5">⚠️</span>
+                    <p className="leading-snug">{errorMessage}</p>
+                  </div>
+                )}
+
                 <textarea
                   id="scan-text"
-                  rows={6}
+                  rows={8}
                   value={inputText}
                   onChange={(e) => {
                     setInputText(e.target.value);
-                    setSelectedPresetId(null);
+                    setErrorMessage(null);
                   }}
-                  placeholder="Paste loan flyer, invoice email, or payment message here..."
+                  placeholder="Paste loan flyer, invoice email, financing contract terms, or payment message here to audit APR and counterparty risk..."
                   className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500/50 resize-none transition-all leading-relaxed"
                 />
 
@@ -570,7 +478,7 @@ export default function TrueCostHubPage() {
                     onClick={() => {
                       setInputText("");
                       setAnalysisResult(null);
-                      setSelectedPresetId(null);
+                      setErrorMessage(null);
                     }}
                     className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
@@ -579,14 +487,18 @@ export default function TrueCostHubPage() {
 
                   <button
                     type="button"
-                    disabled={!inputText.trim() || isAnalyzing}
-                    onClick={() => analyzeText(inputText, currentConfig)}
+                    disabled={!inputText.trim() || isAnalyzing || cooldownSeconds > 0}
+                    onClick={handleRunSecurityScan}
                     className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                   >
                     {isAnalyzing ? (
                       <>
                         <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Scanning Telemetry...</span>
+                        <span>Scanning with Gemini...</span>
+                      </>
+                    ) : cooldownSeconds > 0 ? (
+                      <>
+                        <span>Cooldown ({cooldownSeconds}s)</span>
                       </>
                     ) : (
                       <>

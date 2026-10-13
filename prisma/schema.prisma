@@ -13,8 +13,9 @@ model User {
   email         String    @unique
   passwordHash  String
   businessName  String    @default("Ploy Select Co., Ltd.")
-  role          String    @default("OWNER")
-  createdAt     DateTime  @default(now())
+  role                   String    @default("OWNER")
+  lastScannerAnalysisAt  DateTime?
+  createdAt              DateTime  @default(now())
 
   chats         ChatSession[]
   inboxItems    InboxApproval[]
