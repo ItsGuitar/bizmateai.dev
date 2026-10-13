@@ -354,15 +354,22 @@ export default function DashboardPage() {
 
       // Toggle state: when dev reset, simulate fresh user without bank connection
       setIsBankConnected(false);
+      setFinancialSummary(null);
+      setWeeksData([]);
+      setSelectedWeek(null);
+      setRecentTransactions([]);
+      setInboxItems([]);
+      setPendingApprovalsCount(0);
+
       if (typeof window !== "undefined") {
         localStorage.setItem("bizmate_bank_connected", "false");
+        localStorage.removeItem("bizmate_selected_bank");
       }
-      setPendingApprovalsCount(3);
-      setResetMessage("Database reset to initial demo baseline! (Bank linkage simulated as pending)");
+      setResetMessage("Database reset to fresh baseline! All computed data and approvals wiped.");
       setShowConfirmModal(false);
 
       // Re-fetch inbox items & audit logs
-      fetch("/api/inbox", {
+      fetch("/api/inbox?bankConnected=false", {
         headers: { Authorization: `Bearer ${session.token}` },
       })
         .then((r) => r.json())
@@ -411,8 +418,6 @@ export default function DashboardPage() {
         activeNav="dashboard"
         onDevReset={() => setShowConfirmModal(true)}
         isBankConnected={isBankConnected}
-        selectedBank={selectedBank}
-        onSelectBank={handleSelectBank}
         onToggleBank={() => {
           const nextState = !isBankConnected;
           setIsBankConnected(nextState);

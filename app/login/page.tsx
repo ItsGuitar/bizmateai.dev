@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { saveSession } from "@/lib/auth-client";
@@ -64,31 +63,43 @@ export default function LoginPage() {
 
   return (
     <div className="h-dvh h-screen w-full flex overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {/* LEFT HALF: Full Bleed Artwork - No frame, no border */}
-      <div className="hidden md:block md:w-1/2 h-full relative overflow-hidden bg-slate-950">
-        <Image
-          src="/images/auth-banner-login.png"
-          alt="BizMate Financial Copilot Mascot"
-          fill
-          sizes="50vw"
-          unoptimized
-          className="object-cover object-center"
-          priority
-        />
+      {/* LEFT HALF: Branding Showcase Section */}
+      <div className="hidden md:flex md:w-1/2 h-full relative overflow-hidden bg-slate-900 dark:bg-slate-950 flex-col justify-between p-12 text-white">
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Floating Branding */}
-        <div className="absolute top-6 left-6 z-10">
+        <div className="relative z-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/70 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200/60 dark:border-white/10 shadow-sm group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 shadow-sm group"
           >
             <span
               style={{ fontFamily: "var(--font-logo)" }}
-              className="text-xl font-black tracking-normal select-none bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
+              className="text-2xl font-black tracking-normal select-none bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
             >
-              BizMate
+              Biz<span className="text-sky-400">Mate</span>
             </span>
           </Link>
+        </div>
+
+        {/* Center Marketing Value Props */}
+        <div className="relative z-10 max-w-md space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-semibold">
+            <span>Autonomous Multi-Agent Copilot</span>
+          </div>
+          <h2 className="text-3xl font-black tracking-tight leading-snug">
+            Intelligent Cash Radar & Working Capital Protection
+          </h2>
+          <p className="text-sm text-slate-400 leading-relaxed font-normal">
+            Synchronized with real-time bank statements to protect your operating buffer and automate receivables follow-up with zero surprises.
+          </p>
+        </div>
+
+        {/* Bottom Trust Badge */}
+        <div className="relative z-10 text-xs text-slate-500">
+          Bank-Grade Security • Read-Only Telemetry • PDPA Compliant
         </div>
       </div>
 
@@ -106,7 +117,7 @@ export default function LoginPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
             >
-              BizMate
+              Biz<span className="text-indigo-600 dark:text-indigo-400">Mate</span>
             </span>
           </Link>
           <div className="hidden md:block" />
@@ -125,19 +136,6 @@ export default function LoginPage() {
 
         {/* Center Content: Login Box */}
         <div className="w-full max-w-sm mx-auto my-auto py-2 relative z-10">
-          {/* Mobile Artwork Header - Frameless, no border */}
-          <div className="md:hidden w-full h-32 relative overflow-hidden rounded-xl mb-4 animate-fade-in-scale delay-150">
-            <Image
-              src="/images/auth-banner-login.png"
-              alt="BizMate Mascot"
-              fill
-              sizes="100vw"
-              unoptimized
-              className="object-cover object-center"
-              priority
-            />
-          </div>
-
           <div className="mb-4 animate-fade-in-up delay-200">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               Welcome back

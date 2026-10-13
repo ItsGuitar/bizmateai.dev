@@ -127,9 +127,9 @@ const cachedTransactionsByBank: Record<string, Transaction[]> = {};
 export function normalizeBankId(bankId?: string | null): string {
   if (!bankId) return "kbank";
   const lower = bankId.toLowerCase();
-  if (lower.includes("scb") || lower.includes("siam")) return "scb";
-  if (lower.includes("bbl") || lower.includes("bangkok")) return "bbl";
-  if (lower.includes("personal") || lower.includes("mock4") || lower.includes("indiv") || lower.includes("3m")) return "personal";
+  if (lower.includes("scb") || lower.includes("siam") || lower.includes("apex") || lower.includes("furniture")) return "scb";
+  if (lower.includes("bbl") || lower.includes("bangkok") || lower.includes("bioharvest") || lower.includes("agro")) return "bbl";
+  if (lower.includes("personal") || lower.includes("mock4") || lower.includes("indiv") || lower.includes("3m") || lower.includes("kittisak") || lower.includes("somchai")) return "personal";
   return "kbank";
 }
 
@@ -284,11 +284,11 @@ export function getBuyerHabits(bankId?: string | null): DebtorHabit[] {
   const habits: DebtorHabit[] = [];
   counterpartyGroups.forEach((txns, name) => {
     const totalPaid = txns.filter((t) => t.datetime <= REFERENCE_DATE_ISO).reduce((s, t) => s + t.amount, 0);
-    const overdueTxns = txns.filter((t) => t.metadata?.invoice_no || t.metadata?.payment_habit === "HABITUAL_LATE" || t.counterparty_name.includes("Boutique") || t.counterparty_name.includes("Tokyo") || t.counterparty_name.includes("Chao Phraya"));
+    const overdueTxns = txns.filter((t) => t.metadata?.invoice_no || t.metadata?.payment_habit === "HABITUAL_LATE" || (t.metadata?.delay_days && t.metadata.delay_days > 0));
     
     const isLate = overdueTxns.length > 0;
-    const overdueAmt = isLate ? (overdueTxns[0].amount || (key === "scb" ? 78000 : key === "bbl" ? 54000 : 35000)) : 0;
-    const avgDelay = isLate ? (overdueTxns[0].metadata?.delay_days || 21.4) : 0;
+    const overdueAmt = isLate ? overdueTxns[0].amount : 0;
+    const avgDelay = isLate ? (overdueTxns[0].metadata?.delay_days || 14) : 0;
 
     habits.push({
       name,
@@ -299,22 +299,6 @@ export function getBuyerHabits(bankId?: string | null): DebtorHabit[] {
       invoiceStatus: isLate ? `OVERDUE_${Math.round(avgDelay)}_DAYS` : "PAID_ON_TIME",
     });
   });
-
-  // Fallback defaults if dataset has no B2B debtors (e.g. personal account)
-  if (habits.length === 0) {
-    if (key === "personal") {
-      return [
-        {
-          name: "Client Web Development Transfer",
-          habit: "EXCELLENT",
-          averageDelayDays: 0,
-          totalPaidPastYear: 145000,
-          currentOverdueAmount: 0,
-          invoiceStatus: "PAID_ON_TIME",
-        },
-      ];
-    }
-  }
 
   return habits;
 }
@@ -333,26 +317,22 @@ export function getSupplierHistory(bankId?: string | null): SupplierHistory {
   const totalThb = completed.reduce((sum, t) => sum + t.amount, 0);
   const totalCny = completed.reduce((sum, t) => sum + (t.metadata?.cny_amount || t.metadata?.jpy_amount || 0), 0);
 
-  // Resolve main supplier name from dataset
-  const mainSupplierName = pending?.counterparty_name || completed[0]?.counterparty_name || (
-    key === "scb" ? "Osaka Timber & Veneer Mills Co., Ltd." :
-    key === "bbl" ? "Heilongjiang AgroChem Precision Ltd." :
-    key === "personal" ? "None (Individual Account)" :
-    "Shenzhen Chen Tech Electronics Co., Ltd."
-  );
+  // Resolve main supplier name dynamically from transactions
+  const mainSupplierName = pending?.counterparty_name || completed[0]?.counterparty_name || (supplierTxns.length === 0 ? "None (Individual Account)" : "Verified Trade Supplier");
+  const resolvedSupplierId = pending?.metadata?.supplier_id || completed[0]?.metadata?.supplier_id || (supplierTxns.length === 0 ? "INDIVIDUAL-ACCT" : "SUPPLIER-REG");
 
-  const pendingAmt = pending?.metadata?.cny_amount || pending?.metadata?.jpy_amount || (key === "scb" ? 320000 : key === "bbl" ? 180000 : key === "personal" ? 0 : 100000.0);
-  const currencySymbol = key === "scb" ? "¥" : key === "bbl" ? "¥" : key === "personal" ? "฿" : "¥";
+  const pendingAmt = pending?.metadata?.cny_amount || pending?.metadata?.jpy_amount || (pending ? pending.amount : 0);
+  const currencySymbol = pending?.metadata?.jpy_amount ? "¥" : pending?.metadata?.cny_amount ? "¥" : (supplierTxns.length === 0 ? "฿" : "¥");
 
   return {
     name: mainSupplierName,
-    supplierId: pending?.metadata?.supplier_id || (key === "scb" ? "OSAKA-TIMBER-JP" : key === "bbl" ? "AGROCHEM-HLJ" : "CHEN-TECH-SZ"),
+    supplierId: resolvedSupplierId,
     totalTransfersCount: completed.length,
     totalOrdersCount: supplierTxns.length,
     totalCnySpent: Math.round(totalCny),
     totalThbSpent: Math.round(totalThb),
-    monthsActive: key === "personal" ? 3 : 12,
-    verifiedRail: key !== "personal",
+    monthsActive: all.length > 300 ? 12 : 3,
+    verifiedRail: supplierTxns.length > 0,
     pendingOrderCny: pendingAmt,
     pendingOrderCurrency: currencySymbol,
     pendingOrderAmount: pendingAmt,

@@ -255,10 +255,27 @@ export default function OnboardingPage() {
       }
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
       if (typeof window !== "undefined") {
         localStorage.setItem("bizmate_selected_bank", selectedBankId);
       }
+
+      // Synchronize backend user business name to the newly linked bank's statement company
+      if (session?.token) {
+        try {
+          await fetch("/api/financial/link-bank", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({ bankId: selectedBankId }),
+          });
+        } catch {
+          // Fallback
+        }
+      }
+
       setIsLinkingBank(false);
       setShowConsentSheet(false);
       setBankToast("Bank account linked with verified Read-Only scope 👍");

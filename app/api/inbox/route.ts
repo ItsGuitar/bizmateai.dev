@@ -20,8 +20,8 @@ export async function GET(request: Request) {
 
     const bankId = searchParams.get("bankId") || undefined;
 
-    // Only auto-seed AI proposals once the bank has been connected and statement analyzed
-    if (bankConnected) {
+    // Only auto-seed AI proposals once the bank has been connected and user currently has 0 items
+    if (bankConnected && totalCount === 0) {
       const { getFinancialSummary } = await import("@/lib/financial-service");
       const summary = getFinancialSummary(bankId);
       const debtor = summary.buyerHabits[0];
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
       const defaultProposals = [];
 
-      if (debtor) {
+      if (debtor && debtor.currentOverdueAmount > 0) {
         defaultProposals.push({
           userId: auth.userId,
           agentId: "collections",
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         });
       }
 
-      if (supplier && supplier.totalOrdersCount > 0) {
+      if (supplier && supplier.totalOrdersCount > 0 && supplier.pendingOrderAmount > 0) {
         defaultProposals.push({
           userId: auth.userId,
           agentId: "funding",
@@ -73,19 +73,9 @@ export async function GET(request: Request) {
         });
       }
 
-      // Check existing items to avoid race conditions and duplicates
-      const existing = await prisma.inboxApproval.findMany({
-        where: { userId: auth.userId },
-        select: { agentId: true, title: true },
-      });
-
-      const itemsToCreate = defaultProposals.filter(
-        (dp) => !existing.some((e) => e.agentId === dp.agentId && e.title === dp.title)
-      );
-
-      if (itemsToCreate.length > 0) {
+      if (defaultProposals.length > 0) {
         await prisma.inboxApproval.createMany({
-          data: itemsToCreate,
+          data: defaultProposals,
         });
       }
     }

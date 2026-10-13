@@ -91,14 +91,16 @@ export async function callGeminiOrFallback(
   userQuery: string,
   history: Array<{ senderType: string; content: string }>,
   apiKey?: string,
-  userProfile?: UserBusinessProfile
+  userProfile?: UserBusinessProfile,
+  bankId?: string
 ): Promise<GeminiResponse> {
   const keyToUse = apiKey || process.env.GEMINI_API_KEY;
+  const effectiveBankId = bankId || (userProfile?.businessName ? userProfile.businessName : undefined);
+  const summary = getFinancialSummary(effectiveBankId);
 
   // If apiKey is valid (not placeholder "abcde"), call Google Gemini REST API
   if (keyToUse && keyToUse.trim() !== "" && keyToUse !== "abcde") {
     try {
-      const summary = getFinancialSummary();
       const systemPrompt = getAgentSystemPrompt(userProfile, summary);
       // Strictly use ONLY gemini-3.5-flash-lite (15 RPM, 250k TPM, 500 RPD free tier)
       const model = "gemini-3.5-flash-lite";
@@ -158,40 +160,52 @@ export async function callGeminiOrFallback(
   }
 
   // Graceful deterministic agent reasoning fallback
-  return fallbackAgentReasoning(userQuery, userProfile);
+  return fallbackAgentReasoning(userQuery, userProfile, summary);
 }
 
-function fallbackAgentReasoning(userQuery: string, userProfile?: UserBusinessProfile): GeminiResponse {
+function fallbackAgentReasoning(
+  userQuery: string,
+  userProfile?: UserBusinessProfile,
+  summaryData?: ReturnType<typeof getFinancialSummary>
+): GeminiResponse {
   const query = userQuery.toLowerCase();
-  const summary = getFinancialSummary();
-  const businessName = userProfile?.businessName || "ธุรกิจของคุณ";
-  const conflictWeek = summary.cashRadarWeeks.find((w) => w.status === "below") || summary.cashRadarWeeks[2];
+  const summary = summaryData || getFinancialSummary(userProfile?.businessName);
+  const businessName = userProfile?.businessName || summary.company || "ธุรกิจของคุณ";
+  const conflictWeek = summary.cashRadarWeeks.find((w) => w.status === "below" || w.status === "short") || summary.cashRadarWeeks[2] || summary.cashRadarWeeks[0];
+  const supplier = summary.supplierHistory;
+  const debtor = summary.buyerHabits.find((b) => b.currentOverdueAmount > 0) || summary.buyerHabits[0];
 
   if (query.includes("cash") || query.includes("เงิน") || query.includes("buffer") || query.includes("radar") || query.includes("สภาพคล่อง")) {
+    const riskNote = conflictWeek
+      ? `แต่ในสัปดาห์ที่ ${conflictWeek.week} (${conflictWeek.date}) มีความเสี่ยงที่เงินจะลดเหลือ ฿${conflictWeek.balance.toLocaleString()} ซึ่งต่ำกว่า Safety Buffer ฿${summary.safetyBuffer.toLocaleString()}`
+      : `กระแสเงินสดอยู่ในเกณฑ์ปลอดภัยเหนือ Safety Buffer ฿${summary.safetyBuffer.toLocaleString()} ทุกสัปดาห์`;
     return {
       agentId: "cash",
-      content: `จากข้อมูล 13-Week Cash Radar ใน Statement ปัจจุบันคุณมีเงินสดคงเหลือ ${summary.formattedCurrentCash} ครับ แต่ในสัปดาห์ที่ ${conflictWeek.week} (${conflictWeek.date} 2026) ยอดจ่ายซัพพลายเออร์ Chen Tech ¥100,000 จะทำให้เงินลดเหลือ ฿${conflictWeek.balance.toLocaleString()} ซึ่งต่ำกว่า Safety Buffer ฿${summary.safetyBuffer.toLocaleString()} ทางเราแนะนำให้กดดูแผนร่วม (Joint Remedy Plan) เพื่อแก้ปัญหาล่วงหน้าครับ`,
-      reasoning: `Cash Agent วิเคราะห์การไหลเข้า-ออกของเงินใน Statement บัญชีหลัก พบความเสี่ยงเงินสดต่ำกว่าเกณฑ์ในวันที่ ${conflictWeek.date}`,
+      content: `จากข้อมูล 13-Week Cash Radar ใน Statement ของ ${businessName} ปัจจุบันมีเงินสดคงเหลือ ${summary.formattedCurrentCash} ครับ ${riskNote} ทางเราแนะนำให้กดดูแผนร่วม (Joint Remedy Plan) เพื่อบริหารสภาพคล่องล่วงหน้าครับ`,
+      reasoning: `Cash Agent วิเคราะห์การไหลเข้า-ออกของเงินใน Statement บัญชี ${summary.bankName}`,
       actionRoute: "/dashboard#joint-plan",
     };
   }
 
-  if (query.includes("supplier") || query.includes("chen") || query.includes("loan") || query.includes("ยืม") || query.includes("กู้") || query.includes("ทุน")) {
-    const supplier = summary.supplierHistory;
+  if (query.includes("supplier") || query.includes("loan") || query.includes("ยืม") || query.includes("กู้") || query.includes("ทุน") || query.includes("ซัพพลายเออร์")) {
     return {
       agentId: "funding",
-      content: `ประวัติการค้ากับ ${supplier.name} พบการโอนต่อเนื่อง ${supplier.monthsActive} เดือน รวม ${supplier.totalTransfersCount} รายการ สำหรับยอด ¥${supplier.pendingOrderCny.toLocaleString()} ที่จะถึงกำหนด 26 ต.ค. ทางเลือกที่คุ้มที่สุดคือการขอขยายเทอมเป็น 60 วันโดยมีค่าธรรมเนียมเพียง 1.1% (~฿5,000) ซึ่งประหยัดกว่าการกู้เงินด่วนธนาคาร (ดอกเบี้ย 7.5% - 14% APR) ครับ`,
-      reasoning: "Funding Agent ตรวจสอบประวัติคู่ค้าและประเมินทางเลือกสภาพคล่องที่ต้นทุนต่ำที่สุด 6 รูปแบบ",
+      content: `ประวัติการค้ากับ ${supplier.name} พบประวัติการทำธุรกรรมต่อเนื่อง ${supplier.monthsActive} เดือน รวม ${supplier.totalTransfersCount} รายการ สำหรับยอดค้างชำระ ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} (~฿${supplier.pendingOrderThb.toLocaleString()}) ที่จะถึงกำหนด ทางเลือกที่คุ้มที่สุดคือการขอขยายเทอมเป็น 60 วัน (ค่าธรรมเนียมเพียง 1.1%) ซึ่งประหยัดกว่าการกู้เงินด่วนธนาคารหรือสินเชื่อภายนอกครับ`,
+      reasoning: `Funding Agent ตรวจสอบประวัติคู่ค้า ${supplier.name} และประเมินทางเลือกสภาพคล่องที่ต้นทุนต่ำที่สุด`,
       actionRoute: "/dashboard#joint-plan",
     };
   }
 
-  if (query.includes("หนี้") || query.includes("invoice") || query.includes("ทวง") || query.includes("ค้าง") || query.includes("boutique") || query.includes("ตาม")) {
-    const debtor = summary.buyerHabits.find((b) => b.habit === "HABITUAL_LATE") || summary.buyerHabits[1];
+  if (query.includes("หนี้") || query.includes("invoice") || query.includes("ทวง") || query.includes("ค้าง") || query.includes("ตาม") || query.includes("ลูกหนี้")) {
+    const debtorInfo = debtor
+      ? `พบคู่ค้า ${debtor.name} มียอดค้างชำระ ฿${debtor.currentOverdueAmount.toLocaleString()} เกินกำหนดมาแล้ว ${Math.round(debtor.averageDelayDays)} วันครับ จากพฤติกรรมในอดีตมักจะจ่ายทันทีเมื่อได้รับข้อความเตือนสุภาพ ผมได้ร่างข้อความ LINE แจ้งเตือนไว้ใน Inbox แล้ว รอคุณกดอนุมัติเพื่อส่งครับ`
+      : `ปัจจุบันไม่มีลูกหนี้ค้างชำระเกินกำหนดในระบบครับ ลูกหนี้ทุกรายชำระตรงตามกำหนด`;
     return {
       agentId: "collections",
-      content: `พบคู่ค้า ${debtor.name} มียอดค้างชำระ ฿${debtor.currentOverdueAmount.toLocaleString()} เกินกำหนดมาแล้ว ${Math.round(debtor.averageDelayDays)} วันครับ จากพฤติกรรมในอดีตมักจะจ่ายทันทีเมื่อได้รับข้อความเตือนสุภาพ ผมได้ร่างข้อความ LINE แจ้งเตือนไว้ใน Inbox แล้ว รอคุณกดอนุมัติเพื่อส่งครับ`,
-      reasoning: `Collections Agent คำนวณค่าเฉลี่ยความล่าช้าในการชำระเงิน (${debtor.averageDelayDays.toFixed(1)} วัน) และร่างข้อความตามนโยบาย Zero-Surprise`,
+      content: debtorInfo,
+      reasoning: debtor
+        ? `Collections Agent คำนวณค่าเฉลี่ยความล่าช้าในการชำระเงินของ ${debtor.name} (${debtor.averageDelayDays.toFixed(1)} วัน) และร่างข้อความตามนโยบาย Zero-Surprise`
+        : `Collections Agent ตรวจสอบสถานะลูกหนี้ทั้งหมดใน AR Ledger`,
       actionRoute: "/dashboard#inbox-approvals",
     };
   }
@@ -199,7 +213,7 @@ function fallbackAgentReasoning(userQuery: string, userProfile?: UserBusinessPro
   if (query.includes("โกง") || query.includes("ปลอม") || query.includes("apr") || query.includes("ดอก") || query.includes("ปลอดภัย") || query.includes("fraud") || query.includes("สแกม")) {
     return {
       agentId: "true-cost",
-      content: `True Cost Agent ตรวจสอบและสกัดกั้นภัยคุกคามแล้ว ${summary.anomaliesCount} รายการ: 1) ดักจับและบล็อกโฆษณาสินเชื่อเงินด่วนคิดดอก 1%/วัน ซึ่งแท้จริงคือ APR สูงถึง 365%/ปี 2) ตรวจพบและบล็อกบัญชีปลอมในฮ่องกงที่พยายามสวมรอยเป็น Chen Tech ปลอดภัย 100% ครับ`,
+      content: `True Cost Agent ตรวจสอบและสกัดกั้นภัยคุกคามทางการเงินแล้ว ${summary.anomaliesCount} รายการ รวมถึงการดักจับและบล็อกโฆษณาสินเชื่อเงินด่วนคิดดอกเบี้ยเกินจริง (APR เกินเกณฑ์กำกับ) และตรวจสอบบัญชีคู่ค้าของ ${businessName} ผ่าน Registry ปลอดภัย 100% ครับ`,
       reasoning: "True Cost Agent คำนวณดอกเบี้ยที่แท้จริงและยืนยันความถูกต้องของบัญชีคู่ค้าผ่าน Registry ตรวจสอบ",
       actionRoute: "/dashboard#activity-stream",
     };
@@ -208,16 +222,16 @@ function fallbackAgentReasoning(userQuery: string, userProfile?: UserBusinessPro
   if (query.includes("ใคร") || query.includes("ชื่ออะไร") || query.includes("ทำอะไรได้") || query.includes("bot") || query.includes("บอท") || query.includes("มั่ว") || query.includes("โม้")) {
     return {
       agentId: "trust",
-      content: `ขออภัยครับ! ผมคือ BizMate AI Copilot ผู้ช่วยทางการเงินอัตโนมัติของ "${businessName}" ไม่ได้ตอบมั่วแน่นอนครับ ข้อมูลทั้งหมดคำนวณสดจากประวัติ Statement ธนาคารกสิกรไทย 1 ปีย้อนหลัง (366 วัน 1,180 ธุรกรรม) โดยวิเคราะห์ทั้งกระแสเงินสด Cash Radar, เครดิตซัพพลายเออร์ และลูกหนี้ค้างชำระครับ คุณสามารถถามเรื่องเงินสดคงเหลือ หนี้ค้างชำระ หรือตรวจสอบดอกเบี้ยเงินกู้ได้เลยครับ`,
-      reasoning: "Trust Agent ยืนยันตัวตนและแหล่งที่มาของข้อมูลการคำนวณจาก Bank Statement จริง",
+      content: `ขออภัยครับ! ผมคือ BizMate AI Copilot ผู้ช่วยทางการเงินอัตโนมัติของ "${businessName}" ไม่ได้ตอบมั่วแน่นอนครับ ข้อมูลทั้งหมดคำนวณสดจากประวัติ Statement บัญชี ${summary.bankName} (${summary.totalTransactionsInStatement.toLocaleString()} ธุรกรรม) โดยวิเคราะห์ทั้งกระแสเงินสด Cash Radar, เครดิตซัพพลายเออร์ และลูกหนี้ค้างชำระครับ คุณสามารถถามเรื่องเงินสดคงเหลือ หนี้ค้างชำระ หรือตรวจสอบดอกเบี้ยเงินกู้ได้เลยครับ`,
+      reasoning: `Trust Agent ยืนยันตัวตนและแหล่งที่มาของข้อมูลการคำนวณจาก Bank Statement จริงของ ${businessName}`,
       actionRoute: "/dashboard",
     };
   }
 
   return {
     agentId: "health",
-    content: `คะแนนสุขภาพทางการเงินของคุณอยู่ที่ ${summary.healthScore.overallScore}/100 (${summary.healthScore.ratingGrade}) ครับ อยู่ในเกณฑ์ Prime SME ที่มีสิทธิ์ขอสินเชื่อดอกเบี้ยต่ำ จุดแข็งคือไม่เคยมีเช็คเด้งหรือเงินติดลบใน 366 วันที่ผ่านมา จุดที่ควรปรับปรุงคือการติดตามหนี้ค้างจาก Boutique Siam ครับ`,
-    reasoning: "Health Agent ประเมินสุขอนามัยทางการเงิน 7 มิติจากประวัติ Statement รายรับรายจ่ายย้อนหลัง 1 ปี",
+    content: `คะแนนสุขภาพทางการเงินของ ${businessName} อยู่ที่ ${summary.healthScore.overallScore}/100 (${summary.healthScore.ratingGrade}) ครับ อยู่ในเกณฑ์ ${summary.healthScore.creditStatus} จุดแข็งคือไม่เคยมีเช็คเด้งหรือเงินติดลบในประวัติ Statement จุดที่ควรให้ความสำคัญคือการบริหารรอบเงินทุนหมุนเวียนและการติดตามลูกหนี้ตามกำหนดครับ`,
+    reasoning: `Health Agent ประเมินสุขอนามัยทางการเงิน 7 มิติจากประวัติ Statement รายรับรายจ่ายย้อนหลังของ ${businessName}`,
     actionRoute: "/dashboard#health-score",
   };
 }

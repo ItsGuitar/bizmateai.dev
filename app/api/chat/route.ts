@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { message, sessionId, apiKey } = await request.json();
+    const { message, sessionId, bankId: requestBankId } = await request.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -96,11 +96,20 @@ export async function POST(request: Request) {
       select: { businessName: true, email: true },
     });
 
+    const activeBusinessName = dbUser?.businessName || auth.businessName;
+    const effectiveBankId = requestBankId || activeBusinessName;
+
     // 2. Multi-Agent Reasoning via Google Gemini AI / Deterministic Multi-Agent Fallback (Axiom 1 & 4)
-    const agentResult = await callGeminiOrFallback(message, previousMessages, apiKey, {
-      businessName: dbUser?.businessName || auth.businessName,
-      email: dbUser?.email || auth.email,
-    });
+    const agentResult = await callGeminiOrFallback(
+      message,
+      previousMessages,
+      undefined,
+      {
+        businessName: activeBusinessName,
+        email: dbUser?.email || auth.email,
+      },
+      effectiveBankId
+    );
 
     // 3. Save Agent Response
     const agentMessage = await prisma.chatMessage.create({

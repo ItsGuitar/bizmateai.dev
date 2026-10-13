@@ -2143,7 +2143,7 @@
       "supplier_id": "AGROCHEM-HLJ",
       "cny_amount": 180000,
       "fx_rate": 4.8,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Agricultural Bank of China (Harbin Branch)",
       "verified_registry": true,
       "notes": "Organic nutrient batch supply via BBL Trade Rail"
     }
@@ -4621,7 +4621,7 @@
       "supplier_id": "AGROCHEM-HLJ",
       "cny_amount": 180000,
       "fx_rate": 4.8077,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Agricultural Bank of China (Harbin Branch)",
       "verified_registry": true,
       "notes": "Organic nutrient batch supply via BBL Trade Rail"
     }
@@ -7300,7 +7300,7 @@
       "supplier_id": "AGROCHEM-HLJ",
       "cny_amount": 180000,
       "fx_rate": 4.8113,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Agricultural Bank of China (Harbin Branch)",
       "verified_registry": true,
       "notes": "Organic nutrient batch supply via BBL Trade Rail"
     }
@@ -9897,7 +9897,7 @@
       "supplier_id": "AGROCHEM-HLJ",
       "cny_amount": 180000,
       "fx_rate": 4.8148,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Agricultural Bank of China (Harbin Branch)",
       "verified_registry": true,
       "notes": "Organic nutrient batch supply via BBL Trade Rail"
     }
@@ -12528,7 +12528,7 @@
       "supplier_id": "AGROCHEM-HLJ",
       "cny_amount": 180000,
       "fx_rate": 4.8077,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Agricultural Bank of China (Harbin Branch)",
       "verified_registry": true,
       "notes": "Organic nutrient batch supply via BBL Trade Rail"
     }
@@ -15110,7 +15110,7 @@
       "supplier_id": "AGROCHEM-HLJ",
       "cny_amount": 180000,
       "fx_rate": 4.825,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Agricultural Bank of China (Harbin Branch)",
       "core_conflict_trigger": true,
       "safety_buffer_breach": true,
       "safety_buffer_threshold": 80000,

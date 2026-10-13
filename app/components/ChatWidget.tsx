@@ -27,9 +27,9 @@ const AGENTS_META: Record<string, { name: string; emoji: string; color: string; 
 
 const SUGGESTED_QUESTIONS = [
   "How is our 13-week cash runway and liquidity buffer looking?",
-  "What are our pending accounts receivable from Boutique Siam?",
+  "What are our pending accounts receivable and overdue invoices?",
   "Explain our financial health score and areas to improve.",
-  "What is the cheapest way to finance the Chen Tech supplier payment?",
+  "What is the cheapest way to finance our upcoming supplier payment?",
 ];
 
 export function ChatWidget() {
@@ -40,22 +40,7 @@ export function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Settings / Custom API Key Modal
-  const [showSettings, setShowSettings] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState("");
-  const [activeApiKey, setActiveApiKey] = useState("");
-  const [apiKeySavedNotice, setApiKeySavedNotice] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Load custom API key from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedKey = localStorage.getItem("bizmate_gemini_api_key") || "";
-      setActiveApiKey(storedKey);
-      setApiKeyInput(storedKey);
-    }
-  }, []);
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -83,19 +68,6 @@ export function ChatWidget() {
     }
   }, []);
 
-  const handleSaveApiKey = () => {
-    const trimmed = apiKeyInput.trim();
-    setActiveApiKey(trimmed);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("bizmate_gemini_api_key", trimmed);
-    }
-    setApiKeySavedNotice(true);
-    setTimeout(() => {
-      setApiKeySavedNotice(false);
-      setShowSettings(false);
-    }, 1200);
-  };
-
   const handleSendMessage = async (textToSend?: string) => {
     const message = (textToSend || inputMessage).trim();
     if (!message || isLoading) return;
@@ -115,6 +87,7 @@ export function ChatWidget() {
     setIsLoading(true);
 
     try {
+      const storedBank = typeof window !== "undefined" ? localStorage.getItem("bizmate_selected_bank") : null;
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -124,7 +97,7 @@ export function ChatWidget() {
         body: JSON.stringify({
           message,
           sessionId,
-          apiKey: activeApiKey || undefined,
+          bankId: storedBank || undefined,
         }),
       });
 
@@ -226,15 +199,6 @@ export function ChatWidget() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              {/* API Key Settings Button */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 rounded-xl hover:bg-white/15 text-blue-100 hover:text-white transition-colors cursor-pointer text-xs"
-                title="Configure Google Gemini API Key"
-              >
-                ⚙️
-              </button>
-
               {/* Close Button */}
               <button
                 onClick={() => setIsOpen(false)}
@@ -245,49 +209,6 @@ export function ChatWidget() {
               </button>
             </div>
           </div>
-
-          {/* API Key Settings Drawer (Collapsible) */}
-          {showSettings && (
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700 text-xs animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <span>🔑</span>
-                  <span>Google AI Studio Key (Gemini)</span>
-                </span>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Get free key ↗
-                </a>
-              </div>
-              <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
-                Provide your Google Gemini API key here to activate Gemini 3.5 Flash Lite (Free tier: 15 RPM, 250k TPM, 500 RPD).
-              </p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="password"
-                  placeholder="เช่น AIzaSy..."
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleSaveApiKey}
-                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs cursor-pointer transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-              {apiKeySavedNotice && (
-                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold mt-1.5 animate-in fade-in">
-                  ✓ บันทึก API Key เรียบร้อยแล้ว!
-                </p>
-              )}
-            </div>
-          )}
 
           {/* Chat Messages Feed */}
           <div className="flex-1 p-4 overflow-y-auto space-y-4">

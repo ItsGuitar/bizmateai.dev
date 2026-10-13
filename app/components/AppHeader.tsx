@@ -33,8 +33,6 @@ interface AppHeaderProps {
   onDevReset?: () => void;
   isBankConnected?: boolean;
   onToggleBank?: () => void;
-  selectedBank?: string;
-  onSelectBank?: (bankId: string) => void;
 }
 
 export function AppHeader({
@@ -43,8 +41,6 @@ export function AppHeader({
   onDevReset,
   isBankConnected,
   onToggleBank,
-  selectedBank = "kbank",
-  onSelectBank,
 }: AppHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -76,8 +72,9 @@ export function AppHeader({
 
     try {
       const isBankConnectedState = typeof window !== "undefined" && localStorage.getItem("bizmate_bank_connected") === "true";
+      const storedBankId = typeof window !== "undefined" ? localStorage.getItem("bizmate_selected_bank") || "" : "";
       // 1. Fetch pending approvals (only seeded if bank is connected)
-      const inboxRes = await fetch(`/api/inbox?status=PENDING&bankConnected=${isBankConnectedState}`, {
+      const inboxRes = await fetch(`/api/inbox?status=PENDING&bankConnected=${isBankConnectedState}&bankId=${storedBankId}`, {
         headers: { Authorization: `Bearer ${session.token}` },
       });
       const inboxData = await inboxRes.json();
@@ -210,26 +207,8 @@ export function AppHeader({
           </nav>
         </div>
 
-        {/* Right Side: Bank Switcher, Dev Reset, Theme, Notification Popover, User */}
+        {/* Right Side: Dev Reset, Theme, Notification Popover, User */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Active Bank Mock Dataset Selector */}
-          {onSelectBank && (
-            <div className="flex items-center gap-1.5">
-              <label htmlFor="bank-switcher" className="sr-only">Switch Bank Statement</label>
-              <select
-                id="bank-switcher"
-                value={selectedBank}
-                onChange={(e) => onSelectBank(e.target.value)}
-                className="text-xs font-mono font-semibold py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-xs cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                title="Select Bank Statement Mock Dataset"
-              >
-                <option value="kbank">KBANK (Ploy Select SME)</option>
-                <option value="scb">SCB (Apex Craft Furniture)</option>
-                <option value="bbl">BBL (BioHarvest Agro)</option>
-                <option value="personal">Personal (Kittisak 3M)</option>
-              </select>
-            </div>
-          )}
 
           {/* Optional Developer Reset Button */}
           {onDevReset !== undefined && (

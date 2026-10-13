@@ -2142,7 +2142,7 @@
     "metadata": {
       "supplier_id": "OSAKA-TIMBER-JP",
       "fx_rate": 4.8,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Sumitomo Mitsui Banking Corporation (Osaka Branch)",
       "verified_registry": true,
       "notes": "Quarterly premium timber import from Osaka Port",
       "jpy_amount": 320000
@@ -4620,7 +4620,7 @@
     "metadata": {
       "supplier_id": "OSAKA-TIMBER-JP",
       "fx_rate": 4.8077,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Sumitomo Mitsui Banking Corporation (Osaka Branch)",
       "verified_registry": true,
       "notes": "Quarterly premium timber import from Osaka Port",
       "jpy_amount": 320000
@@ -7299,7 +7299,7 @@
     "metadata": {
       "supplier_id": "OSAKA-TIMBER-JP",
       "fx_rate": 4.8113,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Sumitomo Mitsui Banking Corporation (Osaka Branch)",
       "verified_registry": true,
       "notes": "Quarterly premium timber import from Osaka Port",
       "jpy_amount": 320000
@@ -9896,7 +9896,7 @@
     "metadata": {
       "supplier_id": "OSAKA-TIMBER-JP",
       "fx_rate": 4.8148,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Sumitomo Mitsui Banking Corporation (Osaka Branch)",
       "verified_registry": true,
       "notes": "Quarterly premium timber import from Osaka Port",
       "jpy_amount": 320000
@@ -12527,7 +12527,7 @@
     "metadata": {
       "supplier_id": "OSAKA-TIMBER-JP",
       "fx_rate": 4.8077,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Sumitomo Mitsui Banking Corporation (Osaka Branch)",
       "verified_registry": true,
       "notes": "Quarterly premium timber import from Osaka Port",
       "jpy_amount": 320000
@@ -15109,7 +15109,7 @@
     "metadata": {
       "supplier_id": "OSAKA-TIMBER-JP",
       "fx_rate": 4.825,
-      "recipient_bank": "China Construction Bank (Shenzhen Branch)",
+      "recipient_bank": "Sumitomo Mitsui Banking Corporation (Osaka Branch)",
       "core_conflict_trigger": true,
       "safety_buffer_breach": true,
       "safety_buffer_threshold": 80000,
@@ -15387,3 +15387,4 @@
     }
   }
 ]
+

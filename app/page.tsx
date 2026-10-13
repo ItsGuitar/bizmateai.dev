@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { AGENTS, AgentDefinition } from "./data/agents";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { UserProfileMenu } from "./components/UserProfileMenu";
@@ -70,20 +69,16 @@ export default function WelcomePage() {
       <section className="min-h-[calc(100vh-80px)] w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center text-center z-10 py-4 sm:py-6">
         {/* Prominent Centered Brand Logo with smooth scale entrance */}
         <div className="flex flex-col items-center mb-3 cursor-default">
-          <div className="relative mb-2 flex items-center justify-center animate-fade-in-scale">
+          <div className="relative mb-4 flex items-center justify-center animate-fade-in-scale">
             {/* Ambient Background Glow */}
-            <div className="absolute -inset-6 sm:-inset-8 bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 rounded-full blur-2xl opacity-35 dark:opacity-50 pointer-events-none" />
+            <div className="absolute -inset-6 bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 rounded-full blur-3xl opacity-35 dark:opacity-50 pointer-events-none" />
 
-            <div className="relative w-72 sm:w-[480px] md:w-[620px] lg:w-[700px] aspect-[21/8] flex items-center justify-center transition-transform duration-500 hover:scale-[1.02]">
-              <Image
-                src="/images/logo.png"
-                alt="BizMate Logo"
-                fill
-                priority
-                unoptimized
-                className="object-contain drop-shadow-md select-none"
-              />
-            </div>
+            <span
+              style={{ fontFamily: "var(--font-logo)" }}
+              className="relative inline-block px-4 py-1 text-6xl sm:text-8xl md:text-9xl font-black tracking-normal select-none bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-400 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent drop-shadow-sm transition-transform duration-500 hover:scale-[1.02] cursor-default"
+            >
+              Biz<span className="bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-sky-300 dark:to-cyan-300 bg-clip-text text-transparent">Mate</span>
+            </span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mt-1 text-slate-900 dark:text-white leading-tight max-w-2xl animate-fade-in-up delay-100">

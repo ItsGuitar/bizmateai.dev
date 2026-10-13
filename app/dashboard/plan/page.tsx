@@ -398,8 +398,6 @@ export default function CollaborativePlanPage() {
       <AppHeader
         user={user}
         activeNav="plan"
-        selectedBank={selectedBank}
-        onSelectBank={handleSelectBank}
       />
 
       {/* Main Container */}
