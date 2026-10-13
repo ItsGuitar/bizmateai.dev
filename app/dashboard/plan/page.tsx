@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { UserProfileMenu } from "@/app/components/UserProfileMenu";
+import { AppHeader } from "@/app/components/AppHeader";
 import { getSession, AuthUser } from "@/lib/auth-client";
 
 interface DeliberationStep {
@@ -206,37 +207,8 @@ export default function CollaborativePlanPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col pb-16">
-      {/* Header */}
-      <header className="sticky top-0 z-30 w-full backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-            >
-              <span>←</span>
-              <span>Dashboard</span>
-            </Link>
-
-            <Link href="/" className="inline-flex items-center gap-2">
-              <span
-                style={{ fontFamily: "var(--font-logo)" }}
-                className="text-lg font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent"
-              >
-                BizMate
-              </span>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <span className="hidden sm:inline-flex text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-semibold">
-              ⚡ Glass-Box Trace
-            </span>
-            <ThemeToggle />
-            <UserProfileMenu user={user} onLogout={() => router.push("/")} />
-          </div>
-        </div>
-      </header>
+      {/* Universal Top Navigation Header */}
+      <AppHeader user={user} activeNav="plan" />
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full flex-1">
@@ -329,15 +301,25 @@ export default function CollaborativePlanPage() {
           </button>
         </div>
 
-        {/* TAB 1: DELIBERATION TRACE (Progressive Disclosure / Accordions) */}
+        {/* TAB 1: DELIBERATION TRACE (Progressive Disclosure / Smooth Accordions) */}
         {activeTab === "trace" && (
-          <div className="space-y-3">
-            {DELIBERATION_STEPS.map((step) => {
+          <div className="space-y-3 animate-fade-in-up duration-300">
+            {DELIBERATION_STEPS.map((step, idx) => {
               const isExpanded = expandedStepId === step.id;
+              const delayClass =
+                idx === 0
+                  ? "delay-100"
+                  : idx === 1
+                  ? "delay-200"
+                  : idx === 2
+                  ? "delay-300"
+                  : idx === 3
+                  ? "delay-400"
+                  : "delay-500";
               return (
                 <div
                   key={step.id}
-                  className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs transition-all"
+                  className={`rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md animate-fade-in-up ${delayClass}`}
                 >
                   {/* Scannable Header Row */}
                   <div
@@ -346,7 +328,7 @@ export default function CollaborativePlanPage() {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-transform duration-300 hover:scale-110"
                         style={{ backgroundColor: `${step.agentColor}20`, color: step.agentColor }}
                       >
                         {step.agentEmoji}
@@ -368,7 +350,7 @@ export default function CollaborativePlanPage() {
 
                     <div className="flex items-center gap-2.5 shrink-0">
                       <span
-                        className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg ${
+                        className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg transition-colors ${
                           step.metricType === "warning"
                             ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
                             : step.metricType === "success"
@@ -380,54 +362,64 @@ export default function CollaborativePlanPage() {
                       >
                         {step.keyMetric}
                       </span>
-                      <span className="text-xs text-slate-400 transition-transform duration-200">
-                        {isExpanded ? "▲" : "▼"}
+                      <span
+                        className={`text-xs text-slate-400 inline-block transition-transform duration-300 ease-out ${
+                          isExpanded ? "rotate-180 text-blue-600 dark:text-blue-400" : "rotate-0"
+                        }`}
+                      >
+                        ▼
                       </span>
                     </div>
                   </div>
 
-                  {/* Expanded Accordion: Deep Glass-Box Reasoning */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs animate-in fade-in duration-150">
-                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 my-2">
-                        <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
-                          Glass-Box Reasoning:
-                        </span>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                          {step.detailedReasoning}
-                        </p>
-                      </div>
+                  {/* Smooth Expanded Accordion: CSS Grid Animation */}
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs">
+                        <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 my-2 shadow-2xs">
+                          <span className="text-[10px] font-mono text-slate-400 uppercase block mb-1">
+                            Glass-Box Reasoning:
+                          </span>
+                          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                            {step.detailedReasoning}
+                          </p>
+                        </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                        {step.dataPoints.map((dp, i) => (
-                          <div
-                            key={i}
-                            className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px]"
-                          >
-                            <span className="text-[9px] font-mono text-slate-400 uppercase block">
-                              {dp.label}
-                            </span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
-                              {dp.value}
-                            </span>
-                          </div>
-                        ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                          {step.dataPoints.map((dp, i) => (
+                            <div
+                              key={i}
+                              className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] transition-colors hover:border-slate-300"
+                            >
+                              <span className="text-[9px] font-mono text-slate-400 uppercase block">
+                                {dp.label}
+                              </span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 truncate block mt-0.5">
+                                {dp.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
 
-        {/* TAB 2: COMPARISON (Crisp Visual Cards) */}
+        {/* TAB 2: COMPARISON (Crisp Visual Cards with Smooth Hover) */}
         {activeTab === "comparison" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {COMPARISON_OPTIONS.map((opt) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 animate-fade-in-up duration-300">
+            {COMPARISON_OPTIONS.map((opt, idx) => (
               <div
                 key={opt.id}
-                className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all ${
+                className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg animate-fade-in-up delay-${(idx + 1) * 100} ${
                   opt.status === "RECOMMENDED"
                     ? "border-emerald-500 ring-1 ring-emerald-500/40 shadow-xs"
                     : opt.status === "BLOCKED"
@@ -463,8 +455,8 @@ export default function CollaborativePlanPage() {
 
         {/* TAB 3: 3 APPROVAL ACTIONS */}
         {activeTab === "actions" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 animate-fade-in-up duration-300">
+            <div className="group p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
               <div>
                 <span className="text-[10px] font-mono font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950 px-2 py-0.5 rounded">
                   Step 1 • Collections
@@ -477,14 +469,15 @@ export default function CollaborativePlanPage() {
                 </p>
               </div>
               <Link
-                href="/dashboard#inbox-approvals"
-                className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                href="/inbox?item=collections"
+                className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group-hover:gap-1.5 transition-all"
               >
-                Review Draft →
+                <span>Review Draft in Inbox</span>
+                <span>→</span>
               </Link>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+            <div className="group p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
               <div>
                 <span className="text-[10px] font-mono font-bold text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-950 px-2 py-0.5 rounded">
                   Step 2 • Funding
@@ -497,14 +490,15 @@ export default function CollaborativePlanPage() {
                 </p>
               </div>
               <Link
-                href="/dashboard#inbox-approvals"
-                className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                href="/inbox?item=funding"
+                className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group-hover:gap-1.5 transition-all"
               >
-                Inspect Proposal →
+                <span>Inspect Proposal in Inbox</span>
+                <span>→</span>
               </Link>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+            <div className="group p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
               <div>
                 <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded">
                   Step 3 • Security &amp; Trust
@@ -517,10 +511,11 @@ export default function CollaborativePlanPage() {
                 </p>
               </div>
               <Link
-                href="/dashboard#inbox-approvals"
-                className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                href="/inbox?item=true-cost"
+                className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group-hover:gap-1.5 transition-all"
               >
-                Authorize with Face ID →
+                <span>Authorize with Face ID in Inbox</span>
+                <span>→</span>
               </Link>
             </div>
           </div>

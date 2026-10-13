@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { AppHeader } from "@/app/components/AppHeader";
 
 export default function SwaggerDocsPage() {
   const initSwagger = () => {
@@ -40,42 +41,8 @@ export default function SwaggerDocsPage() {
         href="https://unpkg.com/swagger-ui-dist@5.18.2/swagger-ui.css"
       />
 
-      {/* Header Bar */}
-      <header className="sticky top-0 z-30 w-full backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <span
-                style={{ fontFamily: "var(--font-logo)" }}
-                className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent"
-              >
-                BizMate
-              </span>
-            </Link>
-            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              Swagger OpenAPI 3.0
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <a
-              href="/api/docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              Raw Spec (JSON) ↗
-            </a>
-            <ThemeToggle />
-            <Link
-              href="/"
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Universal Top Navigation Header */}
+      <AppHeader activeNav="docs" />
 
       {/* Info notice bar */}
       <div className="bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 py-2.5 px-6 text-xs text-slate-600 dark:text-slate-400">

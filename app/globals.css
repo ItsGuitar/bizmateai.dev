@@ -114,6 +114,56 @@ body {
   animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Face ID Biometric Laser Scanner */
+@keyframes scanBeam {
+  0%, 100% {
+    top: 8%;
+    opacity: 0.3;
+  }
+  50% {
+    top: 88%;
+    opacity: 1;
+  }
+}
+
+.animate-scan-beam {
+  animation: scanBeam 1.4s ease-in-out infinite;
+}
+
+/* Gentle floating bob for agent avatars */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: floatGentle 3s ease-in-out infinite;
+}
+
+/* Checkmark pop for successful authorization */
+@keyframes checkPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-check-pop {
+  animation: checkPop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .shimmer-active {
   background: linear-gradient(
     90deg,

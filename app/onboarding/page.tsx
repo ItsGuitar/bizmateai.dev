@@ -722,7 +722,12 @@ export default function OnboardingPage() {
 
             {/* Primary Activation CTA */}
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("bizmate_bank_connected", "true");
+                }
+                router.push("/dashboard");
+              }}
               disabled={!isProvisioningComplete}
               className={`w-full py-4 rounded-2xl font-bold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 ${
                 isProvisioningComplete

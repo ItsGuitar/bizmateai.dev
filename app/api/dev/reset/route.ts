@@ -28,57 +28,13 @@ export async function POST(request: Request) {
       prisma.auditLog.deleteMany({
         where: { userId },
       }),
-      // Re-seed PRD default inbox items
-      prisma.inboxApproval.createMany({
-        data: [
-          {
-            userId,
-            agentId: "collections",
-            title: "Chase overdue invoice - Boutique Siam",
-            description: "Drafted polite LINE reminder for ฿35,000 invoice (21 days past due).",
-            impact: "+฿35,000 cash recovery on 20 Oct",
-            status: "PENDING",
-            requiresFaceId: false,
-          },
-          {
-            userId,
-            agentId: "funding",
-            title: "Request 60-day terms from Chen Tech",
-            description: "Proposal to defer ¥100,000 payment to 25 Dec at 1.1% fee financing.",
-            impact: "Preserves ฿80,000 safety buffer on 26 Oct",
-            status: "PENDING",
-            requiresFaceId: false,
-          },
-          {
-            userId,
-            agentId: "true-cost",
-            title: "Approve Shenzhen Chen Tech FX Payment",
-            description: "Direct bank rail locked to verified registry account (¥100,000).",
-            impact: "-฿482,500 cash outflow scheduled for due date",
-            status: "PENDING",
-            requiresFaceId: true,
-          },
-        ],
-      }),
-      // Re-seed PRD default audit logs
+      // Re-seed initial Trust Agent baseline audit log
       prisma.auditLog.createMany({
         data: [
           {
             userId,
             agentId: "trust",
-            action: "System database state reset to baseline by Developer Reset Utility",
-            status: "DONE",
-          },
-          {
-            userId,
-            agentId: "cash",
-            action: "Ingested bank feed: Kasikornbank Main (฿145,628) from 12-month statement",
-            status: "DONE",
-          },
-          {
-            userId,
-            agentId: "true-cost",
-            action: "Shenzhen Chen Tech invoice verified: No account tampering detected",
+            action: "System database reset to unlinked baseline. Bank connection required.",
             status: "DONE",
           },
         ],
