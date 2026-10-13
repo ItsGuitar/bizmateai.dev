@@ -628,14 +628,14 @@ export default function DashboardPage() {
                 ฿{financialSummary?.buyerHabits?.[1]?.currentOverdueAmount?.toLocaleString() || "35,000"}
               </p>
               <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5 font-medium">
-                1 invoice • Boutique Siam (21 days overdue)
+                Boutique Siam (21 days overdue)
               </p>
             </div>
             <Link
               href="#inbox-approvals"
               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
             >
-              <span>Review polite reminder draft</span>
+              <span>Review draft</span>
               <span>→</span>
             </Link>
           </div>
@@ -660,7 +660,7 @@ export default function DashboardPage() {
               href="#health-score"
               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
             >
-              <span>Inspect 7-part breakdown</span>
+              <span>Score details</span>
               <span>→</span>
             </Link>
           </div>
@@ -669,7 +669,7 @@ export default function DashboardPage() {
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                For Your OK (Approval Queue)
+                For Your OK
               </span>
               <span className="text-lg">📥</span>
             </div>
@@ -678,14 +678,14 @@ export default function DashboardPage() {
                 {pendingApprovalsCount} Pending
               </p>
               <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 font-medium">
-                Zero-surprise actions awaiting your sign-off
+                Zero-surprise approval queue
               </p>
             </div>
             <Link
               href="#inbox-approvals"
               className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
             >
-              <span>Open Central Approval Inbox</span>
+              <span>Open Inbox</span>
               <span>→</span>
             </Link>
           </div>
@@ -695,18 +695,18 @@ export default function DashboardPage() {
             THE AGENTS' JOINT PLAN CARD (PL-01 Highlight Card)
         ======================================================== */}
         <section id="joint-plan" className="mb-8">
-          <div className="p-6 sm:p-7 rounded-3xl bg-amber-50/50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/60 shadow-md">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="p-5 sm:p-6 rounded-3xl bg-amber-50/50 dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/60 shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center text-xl font-bold shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center text-lg font-bold shadow-xs">
                   ⚡
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">
                     The Agents&apos; Joint Plan: Resolve 26 Oct Cash Dip
                   </h2>
                   <p className="text-xs text-slate-600 dark:text-slate-400">
-                    6 agents synchronized a 3-step remedy to safeguard the ฿80k safety buffer.
+                    3-step remedy to safeguard your ฿80k safety buffer with zero debt.
                   </p>
                 </div>
               </div>
@@ -714,22 +714,22 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2.5 self-start sm:self-center">
                 <Link
                   href="/dashboard/plan"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 shadow-xs hover:shadow-md transition-all cursor-pointer"
                   title="View transparent deliberation trace showing how the 6 agents synchronized this plan"
                 >
                   <span>How they decided</span>
                   <span>→</span>
                 </Link>
-                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800">
-                  Explainable AI (Glass Box)
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-2.5 py-1 rounded-xl border border-amber-300 dark:border-amber-800">
+                  Glass Box
                 </span>
               </div>
             </div>
 
             {/* The 3 Synchronized Steps */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 my-4">
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 my-3">
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-mono font-bold text-orange-600 dark:text-orange-400">
                     Step 1 • Collections
                   </span>
@@ -738,52 +738,52 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Chase Overdue Invoice - Boutique Siam
+                  Recover ฿35k Overdue AR
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Drafted friendly reminder for ฿35k (21 days past due) to recover cash by 20 Oct.
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Polite LINE reminder ready for Boutique Siam.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-2">
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-mono font-bold text-yellow-600 dark:text-yellow-400">
                     Step 2 • Funding
                   </span>
                   <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
-                    Preserves Buffer
+                    Saves Buffer
                   </span>
                 </div>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Request 60-Day Supplier Terms
+                  60-Day Supplier Terms
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Proposal to defer ¥100,000 Chen Tech invoice to 25 Dec at 1.1% fee financing.
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Defer ¥100k Chen Tech invoice to 25 Dec @ 1.1% fee.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-2">
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-mono font-bold text-red-600 dark:text-red-400">
-                    Step 3 • True Cost &amp; Trust
+                    Step 3 • Security &amp; Trust
                   </span>
                   <span className="text-xs font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
-                    Biometric Lock
+                    Face ID
                   </span>
                 </div>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                  Pay Chen Tech via Partner FX Rail
+                  Verified FX Rail Transfer
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Direct bank rail locked to verified registry account. Protected by Face ID.
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Locked CCB rail with Face ID biometric check.
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 text-xs text-slate-500 dark:text-slate-400 border-t border-amber-200/60 dark:border-amber-800/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 text-xs text-slate-500 dark:text-slate-400 border-t border-amber-200/60 dark:border-amber-800/40">
               <span className="flex items-center gap-1.5">
                 <span>🛡️</span>
-                <span>Deterministic Rule: No action is executed without your explicit sign-off in Central Inbox.</span>
+                <span>Zero-Surprise: Actions require your sign-off in Central Inbox.</span>
               </span>
               <div className="flex items-center gap-3">
                 <Link
@@ -793,7 +793,7 @@ export default function DashboardPage() {
                   <span>Read full trace</span>
                   <span>→</span>
                 </Link>
-                <span className="font-mono text-[11px]">System Clock: 12 Oct 2026</span>
+                <span className="font-mono text-[11px]">12 Oct 2026</span>
               </div>
             </div>
           </div>
@@ -867,13 +867,13 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Statement Ledger Ingestion</span>
+                    <span>Transaction History</span>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                      366-Day Verified
+                      Verified
                     </span>
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Analyzing {financialSummary?.totalTransactionsInStatement || 1030} records across Omnichannel platforms and Shenzhen Chen Tech cross-border rails.
+                    Live feeds from sales channels and cross-border supplier rails.
                   </p>
                 </div>
               </div>
@@ -981,11 +981,11 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2.5">
                 <span className="text-lg">📜</span>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                  Latest from Your Agents (Immutable Audit Stream)
+                  Recent Agent Activity
                 </h2>
               </div>
               <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                ● Real-time Verifiable Ledger
+                ● Live Audit Feed
               </span>
             </div>
 
