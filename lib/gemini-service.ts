@@ -168,15 +168,67 @@ function fallbackAgentReasoning(
   userProfile?: UserBusinessProfile,
   summaryData?: ReturnType<typeof getFinancialSummary>
 ): GeminiResponse {
-  const query = userQuery.toLowerCase();
+  const query = userQuery.trim().toLowerCase();
   const summary = summaryData || getFinancialSummary(userProfile?.businessName);
   const businessName = userProfile?.businessName || summary.company || "ธุรกิจของคุณ";
   const conflictWeek = summary.cashRadarWeeks.find((w) => w.status === "below" || w.status === "short") || summary.cashRadarWeeks[2] || summary.cashRadarWeeks[0];
   const supplier = summary.supplierHistory;
   const debtor = summary.buyerHabits.find((b) => b.currentOverdueAmount > 0) || summary.buyerHabits[0];
 
-  if (query.includes("cash") || query.includes("เงิน") || query.includes("buffer") || query.includes("radar") || query.includes("สภาพคล่อง")) {
-    const riskNote = conflictWeek
+  // 1. Detect profanity, venting, or aggressive slang (ควย, สัส, เหี้ย, etc.)
+  const profanityRegex = /(ควย|สัส|เหี้ย|มึง|กู|เย็ด|เสือก|ไอ้เวร|ไอ้บ้า|fuck|shit|bitch|asshole|dick)/i;
+  if (profanityRegex.test(query)) {
+    const hasFinancialIntent = query.includes("เงิน") || query.includes("หนี้") || query.includes("เจ๊ง") || query.includes("ชิบหาย") || query.includes("รอด") || query.includes("กู้");
+    if (!hasFinancialIntent) {
+      return {
+        agentId: "trust",
+        content: `ใจเย็น ๆ ก่อนครับผู้ประกอบการ BizMate AI Copilot พร้อมรับฟังและช่วยวิเคราะห์การเงินให้เสมอครับ ตอนนี้มีเรื่องสภาพคล่อง เงินสด หรือคู่ค้าค้างชำระจุดไหนที่กังวลเป็นพิเศษไหมครับ? พิมพ์บอกผมได้เลยครับ`,
+        reasoning: "Trust Agent เข้ามาดูแลและรับฟังปัญหา เพื่อนำพาเข้าสู่การวิเคราะห์การเงินที่แท้จริง",
+        actionRoute: "/dashboard",
+      };
+    }
+  }
+
+  // 2. Detect non-financial prompts, repeat/spam commands, jokes, gibberish (e.g., "say gernig 10 times", "tell me a joke", "write code")
+  const isCodeOrAlgorithm = /(code|javascript|python|binary search|merge sort|function|algorithm|เขียนโค้ด|แก้โค้ด)/i.test(query);
+  const isGenericCommand = /(say|repeat|พูด|ท่อง|นับ|เล่าเรื่อง|แต่งกลอน|เล่าตลก|joke|poem|sing)/i.test(query) && !query.includes("เงิน") && !query.includes("หนี้");
+  const isNonsenseOrOutOfDomain = isCodeOrAlgorithm || isGenericCommand;
+
+  if (isNonsenseOrOutOfDomain) {
+    return {
+      agentId: "trust",
+      content: `BizMate เป็นระบบ AI Copilot เฉพาะทางด้านการเงินและสภาพคล่องสำหรับธุรกิจ ${businessName} ครับ จึงไม่สามารถทำคำสั่งทั่วไปอย่างการพูดซ้ำ แต่งกลอน หรือเขียนโค้ดได้ครับ\n\nแต่หากต้องการให้ผมตรวจสอบ:\n• สภาพคล่องกระแสเงินสด 13 สัปดาห์ (Cash Radar)\n• ลูกหนี้ที่ค้างชำระและแนวทางติดตาม (Collections)\n• วงเงินทุนหมุนเวียนและการยืดเครดิตเทอมคู่ค้า (Funding)\nสามารถสอบถามได้ทันทีครับ!`,
+      reasoning: "Trust Agent รักษาขอบเขตการทำงานเฉพาะทางด้านการเงิน (Domain Boundary Guardrail)",
+      actionRoute: "/dashboard",
+    };
+  }
+
+  // 3. Greetings / Introductions / Capability inquiry
+  if (query.includes("สวัสดี") || query.includes("hello") || query.includes("hi") || query.includes("หวัดดี") || query.includes("ทำอะไรได้") || query.includes("help") || query.includes("ช่วยอะไร") || query.includes("เป็นใคร")) {
+    return {
+      agentId: "trust",
+      content: `สวัสดีครับคุณผู้บริหาร BizMate AI Copilot พร้อมช่วยดูแลการเงินของ "${businessName}" ตลอด 24 ชม. ครับ! ระบบของเราเชื่อมต่อกับข้อมูลบัญชี ${summary.bankName} เรียบร้อยแล้ว คุณสามารถถามผมเกี่ยวกับ:\n1. กระแสเงินสดและเงินสำรอง (เช่น "เงินสดเหลือเท่าไหร่", "เดือนหน้ารอดไหม")\n2. ลูกหนี้ค้างชำระ (เช่น "ใครค้างเงินบ้าง", "ตามหนี้ยังไง")\n3. ค่าใช้จ่ายคู่ค้าและการยืดหนี้ (เช่น "รอบจ่ายซัพพลายเออร์")\n4. คะแนนสุขภาพการเงินและเครดิต`,
+      reasoning: "Trust Agent แนะนำขอบเขตความสามารถและสถานะการเชื่อมต่อบัญชีธนาคาร",
+      actionRoute: "/dashboard",
+    };
+  }
+
+  // 4. Slang for financial stress / collapse (เช่น "ชิบหาย", "เจ๊ง", "รอดไหม", "จะรอดมั้ย", "พังไหม")
+  if (query.includes("ชิบหาย") || query.includes("เจ๊ง") || query.includes("รอด") || query.includes("พัง") || query.includes("วิกฤต") || query.includes("แย่")) {
+    const isSafe = !conflictWeek || conflictWeek.status === "safe";
+    return {
+      agentId: "cash",
+      content: isSafe
+        ? `ไม่ต้องกังวลครับ จากการคำนวณ 13-Week Cash Radar ของ ${businessName} สภาพคล่องยัง "ปลอดภัย" ครับ! เงินสดปัจจุบันมี ${summary.formattedCurrentCash} สูงกว่า Safety Buffer (${summary.formattedSafetyBuffer}) และยังไม่มีสัปดาห์ใดที่เงินสดต่ำกว่าเกณฑ์ แต่ถ้าต้องการเสริมเกราะป้องกัน แนะนำเร่งเก็บหนี้ค้างจาก ${debtor ? debtor.name : "ลูกหนี้"} ครับ`
+        : `มีจุดที่ต้องระวังครับ! ในสัปดาห์ที่ ${conflictWeek.week} (${conflictWeek.date}) คาดว่าเงินสดจะลดลงเหลือ ฿${conflictWeek.balance.toLocaleString()} ซึ่งต่ำกว่า Safety Buffer ที่ตั้งไว้ ฿${summary.safetyBuffer.toLocaleString()} แนะนำเปิดดู "Joint Remedy Plan" เพื่อเลื่อนจ่ายคู่ค้าหรือเร่งทวงหนี้ทันทีครับ`,
+      reasoning: `Cash Agent ตรวจจับคำถามความเสี่ยงสภาพคล่อง และประเมินผ่าน Cash Flow Projection 13 สัปดาห์`,
+      actionRoute: "/dashboard#joint-plan",
+    };
+  }
+
+  // 5. Cash / Liquidity / Balance (เงินสด, กระแสเงินสด, สภาพคล่อง, buffer, radar)
+  if (query.includes("cash") || query.includes("เงิน") || query.includes("buffer") || query.includes("radar") || query.includes("สภาพคล่อง") || query.includes("ยอดเงิน")) {
+    const riskNote = conflictWeek && conflictWeek.status !== "safe"
       ? `แต่ในสัปดาห์ที่ ${conflictWeek.week} (${conflictWeek.date}) มีความเสี่ยงที่เงินจะลดเหลือ ฿${conflictWeek.balance.toLocaleString()} ซึ่งต่ำกว่า Safety Buffer ฿${summary.safetyBuffer.toLocaleString()}`
       : `กระแสเงินสดอยู่ในเกณฑ์ปลอดภัยเหนือ Safety Buffer ฿${summary.safetyBuffer.toLocaleString()} ทุกสัปดาห์`;
     return {
@@ -187,7 +239,8 @@ function fallbackAgentReasoning(
     };
   }
 
-  if (query.includes("supplier") || query.includes("loan") || query.includes("ยืม") || query.includes("กู้") || query.includes("ทุน") || query.includes("ซัพพลายเออร์")) {
+  // 6. Supplier / Deferred terms / Loans / Funding (ซัพพลายเออร์, ทุน, กู้, ยืม, จ่ายเงิน, ค่าของ)
+  if (query.includes("supplier") || query.includes("loan") || query.includes("ยืม") || query.includes("กู้") || query.includes("ทุน") || query.includes("ซัพพลายเออร์") || query.includes("จ่ายคู่ค้า") || query.includes("ยอดจ่าย")) {
     return {
       agentId: "funding",
       content: `ประวัติการค้ากับ ${supplier.name} พบประวัติการทำธุรกรรมต่อเนื่อง ${supplier.monthsActive} เดือน รวม ${supplier.totalTransfersCount} รายการ สำหรับยอดค้างชำระ ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} (~฿${supplier.pendingOrderThb.toLocaleString()}) ที่จะถึงกำหนด ทางเลือกที่คุ้มที่สุดคือการขอขยายเทอมเป็น 60 วัน (ค่าธรรมเนียมเพียง 1.1%) ซึ่งประหยัดกว่าการกู้เงินด่วนธนาคารหรือสินเชื่อภายนอกครับ`,
@@ -196,7 +249,8 @@ function fallbackAgentReasoning(
     };
   }
 
-  if (query.includes("หนี้") || query.includes("invoice") || query.includes("ทวง") || query.includes("ค้าง") || query.includes("ตาม") || query.includes("ลูกหนี้")) {
+  // 7. Collections / Debt / Invoice overdue (หนี้, ทวง, invoice, ค้าง, ลูกหนี้, ใบแจ้งหนี้)
+  if (query.includes("หนี้") || query.includes("invoice") || query.includes("ทวง") || query.includes("ค้าง") || query.includes("ตาม") || query.includes("ลูกหนี้") || query.includes("เก็บเงิน")) {
     const debtorInfo = debtor
       ? `พบคู่ค้า ${debtor.name} มียอดค้างชำระ ฿${debtor.currentOverdueAmount.toLocaleString()} เกินกำหนดมาแล้ว ${Math.round(debtor.averageDelayDays)} วันครับ จากพฤติกรรมในอดีตมักจะจ่ายทันทีเมื่อได้รับข้อความเตือนสุภาพ ผมได้ร่างข้อความ LINE แจ้งเตือนไว้ใน Inbox แล้ว รอคุณกดอนุมัติเพื่อส่งครับ`
       : `ปัจจุบันไม่มีลูกหนี้ค้างชำระเกินกำหนดในระบบครับ ลูกหนี้ทุกรายชำระตรงตามกำหนด`;
@@ -210,7 +264,8 @@ function fallbackAgentReasoning(
     };
   }
 
-  if (query.includes("โกง") || query.includes("ปลอม") || query.includes("apr") || query.includes("ดอก") || query.includes("ปลอดภัย") || query.includes("fraud") || query.includes("สแกม")) {
+  // 8. Fraud / True Cost / Predatory Loan (โกง, ดอก, apr, สแกม, หลอก, ปลอดภัย)
+  if (query.includes("โกง") || query.includes("ปลอม") || query.includes("apr") || query.includes("ดอก") || query.includes("ปลอดภัย") || query.includes("fraud") || query.includes("สแกม") || query.includes("มิจ")) {
     return {
       agentId: "true-cost",
       content: `True Cost Agent ตรวจสอบและสกัดกั้นภัยคุกคามทางการเงินแล้ว ${summary.anomaliesCount} รายการ รวมถึงการดักจับและบล็อกโฆษณาสินเชื่อเงินด่วนคิดดอกเบี้ยเกินจริง (APR เกินเกณฑ์กำกับ) และตรวจสอบบัญชีคู่ค้าของ ${businessName} ผ่าน Registry ปลอดภัย 100% ครับ`,
@@ -219,19 +274,21 @@ function fallbackAgentReasoning(
     };
   }
 
-  if (query.includes("ใคร") || query.includes("ชื่ออะไร") || query.includes("ทำอะไรได้") || query.includes("bot") || query.includes("บอท") || query.includes("มั่ว") || query.includes("โม้")) {
+  // 9. Health Score / Credit evaluation (คะแนน, สุขภาพ, เครดิต, hygiene, grade, health)
+  if (query.includes("คะแนน") || query.includes("สุขภาพ") || query.includes("เครดิต") || query.includes("health") || query.includes("เกรด") || query.includes("hygiene")) {
     return {
-      agentId: "trust",
-      content: `ขออภัยครับ! ผมคือ BizMate AI Copilot ผู้ช่วยทางการเงินอัตโนมัติของ "${businessName}" ไม่ได้ตอบมั่วแน่นอนครับ ข้อมูลทั้งหมดคำนวณสดจากประวัติ Statement บัญชี ${summary.bankName} (${summary.totalTransactionsInStatement.toLocaleString()} ธุรกรรม) โดยวิเคราะห์ทั้งกระแสเงินสด Cash Radar, เครดิตซัพพลายเออร์ และลูกหนี้ค้างชำระครับ คุณสามารถถามเรื่องเงินสดคงเหลือ หนี้ค้างชำระ หรือตรวจสอบดอกเบี้ยเงินกู้ได้เลยครับ`,
-      reasoning: `Trust Agent ยืนยันตัวตนและแหล่งที่มาของข้อมูลการคำนวณจาก Bank Statement จริงของ ${businessName}`,
-      actionRoute: "/dashboard",
+      agentId: "health",
+      content: `คะแนนสุขภาพทางการเงินของ ${businessName} อยู่ที่ ${summary.healthScore.overallScore}/100 (${summary.healthScore.ratingGrade}) ครับ อยู่ในเกณฑ์ ${summary.healthScore.creditStatus} จุดแข็งคือไม่เคยมีเช็คเด้งหรือเงินติดลบในประวัติ Statement จุดที่ควรให้ความสำคัญคือการบริหารรอบเงินทุนหมุนเวียนและการติดตามลูกหนี้ตามกำหนดครับ`,
+      reasoning: `Health Agent ประเมินสุขอนามัยทางการเงิน 7 มิติจากประวัติ Statement รายรับรายจ่ายย้อนหลังของ ${businessName}`,
+      actionRoute: "/dashboard#health-score",
     };
   }
 
+  // 10. Intelligent conversational default for ambiguous or general questions
   return {
-    agentId: "health",
-    content: `คะแนนสุขภาพทางการเงินของ ${businessName} อยู่ที่ ${summary.healthScore.overallScore}/100 (${summary.healthScore.ratingGrade}) ครับ อยู่ในเกณฑ์ ${summary.healthScore.creditStatus} จุดแข็งคือไม่เคยมีเช็คเด้งหรือเงินติดลบในประวัติ Statement จุดที่ควรให้ความสำคัญคือการบริหารรอบเงินทุนหมุนเวียนและการติดตามลูกหนี้ตามกำหนดครับ`,
-    reasoning: `Health Agent ประเมินสุขอนามัยทางการเงิน 7 มิติจากประวัติ Statement รายรับรายจ่ายย้อนหลังของ ${businessName}`,
-    actionRoute: "/dashboard#health-score",
+    agentId: "trust",
+    content: `ได้รับข้อความ "${userQuery.slice(0, 50)}" แล้วครับ ในฐานะ BizMate AI Copilot สำหรับ ${businessName} ผมพร้อมช่วยวิเคราะห์เจาะลึก 3 ด้านหลัก ได้แก่:\n• ตรวจเช็คกระแสเงินสด 13 สัปดาห์ (พิมพ์ "เงินสด" หรือ "รอดไหม")\n• ติดตามลูกหนี้ค้างชำระ (พิมพ์ "ตามหนี้" หรือ "ใครค้างบ้าง")\n• คำนวณดอกเบี้ยและยืดระยะจ่ายคู่ค้า (พิมพ์ "จ่ายคู่ค้า" หรือ "กู้เงิน")\nคุณต้องการให้ผมตรวจเช็คด้านไหนเป็นพิเศษไหมครับ?`,
+    reasoning: `Trust Agent รับเรื่องและนำทางผู้ใช้งานเข้าสู่ฟังก์ชันการเงินที่ตรงจุด`,
+    actionRoute: "/dashboard",
   };
 }
