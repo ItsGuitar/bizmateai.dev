@@ -1307,7 +1307,7 @@ export default function DashboardPage() {
 
             <ul className="text-xs text-slate-600 dark:text-slate-400 mt-3 space-y-1.5 list-disc list-inside bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/60 font-mono text-[11px]">
               <li>Clear chat message history</li>
-              <li>Re-seed 3 PRD Approval Inbox items</li>
+              <li>Re-seed 3 Central Approval Inbox items</li>
               <li>Re-seed baseline Trust Agent audit logs</li>
               <li>Simulate unlinked bank state for First-Time User view</li>
             </ul>
