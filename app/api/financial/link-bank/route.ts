@@ -14,15 +14,7 @@ export async function POST(request: Request) {
     const normalized = normalizeBankId(bankId);
     const summary = getFinancialSummary(normalized);
 
-    // 1. Update user's business name to match the linked statement's actual business
-    await prisma.user.update({
-      where: { id: auth.userId },
-      data: {
-        businessName: summary.company,
-      },
-    });
-
-    // 2. Clear out any previous inbox proposals from old bank sessions
+    // 1. Clear out any previous inbox proposals from old bank sessions
     await prisma.inboxApproval.deleteMany({
       where: { userId: auth.userId },
     });

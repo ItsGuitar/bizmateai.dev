@@ -26,11 +26,12 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const fallbackName = businessName?.trim() || email.split("@")[0];
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
-        businessName: businessName || "Ploy Select Co., Ltd.",
+        businessName: fallbackName,
         // Seed initial immutable audit logs matching PRD instruction.md
         auditLogs: {
           create: [

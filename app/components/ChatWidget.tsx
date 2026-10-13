@@ -133,8 +133,33 @@ export function ChatWidget() {
     }
   };
 
-  // Hide AI chat and floating button on the Welcome / landing page ('/')
-  if (pathname === "/") {
+  // Track bank connection status dynamically
+  const [isBankLinked, setIsBankLinked] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkBankLinked = () => {
+      if (typeof window !== "undefined") {
+        const storedBankState = localStorage.getItem("bizmate_bank_connected");
+        const storedBankChoice = localStorage.getItem("bizmate_selected_bank");
+        const session = getSession();
+        // Considered linked only if user is logged in AND bank is connected/selected
+        const linked = Boolean(session?.token && storedBankState === "true" && storedBankChoice);
+        setIsBankLinked(linked);
+      }
+    };
+
+    checkBankLinked();
+    window.addEventListener("storage", checkBankLinked);
+    const interval = setInterval(checkBankLinked, 1000);
+    return () => {
+      window.removeEventListener("storage", checkBankLinked);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Hide AI chat and floating button on Welcome ('/'), login, register, onboarding, or if bank is not linked yet
+  const authOrUnlinkedPages = ["/", "/login", "/register", "/onboarding"];
+  if (authOrUnlinkedPages.includes(pathname) || !isBankLinked) {
     return null;
   }
 
