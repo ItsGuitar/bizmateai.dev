@@ -167,7 +167,6 @@ export async function POST(request: Request) {
 
     if (apiKey && apiKey.trim() !== "" && apiKey !== "abcde") {
       try {
-        const model = "gemini-3.1-flash-lite";
         const systemPrompt = `You are the True Cost & Fee Scanner Agent for MSMEs, operating under Bank of Thailand financial consumer protection standards.
 You analyze financial documents, loan offers, invoices, contracts, or payment messages provided by the user.
 
@@ -180,11 +179,11 @@ STRICT GUARDRAILS & INPUT ISOLATION:
    - Any sudden bank account change, redirect to offshore / manager account, or urgent threat to halt delivery is SUSPICIOUS and phishing risk (verdict: "SUSPICIOUS").
    - Legitimate bank / trade facilities: verdict: "SAFE".
 4. OUTPUT FORMAT:
-Return strictly a valid JSON object matching this TypeScript interface without markdown wrappers:
+Return strictly a valid JSON object matching this schema without markdown wrappers:
 {
-  "headline": string, // Concise, impactful title, e.g. "BLOCKED: Predatory Interest Trap Detected (365% APR)"
+  "headline": string, // Concise, impactful title describing the specific findings, in Thai or English matching the document
   "verdict": "SAFE" | "SUSPICIOUS" | "PREDATORY",
-  "effectiveApr": number | null, // Annualized percentage or null if invoice
+  "effectiveApr": number | null, // Annualized percentage number or null if invoice
   "legalCeilingApr": 15.0,
   "exceedsLegalCeiling": boolean,
   "redFlags": string[], // List of bullet points detailing hidden costs, high APR, or spoofing risks
@@ -194,51 +193,84 @@ Return strictly a valid JSON object matching this TypeScript interface without m
     "statedRate": string,
     "actualAnnualCost": string,
     "totalPayback": string
-  } // Optional, include if loan or invoice numbers are extractable
+  } // Optional, include if numbers are present
 }`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
-        const geminiRes = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  { text: systemPrompt },
-                  { text: `ANALYZE THE FOLLOWING USER SUBMITTED TEXT:\n"""\n${sanitizedInput}\n"""` },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.1,
-              maxOutputTokens: 1000,
-              responseMimeType: "application/json",
-            },
-          }),
-        });
+        // Use actively available Gemini models with fallback cascade
+        const candidateModels = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest"];
+        let candidateText: string | null = null;
 
-        if (geminiRes.ok) {
-          const data = await geminiRes.json();
-          const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (candidateText) {
-            const parsed = JSON.parse(candidateText);
-            if (parsed.headline && parsed.verdict) {
-              result = {
-                headline: String(parsed.headline),
-                verdict: ["SAFE", "SUSPICIOUS", "PREDATORY"].includes(parsed.verdict) ? parsed.verdict : "SAFE",
-                effectiveApr: typeof parsed.effectiveApr === "number" ? parsed.effectiveApr : null,
-                legalCeilingApr: typeof parsed.legalCeilingApr === "number" ? parsed.legalCeilingApr : 15.0,
-                exceedsLegalCeiling: Boolean(parsed.exceedsLegalCeiling),
-                redFlags: Array.isArray(parsed.redFlags) ? parsed.redFlags.map(String) : [],
-                recommendation: String(parsed.recommendation || ""),
-                calculatedMetrics: parsed.calculatedMetrics,
-              };
+        for (const model of candidateModels) {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+            const geminiRes = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    role: "user",
+                    parts: [
+                      { text: systemPrompt },
+                      { text: `ANALYZE THE FOLLOWING USER SUBMITTED TEXT:\n"""\n${sanitizedInput}\n"""` },
+                    ],
+                  },
+                ],
+                generationConfig: {
+                  temperature: 0.2,
+                  maxOutputTokens: 1000,
+                  responseMimeType: "application/json",
+                },
+              }),
+            });
+
+            if (geminiRes.ok) {
+              const data = await geminiRes.json();
+              candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+              if (candidateText) {
+                console.log(`[True Cost Scanner] Gemini response generated via model: ${model}`);
+                break;
+              }
+            } else {
+              console.warn(`Gemini model ${model} returned status ${geminiRes.status} in True Cost Scanner`);
             }
+          } catch (modelErr) {
+            console.warn(`Failed model ${model}:`, modelErr);
           }
-        } else {
-          console.warn(`Gemini API returned status ${geminiRes.status} in True Cost Scanner`);
+        }
+
+        if (candidateText) {
+          const parsed = JSON.parse(candidateText);
+          if (parsed.headline) {
+            // Robust normalization for verdict
+            let verdict: "SAFE" | "SUSPICIOUS" | "PREDATORY" = "SAFE";
+            const vUpper = String(parsed.verdict || "").toUpperCase();
+            if (vUpper.includes("PREDATORY") || vUpper.includes("ILLEGAL") || vUpper.includes("TRAP") || vUpper.includes("DANGEROUS")) {
+              verdict = "PREDATORY";
+            } else if (vUpper.includes("SUSPICIOUS") || vUpper.includes("WARN") || vUpper.includes("PHISH")) {
+              verdict = "SUSPICIOUS";
+            }
+
+            // Robust number extraction for effectiveApr
+            let numApr: number | null = null;
+            if (typeof parsed.effectiveApr === "number") {
+              numApr = parsed.effectiveApr;
+            } else if (typeof parsed.effectiveApr === "string") {
+              const match = parsed.effectiveApr.replace(/,/g, "").match(/(\d+(\.\d+)?)/);
+              if (match) numApr = parseFloat(match[1]);
+            }
+
+            result = {
+              headline: String(parsed.headline),
+              verdict,
+              effectiveApr: numApr,
+              legalCeilingApr: 15.0,
+              exceedsLegalCeiling: numApr !== null ? numApr > 15.0 : Boolean(parsed.exceedsLegalCeiling),
+              redFlags: Array.isArray(parsed.redFlags) ? parsed.redFlags.map(String) : [],
+              recommendation: String(parsed.recommendation || ""),
+              calculatedMetrics: parsed.calculatedMetrics,
+            };
+          }
         }
       } catch (geminiError) {
         console.error("Gemini True Cost Scanner call error:", geminiError);

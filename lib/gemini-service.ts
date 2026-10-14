@@ -102,9 +102,6 @@ export async function callGeminiOrFallback(
   if (keyToUse && keyToUse.trim() !== "" && keyToUse !== "abcde") {
     try {
       const systemPrompt = getAgentSystemPrompt(userProfile, summary);
-      // Use gemini-3.1-flash-lite
-      const model = "gemini-3.1-flash-lite";
-
       const contents = [
         {
           role: "user",
@@ -120,39 +117,54 @@ export async function callGeminiOrFallback(
         },
       ];
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(keyToUse.trim())}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 800,
-            responseMimeType: "application/json",
-          },
-        }),
-      });
+      // Use actively available Gemini models with fallback cascade
+      const candidateModels = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest"];
 
-      if (res.ok) {
-        const data = await res.json();
-        const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (candidateText) {
-          const parsed = JSON.parse(candidateText);
-          if (parsed.content) {
-            const validAgent = ["health", "cash", "funding", "collections", "true-cost", "trust"].includes(parsed.agentId)
-              ? parsed.agentId
-              : "trust";
-            return {
-              agentId: validAgent,
-              content: parsed.content,
-              reasoning: parsed.reasoning || `Analyzed across live ledger telemetry and agent signals`,
-              actionRoute: parsed.actionRoute || "/dashboard#joint-plan",
-            };
+      let candidateText: string | null = null;
+      for (const model of candidateModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(keyToUse.trim())}`;
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 800,
+                responseMimeType: "application/json",
+              },
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            if (candidateText) {
+              console.log(`[BizMate Copilot] Response generated via model: ${model}`);
+              break;
+            }
+          } else {
+            console.warn(`Gemini model ${model} returned status ${res.status}`);
           }
+        } catch (mErr) {
+          console.warn(`Error calling model ${model}:`, mErr);
         }
-      } else {
-        console.warn(`Gemini API (${model}) returned status ${res.status}`);
+      }
+
+      if (candidateText) {
+        const parsed = JSON.parse(candidateText);
+        if (parsed.content) {
+          const validAgent = ["health", "cash", "funding", "collections", "true-cost", "trust"].includes(parsed.agentId)
+            ? parsed.agentId
+            : "trust";
+          return {
+            agentId: validAgent,
+            content: parsed.content,
+            reasoning: parsed.reasoning || `Analyzed across live ledger telemetry and agent signals`,
+            actionRoute: parsed.actionRoute || "/dashboard#joint-plan",
+          };
+        }
       }
     } catch (err) {
       console.error("Gemini API call failed, falling back to deterministic agent reasoning:", err);
