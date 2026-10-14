@@ -23,6 +23,14 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "BizMateAI • AI Financial Copilot for SMEs",
   description: "Autonomous financial department for cross-border and omnichannel SMEs operating under strict deterministic guardrails.",
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
