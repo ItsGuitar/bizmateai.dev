@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 export const metadata = {
   title: "PDPA Privacy & Consent Policy • BizMate",
   description:
-    "Comprehensive Personal Data Protection Act (PDPA B.E. 2562) policy, read-only banking scopes, and data governance for BizMate MSME Copilot.",
+    "Comprehensive Personal Data Protection Act (PDPA B.E. 2562) policy, read-only banking scopes, and data governance for BizMate SME Copilot.",
 };
 
 export default function PdpaPolicyPage() {

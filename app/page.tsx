@@ -84,7 +84,7 @@ export default function WelcomePage() {
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mt-1 text-slate-900 dark:text-white leading-tight max-w-2xl animate-fade-in-up delay-100">
             Never run out of cash. <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent">
-              Built for cross-border MSMEs.
+              Built for cross-border SMEs.
             </span>
           </h1>
 
@@ -336,7 +336,7 @@ export default function WelcomePage() {
 
       {/* Clean Bottom Footer */}
       <footer className="w-full border-t border-slate-200/70 dark:border-slate-900 py-6 text-center text-xs text-slate-500 z-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
-        <span>BizMate MSME Financial Copilot • Bank-Grade Deterministic Security</span>
+        <span>BizMate SME Financial Copilot • Bank-Grade Deterministic Security</span>
         <div className="flex items-center gap-4 text-xs font-medium">
           <Link href="/docs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             API Docs (Swagger)

@@ -107,7 +107,7 @@ export default function RegisterPage() {
             <span>Instant Setup • Read-Only Guarantee</span>
           </div>
           <h2 className="text-3xl font-black tracking-tight leading-snug">
-            Take Control of Your MSME Liquidity
+            Take Control of Your SME Liquidity
           </h2>
           <p className="text-sm text-slate-400 leading-relaxed font-normal">
             Connect your primary bank statement to simulate 13-week cash runway, analyze true interest costs, and intercept supplier liquidity shortages.
@@ -295,7 +295,7 @@ export default function RegisterPage() {
 
         {/* Footer info */}
         <div className="w-full max-w-sm mx-auto text-center text-[11px] text-slate-400 shrink-0 relative z-10 animate-fade-in-up delay-500">
-          BizMate MSME Financial Copilot •{" "}
+          BizMate SME Financial Copilot •{" "}
           <button
             type="button"
             onClick={() => setShowPdpaModal(true)}

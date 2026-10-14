@@ -403,7 +403,7 @@ export function getHealthScoreBreakdown(bankId?: string | null) {
   return {
     overallScore,
     ratingGrade: overallScore >= 80 ? "Grade A" : "Grade B+",
-    creditStatus: overallScore >= 75 ? "Prime MSME Credit Line Eligible" : "Standard Tier",
+    creditStatus: overallScore >= 75 ? "Prime SME Credit Line Eligible" : "Standard Tier",
     factors,
   };
 }
@@ -538,7 +538,7 @@ export function getMultiBankFinancialSummary(bankIds: string[]) {
   const combinedHealthScore = {
     overallScore: avgOverallScore,
     ratingGrade: avgOverallScore >= 80 ? "Grade A" : "Grade B+",
-    creditStatus: avgOverallScore >= 75 ? "Prime MSME Multi-Account Eligible" : "Standard Tier",
+    creditStatus: avgOverallScore >= 75 ? "Prime SME Multi-Account Eligible" : "Standard Tier",
     factors: individualSummaries[0].healthScore.factors.map((f, fIdx) => {
       const avgFactorScore = Math.round(
         individualSummaries.reduce((acc, s) => acc + (s.healthScore.factors[fIdx]?.score || f.score), 0) /

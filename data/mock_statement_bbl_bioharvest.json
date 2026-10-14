@@ -10798,7 +10798,7 @@
       "calculated_apr_by_true_cost": 365,
       "flagged_by": "True Cost Agent",
       "status": "HARD_BLOCKED_POLICY_RULE",
-      "notes": "Predatory credit solicitation rejected: True APR calculated at 365%/yr. Violates MSME safety threshold."
+      "notes": "Predatory credit solicitation rejected: True APR calculated at 365%/yr. Violates SME safety threshold."
     }
   },
   {

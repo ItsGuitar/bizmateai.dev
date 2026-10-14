@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 // =============================================================================
-// BizMate AI - MSME 365-Day Financial Statement Generator
+// BizMate AI - SME 365-Day Financial Statement Generator
 // Period: 31 Oct 2025 (2568) to 31 Oct 2026 (2569) - 366 Days (Thailand ICT UTC+7)
 // Company: Ploy Select Co., Ltd. (Omnichannel Retail & Cross-Border Importer)
 // =============================================================================
@@ -346,7 +346,7 @@ while (curr <= endDate) {
   if (year === 2026 && month === 7 && day === 14) {
     registerEvent(formatDateISO(curr, 16, 5, 0), "Direct Solicitation / Unlicensed FX Broker", "FastMoney Express / Unlicensed Cross-Border Rail", "CREDIT", 0.0, "SECURITY_ANOMALY_BLOCKED", {
       red_flag_type: "PREDATORY_LENDING_TRAP", advertised_rate: "1% per day", calculated_apr_by_true_cost: 365.0,
-      flagged_by: "True Cost Agent", status: "HARD_BLOCKED_POLICY_RULE", notes: "Predatory credit solicitation rejected: True APR calculated at 365%/yr. Violates MSME safety threshold."
+      flagged_by: "True Cost Agent", status: "HARD_BLOCKED_POLICY_RULE", notes: "Predatory credit solicitation rejected: True APR calculated at 365%/yr. Violates SME safety threshold."
     });
   }
 
@@ -354,7 +354,7 @@ while (curr <= endDate) {
 }
 
 // -----------------------------------------------------------------------------
-// MONTHLY RE-BALANCING INVENTORY PROCUREMENTS (Keeps cash in safe MSME zone)
+// MONTHLY RE-BALANCING INVENTORY PROCUREMENTS (Keeps cash in safe SME zone)
 // In a thriving retail SME, surplus operational cash is reinvested into inventory
 // batches (fast-moving domestic gadgets) on the 16th of each month.
 // -----------------------------------------------------------------------------

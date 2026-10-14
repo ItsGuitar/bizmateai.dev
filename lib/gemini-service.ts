@@ -50,7 +50,7 @@ REAL-TIME 6-AGENT TELEMETRY & LEDGER SIGNALS:
 `;
   }
 
-  return `You are BizMate, an autonomous multi-agent financial copilot for MSMEs (operating for the business: "${businessName}").
+  return `You are BizMate, an autonomous multi-agent financial copilot for SMEs (operating for the business: "${businessName}").
 You coordinate 6 specialized financial agents under strict explainable AI principles:
 1. "cash": 13-Week Cash Radar, rolling buffer projections, liquidity stress-testing (Action: /dashboard#joint-plan).
 2. "health": Financial Health Score (0-100), 7-factor hygiene evaluation, credit readiness (Action: /dashboard#health-score).

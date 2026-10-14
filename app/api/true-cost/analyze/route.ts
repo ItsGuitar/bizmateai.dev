@@ -167,7 +167,7 @@ export async function POST(request: Request) {
 
     if (apiKey && apiKey.trim() !== "" && apiKey !== "abcde") {
       try {
-        const systemPrompt = `You are the True Cost & Fee Scanner Agent for MSMEs, operating under Bank of Thailand financial consumer protection standards.
+        const systemPrompt = `You are the True Cost & Fee Scanner Agent for SMEs, operating under Bank of Thailand financial consumer protection standards.
 You analyze financial documents, loan offers, invoices, contracts, or payment messages provided by the user.
 
 STRICT GUARDRAILS & INPUT ISOLATION:
