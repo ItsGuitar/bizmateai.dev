@@ -56,8 +56,8 @@ const AGENTS_LIST = [
     badge: "Automated",
     stat: "฿35,000 Owed (1 Invoice)",
     insight: "Boutique Siam 21 days late • Polite LINE ready",
-    actionLabel: "Review Draft",
-    href: "#inbox-approvals",
+    actionLabel: "View AR Ledger",
+    href: "/dashboard/collections",
   },
   {
     id: "true-cost",
@@ -712,10 +712,10 @@ export default function DashboardPage() {
             </div>
             {isBankConnected ? (
               <Link
-                href="/inbox?item=collections"
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                href="/dashboard/collections"
+                className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-1"
               >
-                <span>Review draft</span>
+                <span>View AR ledger</span>
                 <span>→</span>
               </Link>
             ) : (

@@ -201,6 +201,9 @@ export default function TrueCostHubPage() {
     }
   };
 
+  // Bank connection guardrail
+  const [isBankConnected, setIsBankConnected] = useState<boolean>(true); // start optimistic to avoid flash
+
   useEffect(() => {
     const session = getSession();
     if (!session) {
@@ -210,11 +213,27 @@ export default function TrueCostHubPage() {
     setUser(session.user);
     checkCooldownStatus(session.token);
 
-    if (typeof window !== "undefined") {
-      const storedBank = localStorage.getItem("bizmate_selected_bank") || "kbank";
-      const validKey = BANK_SUPPLIER_CONFIGS[storedBank] ? storedBank : "kbank";
-      setSelectedBankId(validKey);
-    }
+    const checkBankState = () => {
+      if (typeof window !== "undefined") {
+        const storedBankState = localStorage.getItem("bizmate_bank_connected");
+        const storedBank = localStorage.getItem("bizmate_selected_bank") || "kbank";
+        
+        // Strict guard: must have bizmate_bank_connected === 'true' and valid selected bank
+        const isConnected = storedBankState === "true" && Boolean(storedBank);
+        setIsBankConnected(isConnected);
+
+        const validKey = BANK_SUPPLIER_CONFIGS[storedBank] ? storedBank : "kbank";
+        setSelectedBankId(validKey);
+      }
+    };
+
+    checkBankState();
+    window.addEventListener("storage", checkBankState);
+    const interval = setInterval(checkBankState, 1000);
+    return () => {
+      window.removeEventListener("storage", checkBankState);
+      clearInterval(interval);
+    };
   }, [router]);
 
   // Countdown timer effect
@@ -542,22 +561,51 @@ export default function TrueCostHubPage() {
           </div>
 
           {/* Connected Bank Switcher */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-slate-400 uppercase hidden sm:inline">
-              Linked Account:
-            </span>
-            <select
-              value={selectedBankId}
-              onChange={(e) => handleSwitchBank(e.target.value)}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/40 cursor-pointer shadow-xs"
-            >
-              <option value="kbank">KBANK: Ploy Select (Shenzhen Chen Tech)</option>
-              <option value="scb">SCB: Apex Craft (Osaka Timber Mills)</option>
-              <option value="bbl">BBL: BioHarvest (Heilongjiang AgroChem)</option>
-              <option value="personal">Personal Savings: Freelance Creator (Domestic)</option>
-            </select>
-          </div>
+          {isBankConnected && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-slate-400 uppercase hidden sm:inline">
+                Linked Account:
+              </span>
+              <select
+                value={selectedBankId}
+                onChange={(e) => handleSwitchBank(e.target.value)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/40 cursor-pointer shadow-xs"
+              >
+                <option value="kbank">KBANK: Ploy Select (Shenzhen Chen Tech)</option>
+                <option value="scb">SCB: Apex Craft (Osaka Timber Mills)</option>
+                <option value="bbl">BBL: BioHarvest (Heilongjiang AgroChem)</option>
+                <option value="personal">Personal Savings: Freelance Creator (Domestic)</option>
+              </select>
+            </div>
+          )}
         </div>
+
+        {/* LOCKED STATE WHEN BANK IS NOT LINKED */}
+        {!isBankConnected ? (
+          <div className="rounded-3xl p-8 sm:p-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl text-center max-w-2xl mx-auto my-12 animate-fade-in-up">
+            <div className="w-16 h-16 rounded-3xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-3xl mx-auto mb-4 shadow-inner">
+              🔒
+            </div>
+            <span className="text-xs font-mono font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 inline-block mb-3">
+              Bank Connection Required
+            </span>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              True Cost Protection Hub Locked
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2.5 leading-relaxed max-w-md mx-auto">
+              To evaluate trade counterparties, compare foreign exchange payment rails, audit predatory APRs, and dispatch disbursements, please connect or select an operating bank account first.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href="/dashboard"
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>← Back to Dashboard to Connect Bank</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
 
         {/* Hero Section */}
         <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs mb-6 relative overflow-hidden">
@@ -1473,6 +1521,8 @@ export default function TrueCostHubPage() {
               </div>
             </div>
           </div>
+        )}
+        </>
         )}
       </main>
 
