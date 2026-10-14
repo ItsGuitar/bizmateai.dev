@@ -33,6 +33,8 @@ interface AppHeaderProps {
   onDevReset?: () => void;
   isBankConnected?: boolean;
   onToggleBank?: () => void;
+  selectedBank?: string;
+  onSelectBank?: (bankId: string) => void;
 }
 
 export function AppHeader({
@@ -41,11 +43,14 @@ export function AppHeader({
   onDevReset,
   isBankConnected,
   onToggleBank,
+  selectedBank: controlledBank,
+  onSelectBank,
 }: AppHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
 
   const [user, setUser] = useState<AuthUser | null>(initialUser || null);
+  const [currentBank, setCurrentBank] = useState<string>("kbank");
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<InboxApprovalNotification[]>([]);
   const [pendingCount, setPendingCount] = useState<number>(0);
@@ -96,9 +101,30 @@ export function AppHeader({
     }
   };
 
+  // Sync current bank with controlledBank or localStorage
   useEffect(() => {
-    fetchNotifications();
-  }, [pathname]);
+    if (controlledBank) {
+      setCurrentBank(controlledBank);
+    } else if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("bizmate_selected_bank") || "kbank";
+      setCurrentBank(stored);
+    }
+  }, [controlledBank]);
+
+  const handleBankChange = (newBank: string) => {
+    setCurrentBank(newBank);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bizmate_selected_bank", newBank);
+      // Dispatch custom storage event for all listening components
+      window.dispatchEvent(new Event("bizmate_bank_changed"));
+    }
+    if (onSelectBank) {
+      onSelectBank(newBank);
+    } else {
+      // Reload or navigate to refresh data with the newly selected bank
+      window.location.reload();
+    }
+  };
 
   // Close notifications popover on click outside
   useEffect(() => {
@@ -218,8 +244,22 @@ export function AppHeader({
           </nav>
         </div>
 
-        {/* Right Side: Dev Reset, Theme, Notification Popover, User */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Right Side: Bank Selector, Dev Reset, Theme, Notification Popover, User */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Universal Active Case / Linked Bank Selector */}
+          <div className="flex items-center gap-1.5">
+            <select
+              value={currentBank}
+              onChange={(e) => handleBankChange(e.target.value)}
+              className="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer shadow-2xs max-w-[155px] sm:max-w-none truncate"
+              title="Switch Active Operating Statement Case"
+            >
+              <option value="kbank">KBANK: Ploy Select (Shenzhen Chen Tech)</option>
+              <option value="scb">SCB: Apex Craft (Osaka Timber Mills)</option>
+              <option value="bbl">BBL: BioHarvest (Heilongjiang AgroChem)</option>
+              <option value="personal">Personal: Freelance Creator (3-Month)</option>
+            </select>
+          </div>
 
           {/* Optional Developer Reset Button */}
           {onDevReset !== undefined && (

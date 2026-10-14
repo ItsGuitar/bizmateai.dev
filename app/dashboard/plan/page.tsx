@@ -395,6 +395,11 @@ export default function CollaborativePlanPage() {
     },
   ];
 
+  // Dynamic Before vs After projected trough calculation from statement data
+  const conflictWeek = summary?.cashRadarWeeks?.find((w: any) => w.status === "below" || w.status === "short");
+  const beforeBalance = conflictWeek ? conflictWeek.balance : (summary?.currentCashToday || 64000);
+  const afterBalance = beforeBalance + (debtor?.amount || 0) + (supplier?.pendingOrderThb ? Math.round(supplier.pendingOrderThb * 0.9) : 51000);
+
   const toggleExpand = (id: string) => {
     setExpandedStepId((prev) => (prev === id ? null : id));
   };
@@ -405,6 +410,8 @@ export default function CollaborativePlanPage() {
       <AppHeader
         user={user}
         activeNav="plan"
+        selectedBank={selectedBank}
+        onSelectBank={handleSelectBank}
       />
 
       {/* Main Container */}
@@ -456,12 +463,12 @@ export default function CollaborativePlanPage() {
             <div className="flex items-center gap-2 shrink-0">
               <div className="px-3 py-1.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-center">
                 <div className="text-[9px] font-mono text-rose-300 uppercase">Without Plan</div>
-                <div className="text-sm font-black text-rose-400 font-mono">฿64,000 ❌</div>
+                <div className="text-sm font-black text-rose-400 font-mono">฿{beforeBalance.toLocaleString()} {beforeBalance < safetyBuffer ? "❌" : "⚠️"}</div>
               </div>
               <div className="text-slate-400 text-xs">→</div>
               <div className="px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-center">
                 <div className="text-[9px] font-mono text-emerald-300 uppercase">With Plan</div>
-                <div className="text-sm font-black text-emerald-400 font-mono">฿115,000+ ✅</div>
+                <div className="text-sm font-black text-emerald-400 font-mono">฿{afterBalance.toLocaleString()}+ ✅</div>
               </div>
             </div>
           </div>

@@ -108,11 +108,14 @@ function InboxContent() {
   // Toast feedback state
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
 
+  const [financialSummary, setFinancialSummary] = useState<any>(null);
+
   // Fetch session & inbox items
   const loadInboxItems = async (token: string, currentStatus = statusFilter) => {
     try {
       const isBankConnectedState = typeof window !== "undefined" && localStorage.getItem("bizmate_bank_connected") === "true";
-      const res = await fetch(`/api/inbox?status=${currentStatus}&bankConnected=${isBankConnectedState}`, {
+      const storedBankChoice = typeof window !== "undefined" ? localStorage.getItem("bizmate_selected_bank") || "kbank" : "kbank";
+      const res = await fetch(`/api/inbox?status=${currentStatus}&bankConnected=${isBankConnectedState}&bankId=${storedBankChoice}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -122,6 +125,12 @@ function InboxContent() {
       if (data.counts) {
         setStatusCounts(data.counts);
       }
+
+      // Fetch dynamic financial summary for active bank
+      fetch(`/api/financial/summary?bankId=${storedBankChoice}`)
+        .then((r) => r.json())
+        .then((s) => setFinancialSummary(s))
+        .catch(() => {});
     } catch (err) {
       console.error("Failed to load inbox items:", err);
       showToast("Failed to sync inbox items", "error");
@@ -663,192 +672,159 @@ function InboxContent() {
 
             {/* Modal Body - Contextual per Agent */}
             <div className="py-5 space-y-5">
-              {/* Context 1: Collections Agent (Boutique Siam) */}
-              {inspectingItem.agentId.toLowerCase() === "collections" && (
-                <div className="space-y-4">
-                  {/* Debtor Profile Card */}
-                  <div className="p-4 rounded-2xl bg-orange-50/50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/50">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="font-bold text-orange-800 dark:text-orange-300">
-                        Debtor: Boutique Siam Co., Ltd.
-                      </span>
-                      <span className="font-mono text-orange-700 dark:text-orange-400 font-bold">
-                        21.4 Days Overdue
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
-                      <div>Invoice: #BS-8820</div>
-                      <div className="text-right font-bold text-slate-900 dark:text-white">Amount: ฿35,000.00</div>
-                      <div>Due Date: 21 Sep 2026</div>
-                      <div className="text-right text-emerald-600">Expected: 20 Oct 2026</div>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-orange-200/60 dark:border-orange-900/40">
-                      <strong>Payment Habit:</strong> Customer typically settles within 48 hours once prompted via LINE OA. Zero formal disputes on record.
-                    </p>
-                  </div>
+              {/* Dynamic Context Variables */}
+              {(() => {
+                const debtor = financialSummary?.buyerHabits?.[0];
+                const supplier = financialSummary?.supplierHistory;
+                const companyName = financialSummary?.company || "Your Business";
+                const safetyBuffer = financialSummary?.safetyBuffer || 80000;
+                const supplierName = supplier?.name || "Verified Trade Supplier";
+                const pendingAmt = supplier?.pendingOrderAmount || 100000;
+                const pendingCurr = supplier?.pendingOrderCurrency || "¥";
+                const pendingThb = supplier?.pendingOrderThb || Math.round(pendingAmt * 4.825);
+                const debtorName = debtor?.name || "Corporate Client";
+                const overdueAmt = debtor?.currentOverdueAmount || 35000;
 
-                  {/* Tone Selector */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Tone of Voice:
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setCollectionsTone("friendly")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                          collectionsTone === "friendly"
-                            ? "bg-orange-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                        }`}
-                      >
-                        Friendly (Polite)
-                      </button>
-                      <button
-                        onClick={() => setCollectionsTone("firm")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                          collectionsTone === "firm"
-                            ? "bg-orange-600 text-white shadow-xs"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                        }`}
-                      >
-                        Firm (Credit Warning)
-                      </button>
-                    </div>
-                  </div>
+                return (
+                  <>
+                    {/* Context 1: Collections Agent (Smart AR Follow-up) */}
+                    {inspectingItem.agentId.toLowerCase() === "collections" && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between text-xs pb-1">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">Tone Strategy:</span>
+                          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                            <button
+                              type="button"
+                              onClick={() => setCollectionsTone("friendly")}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                collectionsTone === "friendly"
+                                  ? "bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-2xs font-bold"
+                                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                              }`}
+                            >
+                              🤝 Polite &amp; Friendly
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCollectionsTone("firm")}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                collectionsTone === "firm"
+                                  ? "bg-white dark:bg-slate-700 text-orange-600 dark:text-orange-400 shadow-2xs font-bold"
+                                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                              }`}
+                            >
+                              ⚖️ Formal &amp; Firm
+                            </button>
+                          </div>
+                        </div>
 
-                  {/* Dual-Language Message Container (PRD Section 5.1 #6) */}
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                      <span>Dispatch Rail: LINE Official Account</span>
-                      <span>Dual-Language Preview</span>
-                    </div>
+                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                            <span>Channel: Verified LINE Official Account</span>
+                            <span>Target: {debtorName}</span>
+                          </div>
 
-                    {/* Original Thai */}
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block mb-1">
-                        Original (Thai)
-                      </span>
-                      <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
-                        {collectionsTone === "friendly"
-                          ? "สวัสดีครับ/ค่ะ จาก Ploy Select ขออนุญาตแจ้งเตือนยอดค้างชำระ Invoice #BS-8820 จำนวน ฿35,000.00 ซึ่งครบกำหนดเมื่อวันที่ 21 ก.ย. หากมีข้อสอบถามเพิ่มเติมหรือชำระแล้วแจ้งสลิปได้เลยนะครับ ขอบคุณครับ 🙏"
-                          : "เรียน คุณลูกค้า ทาง Ploy Select ขอแจ้งเตือนยอดค้างชำระเกินกำหนด 21 วัน สำหรับ Invoice #BS-8820 ยอดเงิน ฿35,000.00 ขอความกรุณาดำเนินการชำระภายในวันที่ 20 ต.ค. 2026 เพื่อหลีกเลี่ยงการระงับวงเงินเครดิตการค้า"}
-                      </p>
-                    </div>
+                          <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60">
+                            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block mb-1">
+                              Thai LINE Message Preview
+                            </span>
+                            <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
+                              {collectionsTone === "friendly"
+                                ? `สวัสดีครับทีม ${debtorName} 🙏 จาก ${companyName} ครับ ขออนุญาตติดตามเอกสารแจ้งหนี้คงค้างยอด ฿${overdueAmt.toLocaleString()} ครับ หากโอนชำระเรียบร้อยแล้วสามารถส่งสลิปแจ้งได้เลยนะครับ ขอบพระคุณมากครับ`
+                                : `เรียน ฝ่ายบัญชีและการเงิน ${debtorName} ทาง ${companyName} ขอแจ้งเตือนยอดค้างชำระ ฿${overdueAmt.toLocaleString()} เกินกำหนดแล้ว เพื่อคงสิทธิเครดิตเทอมทางการค้า รบกวนชำระเงินตามช่องทางปกติ ขอบคุณครับ`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                    {/* English Translation */}
-                    <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block mb-1">
-                        English Translation (Secondary)
-                      </span>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
-                        {collectionsTone === "friendly"
-                          ? "Hello from Ploy Select! Just a polite follow-up regarding overdue Invoice #BS-8820 for ฿35,000.00 (due 21 Sep). Please send over the payment slip once settled, or let us know if you need assistance. Thank you!"
-                          : "Dear Customer, Ploy Select notes Invoice #BS-8820 for ฿35,000.00 is 21 days past due. Please settle by 20 Oct 2026 to avoid temporary suspension of trade credit terms."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                    {/* Context 2: Funding Agent (Supplier Terms) */}
+                    {inspectingItem.agentId.toLowerCase() === "funding" && (
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-2xl bg-yellow-50/50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/50">
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <span className="font-bold text-yellow-800 dark:text-yellow-300">
+                              Supplier: {supplierName}
+                            </span>
+                            <span className="font-mono text-yellow-700 dark:text-yellow-400 font-bold">
+                              1.1% Capital Cost
+                            </span>
+                          </div>
 
-              {/* Context 2: Funding Agent (Chen Tech Terms) */}
-              {inspectingItem.agentId.toLowerCase() === "funding" && (
-                <div className="space-y-4">
-                  {/* Proposal Comparison Card */}
-                  <div className="p-4 rounded-2xl bg-yellow-50/50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900/50">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="font-bold text-yellow-800 dark:text-yellow-300">
-                        Supplier: Shenzhen Chen Tech Electronics Co., Ltd.
-                      </span>
-                      <span className="font-mono text-yellow-700 dark:text-yellow-400 font-bold">
-                        1.1% Capital Cost
-                      </span>
-                    </div>
+                          <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                            <div>Current Due: 26 Oct 2026</div>
+                            <div className="text-right text-rose-600 font-bold">Threatens ฿{(safetyBuffer / 1000).toFixed(0)}k Buffer</div>
+                            <div>Proposed Due: 25 Dec 2026</div>
+                            <div className="text-right text-emerald-600 font-bold">+60 Days Deferral</div>
+                            <div>Financing Fee: {pendingCurr}{Math.round(pendingAmt * 0.011).toLocaleString()} (~฿{Math.round(pendingThb * 0.011).toLocaleString()})</div>
+                            <div className="text-right text-slate-900 dark:text-white">Partner Export Credit</div>
+                          </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
-                      <div>Current Due: 26 Oct 2026</div>
-                      <div className="text-right text-rose-600 font-bold">Breaches ฿80k Buffer</div>
-                      <div>Proposed Due: 25 Dec 2026</div>
-                      <div className="text-right text-emerald-600 font-bold">+60 Days Deferral</div>
-                      <div>Financing Fee: ¥1,100 (~฿5,307)</div>
-                      <div className="text-right text-slate-900 dark:text-white">Partner Export Credit</div>
-                    </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-yellow-200/60 dark:border-yellow-900/40">
+                            <strong>AI Trade Rationale:</strong> Backed by verified transaction history. 1.1% fee outperforms commercial bank overdraft loans and preserves buffer liquidity.
+                          </p>
+                        </div>
 
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-yellow-200/60 dark:border-yellow-900/40">
-                      <strong>AI Trade Rationale:</strong> Backed by 12 months of flawless trade history (¥261k settled). 1.1% fee is 8.4% cheaper than Krungthai 9.5% commercial loan and eliminates bank collateral.
-                    </p>
-                  </div>
+                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                            <span>Routing: Supplier Official Channel</span>
+                            <span>Bilingual Negotiation Draft</span>
+                          </div>
 
-                  {/* Dual-Language Proposal Preview */}
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                      <span>Routing: WeChat & Verified Supplier Email</span>
-                      <span>Bilingual Negotiation Draft</span>
-                    </div>
+                          <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60">
+                            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block mb-1">
+                              Formal Proposal Draft (To {supplierName})
+                            </span>
+                            <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
+                              Regarding order payment {pendingCurr}{pendingAmt.toLocaleString()} due 26 Oct 2026: {companyName} requests a 60-day credit term extension to 25 Dec 2026 under trade partner export credit facility, covering 1.1% deferral fee ({pendingCurr}{Math.round(pendingAmt * 0.011).toLocaleString()}).
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Simplified Chinese */}
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/60">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block mb-1">
-                        Simplified Chinese (For Mr. Chen)
-                      </span>
-                      <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
-                        陈总您好！感谢贵司一直以来的信赖与支持。关于定于10月26日到期的订单（¥100,000），因近期备货旺季，我们希望申请通过中信保出口信贷延期60天至12月25日支付，并承担1.1%的延期手续费（¥1,100）。期待您的确认与支持！
-                      </p>
-                    </div>
+                    {/* Context 3: True Cost Agent (Verified FX Rail) */}
+                    {inspectingItem.agentId.toLowerCase() === "true-cost" && (
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50">
+                          <div className="flex items-center justify-between text-xs mb-2">
+                            <span className="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                              <span>🛡️</span>
+                              <span>Verified Payee Shield: Verified Corporate Rail</span>
+                            </span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                              100% Authentic Registry
+                            </span>
+                          </div>
 
-                    {/* English / Thai Translation */}
-                    <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
-                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase block mb-1">
-                        Thai / English Meaning
-                      </span>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
-                        เรียน คุณเฉิน ขอบคุณสำหรับการสนับสนุนที่ดีมาตลอด สำหรับยอดชำระ ¥100,000 วันที่ 26 ต.ค. ทาง Ploy Select ขอเสนอขอขยายเครดิตเทอม 60 วัน ถึงวันที่ 25 ธ.ค. ผ่านสินเชื่อส่งออก โดยเรายินดีรับภาระค่าธรรมเนียม 1.1% (¥1,100) ขอความกรุณาพิจารณา
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                          <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                            <div>Beneficiary: {supplierName}</div>
+                            <div className="text-right text-slate-900 dark:text-white font-bold">{pendingCurr}{pendingAmt.toLocaleString()}</div>
+                            <div>Verification: Bank Registry Match</div>
+                            <div className="text-right text-slate-900 dark:text-white font-bold">฿{pendingThb.toLocaleString()} THB</div>
+                            <div>Anti-Phishing: Audit Verified</div>
+                            <div className="text-right text-emerald-600 font-bold">Saves SWIFT Surcharge</div>
+                          </div>
 
-              {/* Context 3: True Cost Agent (Shenzhen FX Rail) */}
-              {inspectingItem.agentId.toLowerCase() === "true-cost" && (
-                <div className="space-y-4">
-                  {/* Verified Payee Shield Card */}
-                  <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50">
-                    <div className="flex items-center justify-between text-xs mb-2">
-                      <span className="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-                        <span>🛡️</span>
-                        <span>Verified Payee Shield: China Construction Bank</span>
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                        100% Authentic Registry
-                      </span>
-                    </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-rose-200/60 dark:border-rose-900/40">
+                            <strong>Anti-Fraud Verification:</strong> Recipient account audited against historical statement records. No phishing, invoice tampering, or unauthorized modifications detected.
+                          </p>
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
-                      <div>Beneficiary: Shenzhen Chen Tech</div>
-                      <div className="text-right text-slate-900 dark:text-white font-bold">¥100,000.00 CNH</div>
-                      <div>Account: 6217 **** **** 9081</div>
-                      <div className="text-right text-slate-900 dark:text-white font-bold">฿482,500.00 THB</div>
-                      <div>Rate: 1 CNY = 4.8250 THB</div>
-                      <div className="text-right text-emerald-600 font-bold">Saves ฿6,200 vs SWIFT</div>
-                    </div>
-
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 pt-2 border-t border-rose-200/60 dark:border-rose-900/40">
-                      <strong>Anti-Fraud Verification:</strong> Recipient account audited against historical bank records. No phishing, invoice tampering, or unauthorized account modifications detected.
-                    </p>
-                  </div>
-
-                  {/* Biometric Requirement Alert */}
-                  <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 flex items-center gap-3">
-                    <span className="text-2xl">🔐</span>
-                    <div>
-                      <p className="font-bold">Server-Enforced Biometric Step-Up</p>
-                      <p className="text-[11px] opacity-80 mt-0.5">
-                        High-value cross-border foreign exchange authorizations require Face ID biometric authentication before dispatch to the bank clearing system.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                        <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-900 dark:text-indigo-200 flex items-center gap-3">
+                          <span className="text-2xl">🔐</span>
+                          <div>
+                            <p className="font-bold">Server-Enforced Biometric Step-Up</p>
+                            <p className="text-[11px] opacity-80 mt-0.5">
+                              High-value supplier disbursements require Face ID biometric authentication before dispatch to the bank clearing system.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Trust Agent Verification Footer */}
               <div className="p-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/50 flex items-center justify-between text-[11px] text-slate-500 font-mono">

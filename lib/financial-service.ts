@@ -218,8 +218,15 @@ export function calculate13WeekCashRadar(bankId?: string | null): WeekForecast[]
       const lastTxn = weekTxns[weekTxns.length - 1];
       runningBal = lastTxn.balance_after;
 
-      if (weekTxns.some((t) => t.metadata?.core_conflict_trigger)) {
-        note = "Below ฿80k Buffer (Chen Tech ¥100k due)";
+      const conflictTx = weekTxns.find((t) => t.metadata?.core_conflict_trigger || t.metadata?.safety_buffer_breach);
+      if (conflictTx) {
+        const cpShort = conflictTx.counterparty_name.split(" ")[0] || "Supplier";
+        const foreignAmt = conflictTx.metadata?.cny_amount
+          ? `¥${(conflictTx.metadata.cny_amount / 1000).toFixed(0)}k`
+          : conflictTx.metadata?.jpy_amount
+          ? `¥${(conflictTx.metadata.jpy_amount / 1000).toFixed(0)}k`
+          : `฿${(conflictTx.amount / 1000).toFixed(0)}k`;
+        note = `Below ฿${(safetyBuffer / 1000).toFixed(0)}k Buffer (${cpShort} ${foreignAmt} due)`;
       }
     } else {
       // Future weeks (November - January) projected from average baseline:
@@ -238,12 +245,12 @@ export function calculate13WeekCashRadar(bankId?: string | null): WeekForecast[]
     let status: "safe" | "below" | "short" = "safe";
     if (balance <= 0) {
       status = "short";
-    } else if (balance < SAFETY_BUFFER_THB) {
+    } else if (balance < safetyBuffer) {
       status = "below";
     }
 
-    // Relative bar height scaling for UI (max ~฿300,000)
-    const heightPercent = Math.min(100, Math.max(18, Math.round((balance / 320000) * 100)));
+    // Relative bar height scaling for UI (scaled to max balance headroom)
+    const heightPercent = Math.min(100, Math.max(18, Math.round((balance / Math.max(320000, safetyBuffer * 2)) * 100)));
 
     weeks.push({
       week: weekLabel,

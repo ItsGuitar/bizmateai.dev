@@ -304,12 +304,12 @@ export default function DashboardPage() {
   // Filter transactions dynamically
   const handleFilterTransactions = (filterType: string) => {
     setSelectedFilterCategory(filterType);
-    let url = "/api/financial/transactions?limit=8";
+    let url = `/api/financial/transactions?limit=8&bankId=${selectedBank}`;
     if (filterType === "SHOPEE") url += "&channel=Shopee";
     else if (filterType === "TIKTOK") url += "&channel=TikTok";
     else if (filterType === "LAZADA") url += "&channel=Lazada";
     else if (filterType === "QR") url += "&channel=PromptPay";
-    else if (filterType === "CHEN") url += "&channel=Cross-Border";
+    else if (filterType === "SUPPLIER") url += "&category=SUPPLIER_PURCHASE";
     else if (filterType === "ANOMALY") url += "&category=SECURITY_ANOMALY_BLOCKED";
 
     fetch(url)
@@ -418,6 +418,8 @@ export default function DashboardPage() {
         activeNav="dashboard"
         onDevReset={() => setShowConfirmModal(true)}
         isBankConnected={isBankConnected}
+        selectedBank={selectedBank}
+        onSelectBank={handleSelectBank}
         onToggleBank={() => {
           const nextState = !isBankConnected;
           setIsBankConnected(nextState);
@@ -936,49 +938,99 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {AGENTS_LIST.map((agent) => (
-              <div
-                key={agent.id}
-                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60"
-                      >
-                        {agent.emoji}
+            {AGENTS_LIST.map((agent) => {
+              // Dynamic stats & insights derived from statement data per connected case
+              let dynamicStat = agent.stat;
+              let dynamicInsight = agent.insight;
+
+              if (financialSummary) {
+                const bufferThb = `฿${(financialSummary.safetyBuffer || 80000).toLocaleString()}`;
+                const supplier = financialSummary.supplierHistory;
+                const debtor = financialSummary.buyerHabits?.[0];
+                const conflictW = weeksData.find((w) => w.status === "below" || w.status === "short");
+
+                if (agent.id === "cash") {
+                  dynamicStat = `${bufferThb} Safety Buffer`;
+                  if (conflictW) {
+                    const supShort = supplier?.name ? supplier.name.split(" ")[0] : "Supplier";
+                    dynamicInsight = `Low cash week flagged: ${conflictW.date} (${supShort} ${supplier?.pendingOrderCurrency || "¥"}${supplier?.pendingOrderAmount ? (supplier.pendingOrderAmount / 1000).toFixed(0) + "k" : "due"})`;
+                  } else {
+                    dynamicInsight = "Liquidity safely exceeds operating safety buffer across all 13 weeks.";
+                  }
+                } else if (agent.id === "health") {
+                  dynamicStat = `${financialSummary.healthScore?.overallScore || 78} / 100 Health Score`;
+                  dynamicInsight = `${financialSummary.healthScore?.ratingGrade || "Grade B+"} • ${financialSummary.healthScore?.creditStatus || "Prime Credit Eligible"}`;
+                } else if (agent.id === "funding") {
+                  if (supplier && supplier.pendingOrderAmount > 0) {
+                    const supShort = supplier.name.split(" ")[0];
+                    dynamicStat = "60 Days Terms Match";
+                    dynamicInsight = `${supShort} deferral saves ${bufferThb} buffer on 26 Oct`;
+                  } else {
+                    dynamicStat = "Yield Sweeper Active";
+                    dynamicInsight = `Excess liquidity swept above ${bufferThb} safety buffer.`;
+                  }
+                } else if (agent.id === "collections") {
+                  if (debtor && debtor.currentOverdueAmount > 0) {
+                    dynamicStat = `฿${debtor.currentOverdueAmount.toLocaleString()} Owed (1 Invoice)`;
+                    dynamicInsight = `${debtor.name} ${Math.round(debtor.averageDelayDays)} days late • Courtesy reminder ready`;
+                  } else {
+                    dynamicStat = "฿0 Overdue";
+                    dynamicInsight = "All accounts receivable collected on schedule.";
+                  }
+                } else if (agent.id === "true-cost") {
+                  const supShort = supplier?.name ? supplier.name.split(" ")[0] : "Verified";
+                  dynamicStat = "0% Traps Detected";
+                  dynamicInsight = `${supShort} recipient registry verified • 0% fraud`;
+                } else if (agent.id === "trust") {
+                  dynamicStat = "Face ID Required";
+                  dynamicInsight = `Zero-Surprise Guardrail armed • ${pendingApprovalsCount} pending approvals`;
+                }
+              }
+
+              return (
+                <div
+                  key={agent.id}
+                  className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60"
+                        >
+                          {agent.emoji}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                            {agent.name}
+                          </h3>
+                          <p className="text-[11px] text-slate-500">{agent.role}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                          {agent.name}
-                        </h3>
-                        <p className="text-[11px] text-slate-500">{agent.role}</p>
-                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        {agent.badge}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      {agent.badge}
-                    </span>
+
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-2 font-mono">
+                      {isBankConnected ? dynamicStat : "Awaiting Bank Linkage"}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      {isBankConnected ? dynamicInsight : "Telemetry feeds paused until operating account is verified."}
+                    </p>
                   </div>
 
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-2 font-mono">
-                    {isBankConnected ? agent.stat : "Awaiting Bank Linkage"}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                    {isBankConnected ? agent.insight : "Telemetry feeds paused until operating account is verified."}
-                  </p>
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase text-slate-400">
+                      {isBankConnected ? "Zero-Surprise OK" : "Standby"}
+                    </span>
+                    <Link href={isBankConnected ? agent.href : "/onboarding"} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                      {isBankConnected ? `${agent.actionLabel} →` : "Connect Bank →"}
+                    </Link>
+                  </div>
                 </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase text-slate-400">
-                    {isBankConnected ? "Zero-Surprise OK" : "Standby"}
-                  </span>
-                  <Link href={isBankConnected ? agent.href : "/onboarding"} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                    {isBankConnected ? `${agent.actionLabel} →` : "Connect Bank →"}
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -1125,7 +1177,12 @@ export default function DashboardPage() {
                   { key: "TIKTOK", label: "TikTok" },
                   { key: "LAZADA", label: "Lazada" },
                   { key: "QR", label: "PromptPay QR" },
-                  { key: "CHEN", label: "Chen Tech" },
+                  {
+                    key: "SUPPLIER",
+                    label: financialSummary?.supplierHistory?.name
+                      ? financialSummary.supplierHistory.name.split(" ")[0]
+                      : "Trade Supplier",
+                  },
                   { key: "ANOMALY", label: "Red Flags" },
                 ].map((tab) => (
                   <button
