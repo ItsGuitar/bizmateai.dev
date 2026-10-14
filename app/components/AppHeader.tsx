@@ -198,6 +198,17 @@ export function AppHeader({
             </Link>
 
             <Link
+              href="/dashboard/cash"
+              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
+                pathname.includes("/cash")
+                  ? "bg-slate-100 dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <span>Cash Radar</span>
+            </Link>
+
+            <Link
               href="/inbox"
               className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
                 currentNav === "inbox"
@@ -222,6 +233,17 @@ export function AppHeader({
               }`}
             >
               Joint Plan
+            </Link>
+
+            <Link
+              href="/dashboard/collections"
+              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
+                pathname.includes("/collections")
+                  ? "bg-slate-100 dark:bg-slate-800 text-orange-600 dark:text-orange-400 font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <span>AR Ledger</span>
             </Link>
 
             <Link

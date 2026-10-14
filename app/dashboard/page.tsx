@@ -21,7 +21,7 @@ const AGENTS_LIST = [
     stat: "฿80,000 Safety Buffer",
     insight: "Low cash week flagged: 26 Oct (Chen Tech ¥100k due)",
     actionLabel: "View Radar",
-    href: "#cash-radar",
+    href: "/dashboard/cash",
   },
   {
     id: "health",
@@ -598,7 +598,10 @@ export default function DashboardPage() {
               <div className="relative z-10 pt-6">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-sky-100 dark:text-sky-200">13-Week Cash Radar Forecast</span>
+                    <Link href="/dashboard/cash" className="text-xs font-bold text-sky-100 dark:text-sky-200 hover:underline flex items-center gap-1 group">
+                      <span>13-Week Cash Radar Forecast</span>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                    </Link>
                     <span className="text-[11px] font-mono text-blue-200/80 dark:text-slate-400">(Live statement-backed rolling liquidity)</span>
                   </div>
                   <div className="flex items-center gap-3 text-[11px] font-mono">

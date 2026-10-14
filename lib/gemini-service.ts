@@ -245,9 +245,9 @@ function fallbackAgentReasoning(
       : `กระแสเงินสดอยู่ในเกณฑ์ปลอดภัยเหนือ Safety Buffer ฿${summary.safetyBuffer.toLocaleString()} ทุกสัปดาห์`;
     return {
       agentId: "cash",
-      content: `จากข้อมูล 13-Week Cash Radar ใน Statement ของ ${businessName} ปัจจุบันมีเงินสดคงเหลือ ${summary.formattedCurrentCash} ครับ ${riskNote} ทางเราแนะนำให้กดดูแผนร่วม (Joint Remedy Plan) เพื่อบริหารสภาพคล่องล่วงหน้าครับ`,
+      content: `จากข้อมูล 13-Week Cash Radar ใน Statement ของ ${businessName} ปัจจุบันมีเงินสดคงเหลือ ${summary.formattedCurrentCash} ครับ ${riskNote} ทางเราแนะนำให้กดดู Cash Radar และจำลองสถานการณ์สภาพคล่อง (What-if Stress Testing) ได้ทันทีครับ`,
       reasoning: `Cash Agent วิเคราะห์การไหลเข้า-ออกของเงินใน Statement บัญชี ${summary.bankName}`,
-      actionRoute: "/dashboard#joint-plan",
+      actionRoute: "/dashboard/cash",
     };
   }
 
