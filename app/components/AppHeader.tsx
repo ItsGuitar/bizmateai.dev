@@ -53,6 +53,7 @@ export function AppHeader({
   const [user, setUser] = useState<AuthUser | null>(initialUser || null);
   const [currentBank, setCurrentBank] = useState<string>("kbank");
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isBankSettingsOpen, setIsBankSettingsOpen] = useState(false);
   const [activeBanksCount, setActiveBanksCount] = useState<number>(1);
   const [pendingApprovals, setPendingApprovals] = useState<InboxApprovalNotification[]>([]);
@@ -60,6 +61,7 @@ export function AppHeader({
   const [recentAuditLogs, setRecentAuditLogs] = useState<Array<{ id: string; agentId: string; action: string; status: string }>>([]);
 
   const notiRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
 
   // Sync user from session if not provided
   useEffect(() => {
@@ -138,21 +140,24 @@ export function AppHeader({
     }
   };
 
-  // Close notifications popover on click outside
+  // Close notifications popover or tools dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (notiRef.current && !notiRef.current.contains(event.target as Node)) {
         setIsNotiOpen(false);
       }
+      if (toolsRef.current && !toolsRef.current.contains(event.target as Node)) {
+        setIsToolsOpen(false);
+      }
     }
 
-    if (isNotiOpen) {
+    if (isNotiOpen || isToolsOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isNotiOpen]);
+  }, [isNotiOpen, isToolsOpen]);
 
   const handleToggleNoti = () => {
     if (!isNotiOpen) {
@@ -194,7 +199,7 @@ export function AppHeader({
           </Link>
 
           {/* Unified Primary Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 text-xs font-semibold">
+          <nav className="hidden md:flex items-center gap-1.5 text-xs font-semibold">
             <Link
               href="/dashboard"
               className={`px-3 py-1.5 rounded-xl transition-all ${
@@ -204,17 +209,6 @@ export function AppHeader({
               }`}
             >
               Dashboard
-            </Link>
-
-            <Link
-              href="/dashboard/cash"
-              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
-                pathname.includes("/cash")
-                  ? "bg-slate-100 dark:bg-slate-800 text-sky-600 dark:text-sky-400 font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              }`}
-            >
-              <span>Cash Radar</span>
             </Link>
 
             <Link
@@ -233,38 +227,113 @@ export function AppHeader({
               )}
             </Link>
 
-            <Link
-              href="/dashboard/plan"
-              className={`px-3 py-1.5 rounded-xl transition-all ${
-                currentNav === "plan"
-                  ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              }`}
+            {/* Tools & Agents Hover Dropdown */}
+            <div
+              ref={toolsRef}
+              className="relative"
+              onMouseEnter={() => setIsToolsOpen(true)}
+              onMouseLeave={() => setIsToolsOpen(false)}
             >
-              Joint Plan
-            </Link>
+              <button
+                type="button"
+                onClick={() => setIsToolsOpen((prev) => !prev)}
+                className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer ${
+                  pathname.includes("/cash") ||
+                  pathname.includes("/plan") ||
+                  pathname.includes("/collections") ||
+                  pathname.includes("/true-cost") ||
+                  isToolsOpen
+                    ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                <span>Tools &amp; Agents</span>
+                <span className={`text-[10px] transition-transform duration-200 ${isToolsOpen ? "rotate-180" : ""}`}>
+                  ▼
+                </span>
+              </button>
 
-            <Link
-              href="/dashboard/collections"
-              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
-                pathname.includes("/collections")
-                  ? "bg-slate-100 dark:bg-slate-800 text-orange-600 dark:text-orange-400 font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              }`}
-            >
-              <span>AR Ledger</span>
-            </Link>
+              {/* Hover Dropdown Menu */}
+              {isToolsOpen && (
+                <div className="absolute left-0 mt-1 w-64 p-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="text-[10px] font-mono uppercase text-slate-400 px-2.5 py-1 font-bold">
+                    Autonomous Capabilities
+                  </div>
 
-            <Link
-              href="/dashboard/true-cost"
-              className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 ${
-                pathname.includes("/true-cost")
-                  ? "bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              }`}
-            >
-              <span>Risk &amp; Fee Shield</span>
-            </Link>
+                  <Link
+                    href="/dashboard/cash"
+                    onClick={() => setIsToolsOpen(false)}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                      pathname.includes("/cash")
+                        ? "bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-base shrink-0">
+                      📊
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold">Cash Radar &amp; Scenarios</div>
+                      <div className="text-[10px] text-slate-400">13-week runway &amp; stress test</div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/plan"
+                    onClick={() => setIsToolsOpen(false)}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                      currentNav === "plan"
+                        ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base shrink-0">
+                      ⚡
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold">Joint Remedy Plan</div>
+                      <div className="text-[10px] text-slate-400">Synchronized multi-agent deliberation</div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/collections"
+                    onClick={() => setIsToolsOpen(false)}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                      pathname.includes("/collections")
+                        ? "bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 font-semibold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/60 text-orange-600 dark:text-orange-400 flex items-center justify-center text-base shrink-0">
+                      🔔
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold">AR Collections Ledger</div>
+                      <div className="text-[10px] text-slate-400">Automated buyer debt recovery</div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/true-cost"
+                    onClick={() => setIsToolsOpen(false)}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                      pathname.includes("/true-cost")
+                        ? "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-semibold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base shrink-0">
+                      🛡️
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold">Risk &amp; Fee Shield</div>
+                      <div className="text-[10px] text-slate-400">Payment traps &amp; exchange defense</div>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
 
             <Link
               href="/docs"
