@@ -54,6 +54,7 @@ export function AppHeader({
   const [currentBank, setCurrentBank] = useState<string>("kbank");
   const [isNotiOpen, setIsNotiOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBankSettingsOpen, setIsBankSettingsOpen] = useState(false);
   const [activeBanksCount, setActiveBanksCount] = useState<number>(1);
   const [pendingApprovals, setPendingApprovals] = useState<InboxApprovalNotification[]>([]);
@@ -62,6 +63,7 @@ export function AppHeader({
 
   const notiRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync user from session if not provided
   useEffect(() => {
@@ -230,9 +232,16 @@ export function AppHeader({
             {/* Tools & Agents Hover Dropdown */}
             <div
               ref={toolsRef}
-              className="relative"
-              onMouseEnter={() => setIsToolsOpen(true)}
-              onMouseLeave={() => setIsToolsOpen(false)}
+              className="relative py-1"
+              onMouseEnter={() => {
+                if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+                setIsToolsOpen(true);
+              }}
+              onMouseLeave={() => {
+                closeTimeoutRef.current = setTimeout(() => {
+                  setIsToolsOpen(false);
+                }, 200);
+              }}
             >
               <button
                 type="button"
@@ -253,12 +262,24 @@ export function AppHeader({
                 </span>
               </button>
 
-              {/* Hover Dropdown Menu */}
+              {/* Hover Dropdown Menu with Seamless Hover Bridge */}
               {isToolsOpen && (
-                <div className="absolute left-0 mt-1 w-64 p-2 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <div className="text-[10px] font-mono uppercase text-slate-400 px-2.5 py-1 font-bold">
-                    Autonomous Capabilities
-                  </div>
+                <div
+                  onMouseEnter={() => {
+                    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+                    setIsToolsOpen(true);
+                  }}
+                  onMouseLeave={() => {
+                    closeTimeoutRef.current = setTimeout(() => {
+                      setIsToolsOpen(false);
+                    }, 200);
+                  }}
+                  className="absolute left-0 top-full pt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+                >
+                  <div className="w-64 p-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
+                    <div className="text-[10px] font-mono uppercase text-slate-400 px-2.5 py-1 font-bold">
+                      Autonomous Capabilities
+                    </div>
 
                   <Link
                     href="/dashboard/cash"
@@ -314,23 +335,24 @@ export function AppHeader({
                     </div>
                   </Link>
 
-                  <Link
-                    href="/dashboard/true-cost"
-                    onClick={() => setIsToolsOpen(false)}
-                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
-                      pathname.includes("/true-cost")
-                        ? "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-semibold"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
-                    }`}
-                  >
-                    <span className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base shrink-0">
-                      🛡️
-                    </span>
-                    <div>
-                      <div className="text-xs font-bold">Risk &amp; Fee Shield</div>
-                      <div className="text-[10px] text-slate-400">Payment traps &amp; exchange defense</div>
-                    </div>
-                  </Link>
+                    <Link
+                      href="/dashboard/true-cost"
+                      onClick={() => setIsToolsOpen(false)}
+                      className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                        pathname.includes("/true-cost")
+                          ? "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-semibold"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                      }`}
+                    >
+                      <span className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base shrink-0">
+                        🛡️
+                      </span>
+                      <div>
+                        <div className="text-xs font-bold">Risk &amp; Fee Shield</div>
+                        <div className="text-[10px] text-slate-400">Payment traps &amp; exchange defense</div>
+                      </div>
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
@@ -556,8 +578,149 @@ export function AppHeader({
             showAccountModal={() => router.push("/dashboard")}
             onOpenBankSettings={() => setIsBankSettingsOpen(true)}
           />
+
+          {/* Mobile Hamburger Menu Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className="md:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
+            aria-label="Toggle mobile menu"
+          >
+            <span className="text-base leading-none">{isMobileMenuOpen ? "✕" : "☰"}</span>
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Navigation (Phone Users) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 py-4 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex flex-col gap-1 text-sm font-semibold">
+            <Link
+              href="/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`px-3 py-2 rounded-xl transition-all ${
+                currentNav === "dashboard"
+                  ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              Dashboard
+            </Link>
+
+            <Link
+              href="/inbox"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`px-3 py-2 rounded-xl transition-all flex items-center justify-between ${
+                currentNav === "inbox"
+                  ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <span>Inbox</span>
+              {pendingCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Mobile Tools & Agents Section */}
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="text-[10px] font-mono uppercase text-slate-400 px-3 py-1 font-bold">
+                Tools &amp; Agents
+              </div>
+
+              <div className="grid grid-cols-1 gap-1 mt-1">
+                <Link
+                  href="/dashboard/cash"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    pathname.includes("/cash")
+                      ? "bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-7 h-7 rounded-lg bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm shrink-0">
+                    📊
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold">Cash Radar &amp; Scenarios</div>
+                    <div className="text-[10px] text-slate-400">13-week runway forecast</div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/plan"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    currentNav === "plan"
+                      ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm shrink-0">
+                    ⚡
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold">Joint Remedy Plan</div>
+                    <div className="text-[10px] text-slate-400">Multi-agent remedy trace</div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/collections"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    pathname.includes("/collections")
+                      ? "bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-900/60 text-orange-600 dark:text-orange-400 flex items-center justify-center text-sm shrink-0">
+                    🔔
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold">AR Collections Ledger</div>
+                    <div className="text-[10px] text-slate-400">Overdue buyer recovery</div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/true-cost"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    pathname.includes("/true-cost")
+                      ? "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm shrink-0">
+                    🛡️
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold">Risk &amp; Fee Shield</div>
+                    <div className="text-[10px] text-slate-400">Payment traps &amp; exchange defense</div>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              <Link
+                href="/docs"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`px-3 py-2 rounded-xl transition-all block ${
+                  currentNav === "docs"
+                    ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                }`}
+              >
+                Docs
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
 
     {/* Multi-Bank Settings Modal rendered outside sticky header */}

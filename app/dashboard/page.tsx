@@ -694,47 +694,49 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Bars Grid */}
-                <div className="grid grid-cols-13 gap-1.5 sm:gap-2.5 h-32 items-end bg-black/25 dark:bg-black/40 p-3 sm:p-4 rounded-2xl border border-white/15 dark:border-slate-800 backdrop-blur-xs">
-                  {weeksData.map((w, idx) => {
-                    const isFocus = selectedWeekIndex === idx;
-                    const barColor =
-                      w.status === "below"
-                        ? "bg-amber-300 hover:bg-amber-200"
-                        : w.status === "short"
-                        ? "bg-rose-400 hover:bg-rose-300"
-                        : "bg-white hover:bg-white/90";
+                {/* Bars Grid with Responsive Horizontal Scroll for Phone screens */}
+                <div className="overflow-x-auto pb-2 -mx-1 px-1">
+                  <div className="grid grid-cols-13 gap-2 min-w-[560px] sm:min-w-0 sm:gap-2.5 h-32 items-end bg-black/25 dark:bg-black/40 p-3 sm:p-4 rounded-2xl border border-white/15 dark:border-slate-800 backdrop-blur-xs">
+                    {weeksData.map((w, idx) => {
+                      const isFocus = selectedWeekIndex === idx;
+                      const barColor =
+                        w.status === "below"
+                          ? "bg-amber-300 hover:bg-amber-200"
+                          : w.status === "short"
+                          ? "bg-rose-400 hover:bg-rose-300"
+                          : "bg-white hover:bg-white/90";
 
-                    return (
-                      <div
-                        key={w.week}
-                        onClick={() => {
-                          setSelectedWeek(w);
-                          setSelectedWeekIndex(idx);
-                        }}
-                        className="group flex flex-col items-center justify-end h-full cursor-pointer relative"
-                      >
-                        {/* Selected Indicator Pin */}
-                        {isFocus && (
-                          <div className="absolute -top-3 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-xs animate-bounce" />
-                        )}
-
+                      return (
                         <div
-                          style={{ height: `${w.heightPercent}%` }}
-                          className={`w-full rounded-t-md transition-all duration-300 ${barColor} ${
-                            isFocus ? "ring-2 ring-white shadow-lg" : "opacity-85 group-hover:opacity-100"
-                          }`}
-                        />
-                        <span
-                          className={`text-[10px] font-mono mt-1.5 transition-colors ${
-                            isFocus ? "font-bold text-white" : "text-blue-100/70 dark:text-slate-400 group-hover:text-white"
-                          }`}
+                          key={w.week}
+                          onClick={() => {
+                            setSelectedWeek(w);
+                            setSelectedWeekIndex(idx);
+                          }}
+                          className="group flex flex-col items-center justify-end h-full cursor-pointer relative"
                         >
-                          {w.week}
-                        </span>
-                      </div>
-                    );
-                  })}
+                          {/* Selected Indicator Pin */}
+                          {isFocus && (
+                            <div className="absolute -top-3 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-xs animate-bounce" />
+                          )}
+
+                          <div
+                            style={{ height: `${w.heightPercent}%` }}
+                            className={`w-full rounded-t-md transition-all duration-300 ${barColor} ${
+                              isFocus ? "ring-2 ring-white shadow-lg" : "opacity-85 group-hover:opacity-100"
+                            }`}
+                          />
+                          <span
+                            className={`text-[10px] font-mono mt-1.5 transition-colors ${
+                              isFocus ? "font-bold text-white" : "text-blue-100/70 dark:text-slate-400 group-hover:text-white"
+                            }`}
+                          >
+                            {w.week}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Selected Week Inspector Strip */}

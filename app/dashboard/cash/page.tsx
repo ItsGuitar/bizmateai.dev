@@ -887,47 +887,49 @@ export default function CashAgentHubPage() {
                 </div>
               </div>
 
-              {/* 13-Week Bars Grid */}
-              <div className="grid grid-cols-13 gap-1.5 sm:gap-2.5 h-44 items-end bg-black/40 p-3 sm:p-4 rounded-2xl border border-white/10 backdrop-blur-xs my-3">
-                {computedWeeks.map((w, idx) => {
-                  const isFocus = selectedWeekIndex === idx;
-                  const barColor =
-                    w.status === "below"
-                      ? "bg-amber-400 hover:bg-amber-300"
-                      : w.status === "short"
-                      ? "bg-rose-500 hover:bg-rose-400"
-                      : "bg-sky-400 hover:bg-sky-300";
+              {/* 13-Week Bars Grid with Horizontal Scroll on Phone */}
+              <div className="overflow-x-auto pb-2 -mx-1 px-1 my-3">
+                <div className="grid grid-cols-13 gap-2 min-w-[560px] sm:min-w-0 sm:gap-2.5 h-44 items-end bg-black/40 p-3 sm:p-4 rounded-2xl border border-white/10 backdrop-blur-xs">
+                  {computedWeeks.map((w, idx) => {
+                    const isFocus = selectedWeekIndex === idx;
+                    const barColor =
+                      w.status === "below"
+                        ? "bg-amber-400 hover:bg-amber-300"
+                        : w.status === "short"
+                        ? "bg-rose-500 hover:bg-rose-400"
+                        : "bg-sky-400 hover:bg-sky-300";
 
-                  return (
-                    <div
-                      key={w.week}
-                      onClick={() => {
-                        setSelectedWeek(w);
-                        setSelectedWeekIndex(idx);
-                      }}
-                      className="group flex flex-col items-center justify-end h-full cursor-pointer relative"
-                    >
-                      {/* Selected Indicator Pin */}
-                      {isFocus && (
-                        <div className="absolute -top-3 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-xs animate-bounce" />
-                      )}
-
+                    return (
                       <div
-                        style={{ height: `${w.heightPercent}%` }}
-                        className={`w-full rounded-t-md transition-all duration-300 ${barColor} ${
-                          isFocus ? "ring-2 ring-white shadow-lg" : "opacity-85 group-hover:opacity-100"
-                        }`}
-                      />
-                      <span
-                        className={`text-[10px] font-mono mt-1.5 transition-colors ${
-                          isFocus ? "font-bold text-white" : "text-slate-400 group-hover:text-white"
-                        }`}
+                        key={w.week}
+                        onClick={() => {
+                          setSelectedWeek(w);
+                          setSelectedWeekIndex(idx);
+                        }}
+                        className="group flex flex-col items-center justify-end h-full cursor-pointer relative"
                       >
-                        {w.week}
-                      </span>
-                    </div>
-                  );
-                })}
+                        {/* Selected Indicator Pin */}
+                        {isFocus && (
+                          <div className="absolute -top-3 w-1.5 h-1.5 rounded-full bg-amber-300 shadow-xs animate-bounce" />
+                        )}
+
+                        <div
+                          style={{ height: `${w.heightPercent}%` }}
+                          className={`w-full rounded-t-md transition-all duration-300 ${barColor} ${
+                            isFocus ? "ring-2 ring-white shadow-lg" : "opacity-85 group-hover:opacity-100"
+                          }`}
+                        />
+                        <span
+                          className={`text-[10px] font-mono mt-1.5 transition-colors ${
+                            isFocus ? "font-bold text-white" : "text-slate-400 group-hover:text-white"
+                          }`}
+                        >
+                          {w.week}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Selected Week Inspector Strip */}
