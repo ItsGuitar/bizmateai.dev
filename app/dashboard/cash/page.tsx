@@ -616,76 +616,66 @@ export default function CashAgentHubPage() {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    {/* Animated agent avatar (gentle vertical bobbing animation) */}
-                    <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/80 border border-sky-200 dark:border-sky-800 text-sky-600 dark:text-sky-400 flex items-center justify-center text-2xl font-bold animate-bounce shadow-xs">
+                    {/* Animated agent avatar */}
+                    <div className="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/80 border border-sky-200 dark:border-sky-800 text-sky-600 dark:text-sky-400 flex items-center justify-center text-xl font-bold animate-bounce shadow-xs">
                       📊
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                        <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                           Cash Agent
                         </h1>
                         <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
                           Radar Live
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-mono">
-                        13-Week Cash Radar, Rolling Buffer Projections &amp; What-If Stress-Testing
+                      <p className="text-xs text-slate-500">
+                        13-Week Cash Radar &amp; Liquidity Simulation
                       </p>
                     </div>
                   </div>
 
-                  {/* Speech Bubble Context */}
-                  <div className="mt-3.5 p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed max-w-2xl flex items-start gap-2.5">
-                    <span className="text-base shrink-0 mt-0.5">💬</span>
+                  {/* Speech Bubble Context - Friendly & Crisp */}
+                  <div className="mt-3 p-3 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2.5">
+                    <span className="text-base shrink-0">💬</span>
                     <div>
-                      <strong className="text-sky-800 dark:text-sky-300 font-semibold">
-                        Cash Agent Telemetry Feed:
-                      </strong>{" "}
-                      Tracking rolling liquidity for <strong>{summaryData?.company || "Your SME"}</strong>. Safety buffer calibrated at <strong>฿{activeBuffer.toLocaleString()}</strong>.
+                      <span>Buffer: <strong>฿{activeBuffer.toLocaleString()}</strong>.</span>{" "}
                       {lowestWeek && lowestWeek.status !== "safe" ? (
-                        <span className="text-amber-700 dark:text-amber-400 font-medium ml-1">
-                          ⚠️ Critical liquidity drop flagged on {lowestWeek.week} ({lowestWeek.date}) at ฿{lowestWeek.balance.toLocaleString()}.
+                        <span className="text-amber-700 dark:text-amber-400 font-semibold">
+                          Low cash alert on {lowestWeek.week} ({lowestWeek.date}) at ฿{lowestWeek.balance.toLocaleString()}.
                         </span>
                       ) : (
-                        <span className="text-emerald-700 dark:text-emerald-400 font-medium ml-1">
-                          ✓ Rolling balance remains healthy above safety buffer across all 13 weeks.
+                        <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                          Cash flow is healthy across all 13 weeks.
                         </span>
                       )}
                     </div>
                   </div>
 
                   {/* Operational Boundaries */}
-                  <div className="mt-4 flex flex-wrap items-center gap-4 text-[11px] font-mono">
-                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                  <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px]">
+                    <div className="flex items-center gap-1.5 text-slate-500">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span><strong>Does on its own:</strong> Ingests bank &amp; sales feeds; computes daily rolling cash balances.</span>
+                      <span><strong>Auto:</strong> Tracks rolling daily cash</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-1.5 text-slate-500">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      <span><strong>Asks you first:</strong> Adjusting cash reserve buffer threshold.</span>
+                      <span><strong>Approvals:</strong> Buffer changes require your OK</span>
                     </div>
-                  </div>
-
-                  {/* Data Lineage Footer */}
-                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center gap-3 text-[10px] font-mono text-slate-400">
-                    <span>Uses {summaryData?.bankName || "Linked Statement Feed"}</span>
-                    <span>•</span>
-                    <span>Updated 12 Oct 2026, 09:41 AM ICT</span>
                   </div>
                 </div>
 
                 {/* Quick Buffer Actions Pill */}
-                <div className="flex flex-col gap-2.5 shrink-0 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
+                <div className="flex flex-col gap-2 shrink-0 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 min-w-[210px]">
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase">Operating Cash Today</span>
+                    <span className="text-[11px] text-slate-400 font-medium">Cash Today</span>
                     <span className="text-base font-black font-mono text-slate-900 dark:text-white">
                       {summaryData?.formattedCurrentCash || "฿0"}
                     </span>
                   </div>
                   <div className="w-full h-px bg-slate-200 dark:bg-slate-700" />
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase">Safety Buffer</span>
+                    <span className="text-[11px] text-slate-400 font-medium">Safety Buffer</span>
                     <span className="text-xs font-mono font-bold text-sky-600 dark:text-sky-400">
                       ฿{activeBuffer.toLocaleString()}
                     </span>
@@ -694,31 +684,28 @@ export default function CashAgentHubPage() {
                     onClick={() => setIsBufferModalOpen(true)}
                     className="w-full mt-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                   >
-                    <span>⚙️ Adjust Safety Buffer</span>
+                    <span>⚙️ Adjust Buffer</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* WHAT-IF INTERACTIVE SCENARIOS (instruction.md: CR-01 What-if Chips + Custom Scenarios) */}
+            {/* WHAT-IF INTERACTIVE SCENARIOS */}
             <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-base">🧪</span>
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Interactive What-If Stress Scenarios
+                    What-If Scenarios
                   </h2>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    Live Database Persistence &amp; Dynamic Simulation
-                  </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {(scenarioDebtorLate || scenarioPlatformHold || scenarioExtraInventory || customScenarios.some((s) => s.isEnabled)) && (
                     <button
                       onClick={handleResetScenarios}
-                      className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1 mr-1"
                     >
-                      <span>↺ Reset all to baseline</span>
+                      <span>↺ Reset</span>
                     </button>
                   )}
                   <button
@@ -733,80 +720,86 @@ export default function CashAgentHubPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                Test hypothetical cash inflows, delays, or emergency capital outflows. Custom scenarios are safely saved in your database and can be toggled or removed anytime.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3.5">
+                Simulate cash flow changes to see if your buffer holds.
               </p>
 
               {/* Baseline Presets Group */}
-              <div className="mb-4">
-                <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-2">
-                  System Suggested Stress Tests:
-                </span>
-                <div className="flex flex-wrap items-center gap-2.5">
+              <div className="mb-3.5">
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Preset 1: Debtor pays late */}
                   <button
                     onClick={() => {
                       setScenarioDebtorLate((prev) => !prev);
-                      setScenarioToast(!scenarioDebtorLate ? "Preset active: Key debtor pays 3 weeks late (Inflow shifted to W4)." : "Preset disabled.");
+                      setScenarioToast(!scenarioDebtorLate ? "Debtor delay simulated (shifted to W4)." : "Scenario off.");
                     }}
-                    className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-2xl text-xs font-medium transition-all flex items-center gap-1.5 border cursor-pointer ${
                       scenarioDebtorLate
-                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        ? "bg-amber-500 text-white border-amber-600 shadow-xs"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     <span>{scenarioDebtorLate ? "✓" : "+"}</span>
-                    <span>Boutique Siam / Key Debtor pays 3 weeks late</span>
-                    <span className="text-[10px] font-mono opacity-80">(~฿35k delay)</span>
+                    <span>Debtor pays 3 weeks late</span>
+                    <span className="text-[10px] opacity-75">(~฿35k)</span>
                   </button>
 
                   {/* Preset 2: TikTok holds payout */}
                   <button
                     onClick={() => {
                       setScenarioPlatformHold((prev) => !prev);
-                      setScenarioToast(!scenarioPlatformHold ? "Preset active: Platform holds payouts for 7 days (Shifted to W3)." : "Preset disabled.");
+                      setScenarioToast(!scenarioPlatformHold ? "Platform payout hold simulated (shifted to W3)." : "Scenario off.");
                     }}
-                    className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-2xl text-xs font-medium transition-all flex items-center gap-1.5 border cursor-pointer ${
                       scenarioPlatformHold
-                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        ? "bg-amber-500 text-white border-amber-600 shadow-xs"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     <span>{scenarioPlatformHold ? "✓" : "+"}</span>
-                    <span>TikTok Shop / Platforms hold payouts for 7 days</span>
-                    <span className="text-[10px] font-mono opacity-80">(~฿30k hold)</span>
+                    <span>Platforms hold payouts 7 days</span>
+                    <span className="text-[10px] opacity-75">(~฿30k)</span>
                   </button>
 
                   {/* Preset 3: Order ฿100k extra inventory */}
                   <button
                     onClick={() => {
                       setScenarioExtraInventory((prev) => !prev);
-                      setScenarioToast(!scenarioExtraInventory ? "Preset active: Order ฿100k extra inventory in W2 (Outflow injected)." : "Preset disabled.");
+                      setScenarioToast(!scenarioExtraInventory ? "Extra inventory order simulated in W2." : "Scenario off.");
                     }}
-                    className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-2xl text-xs font-medium transition-all flex items-center gap-1.5 border cursor-pointer ${
                       scenarioExtraInventory
-                        ? "bg-rose-500 text-white border-rose-600 shadow-sm"
+                        ? "bg-rose-500 text-white border-rose-600 shadow-xs"
                         : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     <span>{scenarioExtraInventory ? "✓" : "+"}</span>
-                    <span>Order ฿100k extra inventory</span>
-                    <span className="text-[10px] font-mono opacity-80">(-฿100k Outflow in W2)</span>
+                    <span>Extra inventory order</span>
+                    <span className="text-[10px] opacity-75">(-฿100k in W2)</span>
                   </button>
                 </div>
               </div>
 
               {/* User Custom Scenarios List */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">
-                    Your Custom Scenarios ({customScenarios.length} Saved in DB):
+                    Custom Scenarios ({customScenarios.length})
                   </span>
                 </div>
 
                 {customScenarios.length === 0 ? (
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500">
-                    <span>No custom scenarios yet. Click <strong>&quot;+ New Scenario&quot;</strong> to name an event, pick a week (W1-W13), and test custom cash amounts!</span>
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                    <span>No custom scenarios yet.</span>
+                    <button
+                      onClick={() => {
+                        setFormError(null);
+                        setIsAddScenarioModalOpen(true);
+                      }}
+                      className="text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer"
+                    >
+                      Create one →
+                    </button>
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-2.5">
@@ -987,14 +980,14 @@ export default function CashAgentHubPage() {
                   </h3>
                 </div>
 
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
                   {lowestWeek && lowestWeek.status !== "safe" ? (
                     <>
-                      Cash Agent flagged a projected balance breach in <strong>{lowestWeek.week} ({lowestWeek.date})</strong> dipping to <strong>฿{lowestWeek.balance.toLocaleString()}</strong>, which violates your <strong>฿{activeBuffer.toLocaleString()}</strong> operating safety buffer.
+                      Projected cash dips to <strong>฿{lowestWeek.balance.toLocaleString()}</strong> in <strong>{lowestWeek.week} ({lowestWeek.date})</strong>, below your ฿{activeBuffer.toLocaleString()} buffer.
                     </>
                   ) : (
                     <>
-                      All 13 projected weeks safely sustain rolling cash balances above the <strong>฿{activeBuffer.toLocaleString()}</strong> threshold. No mandatory financing intervention is required.
+                      All 13 weeks maintain cash balances above your ฿{activeBuffer.toLocaleString()} buffer.
                     </>
                   )}
                 </p>
@@ -1043,8 +1036,8 @@ export default function CashAgentHubPage() {
                   </h3>
                 </div>
 
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                  The Cash Agent coordinates with fellow agents to restore liquidity buffers without resorting to predatory loans:
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                  Suggested steps across agents to protect your liquidity buffer:
                 </p>
 
                 <div className="space-y-2.5">
