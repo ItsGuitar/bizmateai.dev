@@ -25,6 +25,9 @@ export async function POST(request: Request) {
       prisma.inboxApproval.deleteMany({
         where: { userId },
       }),
+      prisma.userBankConnection.deleteMany({
+        where: { userId },
+      }),
       prisma.auditLog.deleteMany({
         where: { userId },
       }),

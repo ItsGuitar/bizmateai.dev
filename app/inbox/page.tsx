@@ -115,7 +115,20 @@ function InboxContent() {
     try {
       const isBankConnectedState = typeof window !== "undefined" && localStorage.getItem("bizmate_bank_connected") === "true";
       const storedBankChoice = typeof window !== "undefined" ? localStorage.getItem("bizmate_selected_bank") || "kbank" : "kbank";
-      const res = await fetch(`/api/inbox?status=${currentStatus}&bankConnected=${isBankConnectedState}&bankId=${storedBankChoice}`, {
+      let effectiveQuery = `bankId=${storedBankChoice}`;
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("bizmate_enabled_banks");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              effectiveQuery = `bankIds=${parsed.join(",")}`;
+            }
+          }
+        } catch {}
+      }
+
+      const res = await fetch(`/api/inbox?status=${currentStatus}&bankConnected=${isBankConnectedState}&${effectiveQuery}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -126,8 +139,8 @@ function InboxContent() {
         setStatusCounts(data.counts);
       }
 
-      // Fetch dynamic financial summary for active bank
-      fetch(`/api/financial/summary?bankId=${storedBankChoice}`)
+      // Fetch dynamic financial summary for active bank(s)
+      fetch(`/api/financial/summary?${effectiveQuery}`)
         .then((r) => r.json())
         .then((s) => setFinancialSummary(s))
         .catch(() => {});

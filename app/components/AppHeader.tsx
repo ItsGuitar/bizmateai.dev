@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { UserProfileMenu } from "@/app/components/UserProfileMenu";
+import { BankSettingsModal } from "@/app/components/BankSettingsModal";
 import { getSession, clearSession, AuthUser } from "@/lib/auth-client";
 
 interface InboxApprovalNotification {
@@ -52,6 +53,8 @@ export function AppHeader({
   const [user, setUser] = useState<AuthUser | null>(initialUser || null);
   const [currentBank, setCurrentBank] = useState<string>("kbank");
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const [isBankSettingsOpen, setIsBankSettingsOpen] = useState(false);
+  const [activeBanksCount, setActiveBanksCount] = useState<number>(1);
   const [pendingApprovals, setPendingApprovals] = useState<InboxApprovalNotification[]>([]);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [recentAuditLogs, setRecentAuditLogs] = useState<Array<{ id: string; agentId: string; action: string; status: string }>>([]);
@@ -259,6 +262,16 @@ export function AppHeader({
               <option value="bbl">BBL: BioHarvest (Heilongjiang AgroChem)</option>
               <option value="personal">Personal: Freelance Creator (3-Month)</option>
             </select>
+
+            <button
+              type="button"
+              onClick={() => setIsBankSettingsOpen(true)}
+              className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer text-xs flex items-center justify-center"
+              title="ตั้งค่าและจัดการบัญชีธนาคาร (Bank Settings)"
+              aria-label="Bank Settings"
+            >
+              <span className="text-sm leading-none">⚙️</span>
+            </button>
           </div>
 
           {/* Optional Developer Reset Button */}
@@ -440,9 +453,22 @@ export function AppHeader({
             user={user}
             onLogout={handleLogout}
             showAccountModal={() => router.push("/dashboard")}
+            onOpenBankSettings={() => setIsBankSettingsOpen(true)}
           />
         </div>
       </div>
+
+      {/* Multi-Bank Settings Modal */}
+      <BankSettingsModal
+        isOpen={isBankSettingsOpen}
+        onClose={() => setIsBankSettingsOpen(false)}
+        onSettingsChanged={() => {
+          fetchNotifications();
+          if (onSelectBank) {
+            onSelectBank(currentBank);
+          }
+        }}
+      />
     </header>
   );
 }

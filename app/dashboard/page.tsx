@@ -199,27 +199,34 @@ export default function DashboardPage() {
 
   // Check stored bank connection state and selected bank on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedBankState = localStorage.getItem("bizmate_bank_connected");
-      const storedBankChoice = localStorage.getItem("bizmate_selected_bank") || "kbank";
-      setSelectedBank(storedBankChoice);
+    const handleSyncBanks = () => {
+      if (typeof window !== "undefined") {
+        const storedBankState = localStorage.getItem("bizmate_bank_connected");
+        const storedBankChoice = localStorage.getItem("bizmate_selected_bank") || "kbank";
+        setSelectedBank(storedBankChoice);
 
-      // Default to true if already connected or previously set, false if explicitly reset or first run
-      if (storedBankState === "true") {
-        setIsBankConnected(true);
-      } else if (storedBankState === "false") {
-        setIsBankConnected(false);
-      } else {
-        // First-time default: check if we should default to false (Setup Required)
-        setIsBankConnected(false);
+        if (storedBankState === "true") {
+          setIsBankConnected(true);
+        } else if (storedBankState === "false") {
+          setIsBankConnected(false);
+        } else {
+          setIsBankConnected(false);
+        }
       }
-    }
+    };
+
+    handleSyncBanks();
+    window.addEventListener("bizmate_bank_changed", handleSyncBanks);
+    return () => {
+      window.removeEventListener("bizmate_bank_changed", handleSyncBanks);
+    };
   }, []);
 
   const handleSelectBank = (bankId: string) => {
     setSelectedBank(bankId);
     if (typeof window !== "undefined") {
       localStorage.setItem("bizmate_selected_bank", bankId);
+      window.dispatchEvent(new Event("bizmate_bank_changed"));
     }
   };
 
@@ -235,8 +242,22 @@ export default function DashboardPage() {
       return;
     }
 
-    // Fetch live financial summary computed for selectedBank
-    fetch(`/api/financial/summary?bankId=${selectedBank}`)
+    // Check if user has multiple enabled banks
+    let effectiveQuery = `bankId=${selectedBank}`;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("bizmate_enabled_banks");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            effectiveQuery = `bankIds=${parsed.join(",")}`;
+          }
+        }
+      } catch {}
+    }
+
+    // Fetch live financial summary computed for active banks
+    fetch(`/api/financial/summary?${effectiveQuery}`)
       .then((r) => r.json())
       .then((data) => {
         if (data && data.cashRadarWeeks) {
@@ -250,8 +271,8 @@ export default function DashboardPage() {
       })
       .catch((err) => console.error("Error loading financial summary:", err));
 
-    // Fetch initial sample transactions from statement for selectedBank
-    fetch(`/api/financial/transactions?limit=8&bankId=${selectedBank}`)
+    // Fetch initial sample transactions from statement
+    fetch(`/api/financial/transactions?limit=8&${effectiveQuery}`)
       .then((r) => r.json())
       .then((data) => {
         if (data && data.transactions) {
@@ -263,7 +284,7 @@ export default function DashboardPage() {
     // Fetch inbox items count & items
     const session = getSession();
     if (session?.token) {
-      fetch(`/api/inbox?bankConnected=true&bankId=${selectedBank}`, {
+      fetch(`/api/inbox?bankConnected=true&${effectiveQuery}`, {
         headers: { Authorization: `Bearer ${session.token}` },
       })
         .then((r) => r.json())

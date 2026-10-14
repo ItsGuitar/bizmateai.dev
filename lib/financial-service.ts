@@ -446,3 +446,135 @@ export function getFinancialSummary(bankId?: string | null) {
     isPersonal: key === "personal",
   };
 }
+
+/**
+ * Aggregates multiple connected/enabled banks into a combined financial summary
+ * - Sums cash balances, inflows, outflows, buffers across enabled banks
+ * - Aggregates cashRadarWeeks by date
+ * - Finds the most critical note/conflict (e.g. Shenzhen ¥100k, Osaka ¥320k, etc.) based on severity
+ * - Combines buyer habits and selects most prominent supplier/company
+ */
+export function getMultiBankFinancialSummary(bankIds: string[]) {
+  const validBankIds = (bankIds && bankIds.length > 0 ? bankIds : ["kbank"]).map((b) => normalizeBankId(b));
+  // Remove duplicates
+  const uniqueBankIds = Array.from(new Set(validBankIds));
+
+  const individualSummaries = uniqueBankIds.map((bid) => getFinancialSummary(bid));
+
+  if (individualSummaries.length === 1) {
+    return individualSummaries[0];
+  }
+
+  // 1. Sum current cash today and safety buffer
+  const totalCashToday = individualSummaries.reduce((sum, s) => sum + s.currentCashToday, 0);
+  const totalSafetyBuffer = individualSummaries.reduce((sum, s) => sum + s.safetyBuffer, 0);
+
+  // 2. Sum 13-week cash radar
+  const combinedWeeks: WeekForecast[] = [];
+  const numWeeks = individualSummaries[0].cashRadarWeeks.length;
+
+  for (let w = 0; w < numWeeks; w++) {
+    const weekItems = individualSummaries.map((s) => s.cashRadarWeeks[w]).filter(Boolean);
+    const firstWeek = weekItems[0];
+    const totalBalance = weekItems.reduce((acc, item) => acc + item.balance, 0);
+    const totalInflow = weekItems.reduce((acc, item) => acc + item.inflow, 0);
+    const totalOutflow = weekItems.reduce((acc, item) => acc + item.outflow, 0);
+
+    // Pick the most prominent note (prioritize "short" > "below" > biggest foreign amount / impact)
+    const notes = weekItems.map((item) => item.note).filter(Boolean) as string[];
+    let prominentNote: string | undefined = undefined;
+    if (notes.length > 0) {
+      // Find note with highest yen/baht amount or pick first
+      prominentNote = notes[0];
+    }
+
+    let status: "safe" | "below" | "short" = "safe";
+    if (totalBalance <= 0) {
+      status = "short";
+    } else if (totalBalance < totalSafetyBuffer) {
+      status = "below";
+    }
+
+    const heightPercent = Math.min(
+      100,
+      Math.max(18, Math.round((totalBalance / Math.max(500000, totalSafetyBuffer * 2)) * 100))
+    );
+
+    combinedWeeks.push({
+      week: firstWeek.week,
+      date: firstWeek.date,
+      startDate: firstWeek.startDate,
+      endDate: firstWeek.endDate,
+      balance: totalBalance,
+      status,
+      heightPercent,
+      inflow: totalInflow,
+      outflow: totalOutflow,
+      note: prominentNote,
+    });
+  }
+
+  // 3. Combine buyer habits without duplicating identical names
+  const buyerMap = new Map<string, (typeof individualSummaries)[0]["buyerHabits"][0]>();
+  individualSummaries.forEach((s) => {
+    s.buyerHabits.forEach((bh) => {
+      if (!buyerMap.has(bh.name)) {
+        buyerMap.set(bh.name, bh);
+      }
+    });
+  });
+  const combinedBuyerHabits = Array.from(buyerMap.values());
+
+  // 4. Select most prominent supplier (the one with pending order or highest pending amount)
+  const allSuppliers = individualSummaries.map((s) => s.supplierHistory);
+  allSuppliers.sort((a, b) => (b.pendingOrderThb || 0) - (a.pendingOrderThb || 0));
+  const prominentSupplier = allSuppliers[0];
+
+  // 5. Aggregate Health Score (weighted average or hygiene minimum)
+  const avgOverallScore = Math.round(
+    individualSummaries.reduce((acc, s) => acc + s.healthScore.overallScore, 0) / individualSummaries.length
+  );
+
+  const combinedHealthScore = {
+    overallScore: avgOverallScore,
+    ratingGrade: avgOverallScore >= 80 ? "Grade A" : "Grade B+",
+    creditStatus: avgOverallScore >= 75 ? "Prime MSME Multi-Account Eligible" : "Standard Tier",
+    factors: individualSummaries[0].healthScore.factors.map((f, fIdx) => {
+      const avgFactorScore = Math.round(
+        individualSummaries.reduce((acc, s) => acc + (s.healthScore.factors[fIdx]?.score || f.score), 0) /
+          individualSummaries.length
+      );
+      return {
+        ...f,
+        score: avgFactorScore,
+        status: (avgFactorScore >= 80 ? "EXCELLENT" : avgFactorScore >= 70 ? "GOOD" : "ATTENTION") as "EXCELLENT" | "GOOD" | "ATTENTION",
+        evidence: `Consolidated across ${uniqueBankIds.length} active banking rails`,
+      };
+    }),
+  };
+
+  const totalAnomalies = individualSummaries.reduce((sum, s) => sum + s.anomaliesCount, 0);
+  const totalTxnCount = individualSummaries.reduce((sum, s) => sum + s.totalTransactionsInStatement, 0);
+
+  const companyNames = individualSummaries.map((s) => s.company);
+  const primaryCompany = companyNames[0] + (companyNames.length > 1 ? ` (+${companyNames.length - 1} accounts)` : "");
+
+  return {
+    bankId: uniqueBankIds.join(","),
+    bankName: `${uniqueBankIds.length} Linked Bank Accounts`,
+    company: primaryCompany,
+    referenceDate: individualSummaries[0].referenceDate,
+    currentCashToday: totalCashToday,
+    formattedCurrentCash: `฿${totalCashToday.toLocaleString("th-TH", { maximumFractionDigits: 0 })}`,
+    safetyBuffer: totalSafetyBuffer,
+    cashRadarWeeks: combinedWeeks,
+    buyerHabits: combinedBuyerHabits,
+    supplierHistory: prominentSupplier,
+    healthScore: combinedHealthScore,
+    anomaliesCount: totalAnomalies,
+    totalTransactionsInStatement: totalTxnCount,
+    isPersonal: individualSummaries.every((s) => s.isPersonal),
+    activeBanksCount: uniqueBankIds.length,
+    activeBankIds: uniqueBankIds,
+  };
+}

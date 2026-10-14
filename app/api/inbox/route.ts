@@ -22,55 +22,65 @@ export async function GET(request: Request) {
 
     // Only auto-seed AI proposals once the bank has been connected and user currently has 0 items
     if (bankConnected && totalCount === 0) {
-      const { getFinancialSummary } = await import("@/lib/financial-service");
-      const summary = getFinancialSummary(bankId);
-      const debtor = summary.buyerHabits[0];
-      const supplier = summary.supplierHistory;
+      const { getFinancialSummary, normalizeBankId } = await import("@/lib/financial-service");
+      
+      const userConns = await prisma.userBankConnection.findMany({
+        where: { userId: auth.userId, isEnabled: true },
+      });
+      const activeBankIds = userConns.length > 0 
+        ? userConns.map((c) => c.bankId) 
+        : [normalizeBankId(bankId || "kbank")];
 
       const defaultProposals = [];
 
-      if (debtor && debtor.currentOverdueAmount > 0) {
-        defaultProposals.push({
-          userId: auth.userId,
-          agentId: "collections",
-          title: `Chase overdue invoice - ${debtor.name}`,
-          description: `Drafted polite reminder for ฿${debtor.currentOverdueAmount.toLocaleString()} invoice (${debtor.averageDelayDays} days average delay).`,
-          impact: `+฿${debtor.currentOverdueAmount.toLocaleString()} cash recovery`,
-          status: "PENDING",
-          requiresFaceId: false,
-        });
-      }
+      for (const bId of activeBankIds) {
+        const summary = getFinancialSummary(bId);
+        const debtor = summary.buyerHabits[0];
+        const supplier = summary.supplierHistory;
 
-      if (supplier && supplier.totalOrdersCount > 0 && supplier.pendingOrderAmount > 0) {
-        defaultProposals.push({
-          userId: auth.userId,
-          agentId: "funding",
-          title: `Request 60-day terms from ${supplier.name}`,
-          description: `Proposal to defer ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} payment to preserve cash buffer.`,
-          impact: `Preserves ฿${summary.safetyBuffer.toLocaleString()} safety buffer`,
-          status: "PENDING",
-          requiresFaceId: false,
-        });
+        if (debtor && debtor.currentOverdueAmount > 0) {
+          defaultProposals.push({
+            userId: auth.userId,
+            agentId: "collections",
+            title: `Chase overdue invoice - ${debtor.name} (${summary.company})`,
+            description: `Drafted polite reminder for ฿${debtor.currentOverdueAmount.toLocaleString()} invoice (${debtor.averageDelayDays} days average delay).`,
+            impact: `+฿${debtor.currentOverdueAmount.toLocaleString()} cash recovery`,
+            status: "PENDING",
+            requiresFaceId: false,
+          });
+        }
 
-        defaultProposals.push({
-          userId: auth.userId,
-          agentId: "true-cost",
-          title: `Approve ${supplier.name} FX Payment`,
-          description: `Direct bank rail locked to verified registry account (${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()}).`,
-          impact: `-฿${Math.round(supplier.pendingOrderAmount * 4.825).toLocaleString()} cash outflow scheduled for due date`,
-          status: "PENDING",
-          requiresFaceId: true,
-        });
-      } else if (summary.isPersonal) {
-        defaultProposals.push({
-          userId: auth.userId,
-          agentId: "funding",
-          title: "Personal Cash Reserve Auto-Sweep",
-          description: `Set up automated ฿5,000 sweep to high-yield digital savings whenever balance exceeds ฿${summary.safetyBuffer.toLocaleString()}.`,
-          impact: `Guarantees emergency fund buffer of ฿${summary.safetyBuffer.toLocaleString()}`,
-          status: "PENDING",
-          requiresFaceId: false,
-        });
+        if (supplier && supplier.totalOrdersCount > 0 && supplier.pendingOrderAmount > 0) {
+          defaultProposals.push({
+            userId: auth.userId,
+            agentId: "funding",
+            title: `Request 60-day terms from ${supplier.name} (${summary.company})`,
+            description: `Proposal to defer ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} payment to preserve cash buffer.`,
+            impact: `Preserves ฿${summary.safetyBuffer.toLocaleString()} safety buffer`,
+            status: "PENDING",
+            requiresFaceId: false,
+          });
+
+          defaultProposals.push({
+            userId: auth.userId,
+            agentId: "true-cost",
+            title: `Approve ${supplier.name} FX Payment (${summary.company})`,
+            description: `Direct bank rail locked to verified registry account (${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()}).`,
+            impact: `-฿${Math.round(supplier.pendingOrderAmount * 4.825).toLocaleString()} cash outflow scheduled for due date`,
+            status: "PENDING",
+            requiresFaceId: true,
+          });
+        } else if (summary.isPersonal) {
+          defaultProposals.push({
+            userId: auth.userId,
+            agentId: "funding",
+            title: `Personal Cash Reserve Auto-Sweep (${summary.company})`,
+            description: `Set up automated ฿5,000 sweep to high-yield digital savings whenever balance exceeds ฿${summary.safetyBuffer.toLocaleString()}.`,
+            impact: `Guarantees emergency fund buffer of ฿${summary.safetyBuffer.toLocaleString()}`,
+            status: "PENDING",
+            requiresFaceId: false,
+          });
+        }
       }
 
       if (defaultProposals.length > 0) {

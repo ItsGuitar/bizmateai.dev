@@ -20,6 +20,7 @@ model User {
   chats         ChatSession[]
   inboxItems    InboxApproval[]
   auditLogs     AuditLog[]
+  bankConnections UserBankConnection[]
 }
 
 model ChatSession {
@@ -54,6 +55,20 @@ model InboxApproval {
   requiresFaceId  Boolean  @default(false)
   createdAt       DateTime @default(now())
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserBankConnection {
+  id          String   @id @default(cuid())
+  userId      String
+  bankId      String   // kbank | scb | bbl | personal
+  bankName    String
+  companyName String
+  isEnabled   Boolean  @default(true)
+  linkedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bankId])
 }
 
 model AuditLog {

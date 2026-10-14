@@ -11,8 +11,24 @@ export async function GET(request: Request) {
     const scope = searchParams.get("scope"); // "past" | "future" | "all"
 
     const bankId = searchParams.get("bankId") || undefined;
+    const bankIdsParam = searchParams.get("bankIds");
 
-    let txns = getTransactions(bankId);
+    let bankIds: string[] = [];
+    if (bankIdsParam) {
+      bankIds = bankIdsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    } else if (bankId) {
+      bankIds = bankId.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+
+    let txns: ReturnType<typeof getTransactions> = [];
+    if (bankIds.length > 1) {
+      const allTxns = bankIds.flatMap((b) => getTransactions(b));
+      // Sort combined transactions descending by datetime
+      allTxns.sort((a, b) => (b.datetime > a.datetime ? 1 : b.datetime < a.datetime ? -1 : 0));
+      txns = allTxns;
+    } else {
+      txns = getTransactions(bankIds[0] || undefined);
+    }
 
     if (scope === "past") {
       txns = txns.filter((t) => t.datetime <= REFERENCE_DATE_ISO);

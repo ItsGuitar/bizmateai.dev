@@ -258,6 +258,7 @@ export default function OnboardingPage() {
     setTimeout(async () => {
       if (typeof window !== "undefined") {
         localStorage.setItem("bizmate_selected_bank", selectedBankId);
+        localStorage.setItem("bizmate_enabled_banks", JSON.stringify([selectedBankId]));
       }
 
       // Synchronize backend user business name to the newly linked bank's statement company

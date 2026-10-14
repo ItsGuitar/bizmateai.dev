@@ -9,9 +9,10 @@ interface UserProfileMenuProps {
   user: AuthUser | null;
   onLogout?: () => void;
   showAccountModal?: () => void;
+  onOpenBankSettings?: () => void;
 }
 
-export function UserProfileMenu({ user, onLogout, showAccountModal }: UserProfileMenuProps) {
+export function UserProfileMenu({ user, onLogout, showAccountModal, onOpenBankSettings }: UserProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -53,6 +54,13 @@ export function UserProfileMenu({ user, onLogout, showAccountModal }: UserProfil
     }
   };
 
+  const handleBankSettingsClick = () => {
+    setIsOpen(false);
+    if (onOpenBankSettings) {
+      onOpenBankSettings();
+    }
+  };
+
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
       <div className="flex items-center gap-2.5">
@@ -90,13 +98,27 @@ export function UserProfileMenu({ user, onLogout, showAccountModal }: UserProfil
           </div>
 
           <div className="py-1">
+            {/* Setting: Bank Connections Option */}
+            <button
+              onClick={handleBankSettingsClick}
+              className="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center gap-2.5 transition-colors cursor-pointer"
+            >
+              <span className="text-base leading-none">🏦</span>
+              <div className="flex-1">
+                <span>Bank Settings</span>
+                <span className="block text-[10px] text-blue-600 dark:text-blue-400 font-normal">
+                  จัดการบัญชีธนาคาร
+                </span>
+              </div>
+            </button>
+
             {/* Account Option */}
             <button
               onClick={handleAccountClick}
               className="w-full text-left px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center gap-2.5 transition-colors cursor-pointer"
             >
               <span className="text-base leading-none">👤</span>
-              <span>Account</span>
+              <span>Account Details</span>
             </button>
           </div>
 
