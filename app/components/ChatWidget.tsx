@@ -173,7 +173,7 @@ export function ChatWidget() {
           <button
             onClick={() => setIsOpen(true)}
             className="group relative w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-blue-600 via-indigo-500 to-sky-400 hover:from-blue-500 hover:to-indigo-600 shadow-xl shadow-blue-500/35 hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-108 active:scale-95 transition-all duration-300 cursor-pointer overflow-visible"
-            aria-label="Open BizMate Copilot Chat"
+            aria-label="Open BizMateAI Copilot Chat"
           >
             {/* Online beacon pulse indicator */}
             <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-ping z-20 pointer-events-none" />
@@ -182,7 +182,7 @@ export function ChatWidget() {
             <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-slate-900 flex items-center justify-center border border-white/60 dark:border-slate-700 shadow-inner">
               <Image
                 src="/images/bot1.png"
-                alt="BizMate Copilot"
+                alt="BizMateAI Copilot"
                 width={56}
                 height={56}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -204,7 +204,7 @@ export function ChatWidget() {
               <div className="w-10 h-10 rounded-2xl overflow-hidden border border-white/30 bg-white/10 shadow-sm shrink-0">
                 <Image
                   src="/images/bot1.png"
-                  alt="BizMate Copilot"
+                  alt="BizMateAI Copilot"
                   width={40}
                   height={40}
                   className="w-full h-full object-cover"
@@ -212,7 +212,7 @@ export function ChatWidget() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold tracking-tight">BizMate Copilot</h3>
+                  <h3 className="text-sm font-bold tracking-tight">BizMateAI Copilot</h3>
                   <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
                     Online
                   </span>

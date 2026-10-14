@@ -96,7 +96,7 @@ export default function RegisterPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-2xl font-black tracking-normal select-none bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
             >
-              Biz<span className="text-sky-400">Mate</span>
+              Biz<span className="text-sky-400">Mate</span><span className="text-blue-400 text-lg font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
         </div>
@@ -134,7 +134,7 @@ export default function RegisterPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
             >
-              Biz<span className="text-indigo-600 dark:text-indigo-400">Mate</span>
+              Biz<span className="text-indigo-600 dark:text-indigo-400">Mate</span><span className="text-blue-500 text-sm font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
           <div className="hidden md:block" />
@@ -276,7 +276,7 @@ export default function RegisterPage() {
                   <span>Creating Account...</span>
                 </>
               ) : (
-                <span>Get started with BizMate →</span>
+                <span>Get started with BizMateAI →</span>
               )}
             </button>
           </form>
@@ -295,7 +295,7 @@ export default function RegisterPage() {
 
         {/* Footer info */}
         <div className="w-full max-w-sm mx-auto text-center text-[11px] text-slate-400 shrink-0 relative z-10 animate-fade-in-up delay-500">
-          BizMate SME Financial Copilot •{" "}
+          BizMateAI SME Financial Copilot •{" "}
           <button
             type="button"
             onClick={() => setShowPdpaModal(true)}
@@ -341,7 +341,7 @@ export default function RegisterPage() {
                 <strong className="block font-bold mb-1 text-blue-800 dark:text-blue-300">
                   🔒 Core Technical Guarantee: Strictly Read-Only
                 </strong>
-                BizMate operates under deterministic server guardrails. We can{" "}
+                BizMateAI operates under deterministic server guardrails. We can{" "}
                 <strong>never initiate transfers, withdraw funds, or alter credentials</strong>. Bank and sales
                 connections are strictly read-only for cash forecasting.
               </div>
@@ -351,7 +351,7 @@ export default function RegisterPage() {
                   1. Data Controller &amp; Statutory Authority
                 </h4>
                 <p>
-                  BizMate Financial Technologies (Thailand) Co., Ltd. (&quot;BizMate&quot;) acts as the Data Controller under
+                  BizMateAI Financial Technologies (Thailand) Co., Ltd. (&quot;BizMateAI&quot;) acts as the Data Controller under
                   Sections 24 and 19 of Thailand PDPA B.E. 2562. You may contact our Data Protection Officer at{" "}
                   <span className="font-mono text-blue-600 dark:text-blue-400">dpo@bizmate.co</span>.
                 </p>

@@ -77,7 +77,7 @@ export default function WelcomePage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="relative inline-block px-4 py-1 text-6xl sm:text-8xl md:text-9xl font-black tracking-normal select-none bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-400 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent drop-shadow-sm transition-transform duration-500 hover:scale-[1.02] cursor-default"
             >
-              Biz<span className="bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-sky-300 dark:to-cyan-300 bg-clip-text text-transparent">Mate</span>
+              Biz<span className="bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-sky-300 dark:to-cyan-300 bg-clip-text text-transparent">Mate</span><span className="text-blue-500 dark:text-cyan-400 text-4xl sm:text-6xl md:text-7xl font-mono align-top ml-1">AI</span>
             </span>
           </div>
 
@@ -149,7 +149,7 @@ export default function WelcomePage() {
           onClick={scrollToAgents}
           className="mt-4 sm:mt-6 flex flex-col items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer group animate-bounce animate-fade-in-up delay-500"
         >
-          <span>Explore how BizMate works</span>
+          <span>Explore how BizMateAI works</span>
           <svg
             className="w-4 h-4 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
             fill="none"
@@ -172,7 +172,7 @@ export default function WelcomePage() {
             Unified Financial Intelligence
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-1">
-            How BizMate Powers Your Business
+            How BizMateAI Powers Your Business
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
             Automating cash radar, working capital, and AR follow-ups under deterministic trust.
@@ -251,7 +251,7 @@ export default function WelcomePage() {
           href={isMounted && user ? "/dashboard" : "/register"}
           className="py-3.5 px-8 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
         >
-          {isMounted && user ? "Go to Dashboard →" : "Get started with BizMate →"}
+          {isMounted && user ? "Go to Dashboard →" : "Get started with BizMateAI →"}
         </Link>
       </section>
 
@@ -336,7 +336,7 @@ export default function WelcomePage() {
 
       {/* Clean Bottom Footer */}
       <footer className="w-full border-t border-slate-200/70 dark:border-slate-900 py-6 text-center text-xs text-slate-500 z-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
-        <span>BizMate SME Financial Copilot • Bank-Grade Deterministic Security</span>
+        <span>BizMateAI SME Financial Copilot • Bank-Grade Deterministic Security</span>
         <div className="flex items-center gap-4 text-xs font-medium">
           <Link href="/docs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             API Docs (Swagger)

@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 // =============================================================================
-// BizMate AI - SME 365-Day Financial Statement Generator
+// BizMateAI - SME 365-Day Financial Statement Generator
 // Period: 31 Oct 2025 (2568) to 31 Oct 2026 (2569) - 366 Days (Thailand ICT UTC+7)
 // Company: Ploy Select Co., Ltd. (Omnichannel Retail & Cross-Border Importer)
 // =============================================================================

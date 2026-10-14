@@ -315,7 +315,7 @@ function InboxContent() {
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5 max-w-2xl leading-relaxed">
                   Every outgoing reminder, cross-border payment, and supplier negotiation prepared by your agents
-                  requires your sign-off before leaving BizMate. No surprises, no opaque executions.
+                  requires your sign-off before leaving BizMateAI. No surprises, no opaque executions.
                 </p>
               </div>
 

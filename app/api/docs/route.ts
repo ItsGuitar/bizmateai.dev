@@ -4,12 +4,12 @@ export async function GET() {
   const spec = {
     openapi: "3.0.3",
     info: {
-      title: "BizMate • SME Financial Copilot API",
+      title: "BizMateAI • SME Financial Copilot API",
       version: "1.0.0",
       description:
-        "Official API documentation for BizMate Autonomous Multi-Agent Financial Copilot. Features server-enforced deterministic guardrails, zero-surprise approval workflows, and immutable audit logging.",
+        "Official API documentation for BizMateAI Autonomous Multi-Agent Financial Copilot. Features server-enforced deterministic guardrails, zero-surprise approval workflows, and immutable audit logging.",
       contact: {
-        name: "BizMate Developer Platform",
+        name: "BizMateAI Developer Platform",
         email: "dpo@bizmate.co",
       },
     },

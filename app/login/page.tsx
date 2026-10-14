@@ -79,7 +79,7 @@ export default function LoginPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-2xl font-black tracking-normal select-none bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
             >
-              Biz<span className="text-sky-400">Mate</span>
+              Biz<span className="text-sky-400">Mate</span><span className="text-blue-400 text-lg font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
         </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
             >
-              Biz<span className="text-indigo-600 dark:text-indigo-400">Mate</span>
+              Biz<span className="text-indigo-600 dark:text-indigo-400">Mate</span><span className="text-blue-500 text-sm font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
           <div className="hidden md:block" />

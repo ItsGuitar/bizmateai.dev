@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 export const metadata = {
-  title: "PDPA Privacy & Consent Policy • BizMate",
+  title: "PDPA Privacy & Consent Policy • BizMateAI",
   description:
-    "Comprehensive Personal Data Protection Act (PDPA B.E. 2562) policy, read-only banking scopes, and data governance for BizMate SME Copilot.",
+    "Comprehensive Personal Data Protection Act (PDPA B.E. 2562) policy, read-only banking scopes, and data governance for BizMateAI SME Copilot.",
 };
 
 export default function PdpaPolicyPage() {
@@ -19,7 +19,7 @@ export default function PdpaPolicyPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent"
             >
-              BizMate
+              BizMate<span className="text-blue-500 dark:text-cyan-400 text-base font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
           <div className="flex items-center gap-4">
@@ -86,8 +86,8 @@ export default function PdpaPolicyPage() {
             </h3>
             <p>
               This policy governs the processing of personal and business financial data by{" "}
-              <strong className="text-slate-900 dark:text-white">BizMate Financial Technologies (Thailand) Co., Ltd.</strong>{" "}
-              (&quot;BizMate&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), acting as the Data Controller in accordance with the
+              <strong className="text-slate-900 dark:text-white">BizMateAI Financial Technologies (Thailand) Co., Ltd.</strong>{" "}
+              (&quot;BizMateAI&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), acting as the Data Controller in accordance with the
               Thailand Personal Data Protection Act B.E. 2562 (PDPA).
             </p>
             <p>
@@ -107,7 +107,7 @@ export default function PdpaPolicyPage() {
             </h3>
             <p>
               To provide the 13-week Cash Radar, Financial Health Score, and automated Accounts Receivable follow-up,
-              BizMate requests the following strictly defined data scopes:
+              BizMateAI requests the following strictly defined data scopes:
             </p>
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <table className="w-full text-left text-xs">
@@ -151,7 +151,7 @@ export default function PdpaPolicyPage() {
               Zero-Surprise Policy &amp; Negative Scopes
             </h3>
             <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs leading-relaxed">
-              <strong>Mandatory Technical Safeguard:</strong> BizMate operates under deterministic server-side guardrails
+              <strong>Mandatory Technical Safeguard:</strong> BizMateAI operates under deterministic server-side guardrails
               enforced by the Trust Agent.
             </div>
             <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
@@ -220,7 +220,7 @@ export default function PdpaPolicyPage() {
               inspect active authorizations and terminate access at any time via:
             </p>
             <p className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 font-mono text-xs text-blue-600 dark:text-blue-400">
-              BizMate Dashboard → Trust Agent Security Controls → Tab 2: Sharing &amp; Consents → Tap [Revoke Access]
+              BizMateAI Dashboard → Trust Agent Security Controls → Tab 2: Sharing &amp; Consents → Tap [Revoke Access]
             </p>
           </section>
         </div>
@@ -228,7 +228,7 @@ export default function PdpaPolicyPage() {
         {/* Bottom CTA */}
         <div className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
-            By registering for BizMate, you consent to data processing under these terms.
+            By registering for BizMateAI, you consent to data processing under these terms.
           </p>
           <Link
             href="/register"

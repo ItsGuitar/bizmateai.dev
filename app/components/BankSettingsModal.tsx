@@ -620,7 +620,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                 <span className="text-rose-600 font-bold">3.</span>
                 <div>
                   <strong className="text-rose-600 dark:text-rose-400 block">Strict Negative Scope:</strong>
-                  BizMate <em>CANNOT</em> transfer funds, execute debits, or modify any account settings.
+                  BizMateAI <em>CANNOT</em> transfer funds, execute debits, or modify any account settings.
                 </div>
               </div>
 

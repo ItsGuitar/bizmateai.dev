@@ -21,7 +21,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "BizMate • AI Financial Copilot for SMEs",
+  title: "BizMateAI • AI Financial Copilot for SMEs",
   description: "Autonomous financial department for cross-border and omnichannel SMEs operating under strict deterministic guardrails.",
 };
 

@@ -446,7 +446,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm font-semibold">Loading BizMate Dashboard...</span>
+          <span className="text-sm font-semibold">Loading BizMateAI Dashboard...</span>
         </div>
       </div>
     );
@@ -585,7 +585,7 @@ export default function DashboardPage() {
                   <div className="hidden md:block relative w-20 h-20 lg:w-24 lg:h-24 shrink-0 drop-shadow-xl hover:scale-105 transition-transform duration-300">
                     <Image
                       src="/images/bot2.png"
-                      alt="BizMate Mascot Bot"
+                      alt="BizMateAI Mascot Bot"
                       width={96}
                       height={96}
                       className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)]"
@@ -693,7 +693,7 @@ export default function DashboardPage() {
                   ⚡ Setup Required • First-Time Deployment
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
-                  Welcome to BizMate, {user?.businessName}!
+                  Welcome to BizMateAI, {user?.businessName}!
                 </h1>
                 <p className="text-xs sm:text-sm text-blue-100 mt-2.5 leading-relaxed">
                   Your autonomous multi-agent financial team is ready. To unlock the <strong>13-Week Cash Radar</strong>, <strong>Real-Time Cash Today</strong>, and <strong>Automated AR Follow-ups</strong>, connect your read-only operating account.
@@ -726,7 +726,7 @@ export default function DashboardPage() {
               <div className="hidden sm:block absolute bottom-4 right-8 w-28 h-28 lg:w-36 lg:h-36 drop-shadow-2xl pointer-events-none">
                 <Image
                   src="/images/bot2.png"
-                  alt="BizMate Mascot Bot"
+                  alt="BizMateAI Mascot Bot"
                   width={144}
                   height={144}
                   className="w-full h-full object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.3)] animate-float"

@@ -340,7 +340,7 @@ export default function OnboardingPage() {
               style={{ fontFamily: "var(--font-logo)" }}
               className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent"
             >
-              BizMate
+              BizMate<span className="text-blue-500 dark:text-cyan-400 text-base font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
           <div className="flex items-center gap-3">
@@ -474,7 +474,7 @@ export default function OnboardingPage() {
                 <strong className="block font-bold mb-0.5 text-blue-800 dark:text-blue-300">
                   Strictly Read-Only Guarantee (Trust Agent Enforced)
                 </strong>
-                BizMate cannot transfer money, debit funds, or alter credentials. Valid for 12 months under PDPA; revocable anytime in 1 tap.
+                BizMateAI cannot transfer money, debit funds, or alter credentials. Valid for 12 months under PDPA; revocable anytime in 1 tap.
               </div>
             </div>
 
@@ -834,7 +834,7 @@ export default function OnboardingPage() {
                 <span className="text-rose-600 font-bold">3.</span>
                 <div>
                   <strong className="text-rose-600 dark:text-rose-400 block">Strict Negative Scope:</strong>
-                  BizMate <em>CANNOT</em> transfer funds, execute debits, or modify any account settings.
+                  BizMateAI <em>CANNOT</em> transfer funds, execute debits, or modify any account settings.
                 </div>
               </div>
 
