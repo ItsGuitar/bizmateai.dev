@@ -283,12 +283,13 @@ export default function CashAgentHubPage() {
       // 4. Custom User-Created Scenarios (Active & applied to this specific week)
       customScenarios.forEach((sc) => {
         if (sc.isEnabled && sc.weekIndex === idx) {
+          const formattedAmt = sc.amount.toLocaleString(undefined, { maximumFractionDigits: 2 });
           if (sc.type === "INFLOW") {
             modifiedInflow += sc.amount;
-            extraNotes.push(`${sc.name} (+฿${(sc.amount / 1000).toFixed(0)}k)`);
+            extraNotes.push(`${sc.name} (+฿${formattedAmt})`);
           } else {
             modifiedOutflow += sc.amount;
-            extraNotes.push(`${sc.name} (-฿${(sc.amount / 1000).toFixed(0)}k)`);
+            extraNotes.push(`${sc.name} (-฿${formattedAmt})`);
           }
         }
       });
@@ -1211,9 +1212,9 @@ export default function CashAgentHubPage() {
                   </span>
                   <input
                     type="number"
-                    min="1"
-                    step="1000"
-                    placeholder="e.g. 50000"
+                    min="0.01"
+                    step="any"
+                    placeholder="e.g. 25450, 18500.50, 100000"
                     value={newScenarioAmount}
                     onChange={(e) => setNewScenarioAmount(e.target.value)}
                     className="w-full text-xs font-mono pl-8 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
