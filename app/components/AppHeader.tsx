@@ -104,7 +104,7 @@ export function AppHeader({
     }
   };
 
-  // Sync current bank with controlledBank or localStorage
+  // Sync current bank with controlledBank or localStorage & listen for open settings event
   useEffect(() => {
     if (controlledBank) {
       setCurrentBank(controlledBank);
@@ -112,6 +112,15 @@ export function AppHeader({
       const stored = localStorage.getItem("bizmate_selected_bank") || "kbank";
       setCurrentBank(stored);
     }
+
+    const handleOpenSettings = () => {
+      setIsBankSettingsOpen(true);
+    };
+
+    window.addEventListener("bizmate_open_bank_settings", handleOpenSettings);
+    return () => {
+      window.removeEventListener("bizmate_open_bank_settings", handleOpenSettings);
+    };
   }, [controlledBank]);
 
   const handleBankChange = (newBank: string) => {

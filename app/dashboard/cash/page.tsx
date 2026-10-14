@@ -387,6 +387,10 @@ export default function CashAgentHubPage() {
   const handleApplyBuffer = (newBuffer: number) => {
     setCustomBuffer(newBuffer);
     setIsBufferModalOpen(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`bizmate_custom_buffer_${selectedBankId}`, String(newBuffer));
+      window.dispatchEvent(new Event("bizmate_bank_changed"));
+    }
     setBufferToast(`Safety buffer threshold dynamically updated to ฿${newBuffer.toLocaleString()}! 13-Week Cash Radar recomputed.`);
     setTimeout(() => setBufferToast(null), 4500);
   };

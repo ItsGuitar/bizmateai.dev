@@ -272,16 +272,91 @@ export default function DashboardPage() {
 
     setIsRefreshingData(true);
 
-    // Fetch live financial summary computed for active banks
-    const fetchSummary = fetch(`/api/financial/summary?${effectiveQuery}`)
-      .then((r) => r.json())
-      .then((data) => {
+    // Fetch live financial summary computed for active banks + active custom What-If scenarios & custom safety buffer
+    const fetchSummary = Promise.all([
+      fetch(`/api/financial/summary?${effectiveQuery}`).then((r) => r.json()),
+      fetch(`/api/financial/what-if?bankId=${selectedBank}`).then((r) => r.json()).catch(() => ({ scenarios: [] })),
+    ])
+      .then(([data, whatIfData]) => {
         if (data && data.cashRadarWeeks) {
-          setFinancialSummary(data);
-          setWeeksData(data.cashRadarWeeks);
-          const conflictIdx = data.cashRadarWeeks.findIndex((w: WeekData) => w.status === "below" || w.status === "short");
+          // Check for user-customized safety buffer
+          let activeBuffer = data.safetyBuffer || 80000;
+          if (typeof window !== "undefined") {
+            const storedBuffer = localStorage.getItem(`bizmate_custom_buffer_${selectedBank}`);
+            if (storedBuffer) {
+              const parsed = parseFloat(storedBuffer);
+              if (!isNaN(parsed)) activeBuffer = parsed;
+            }
+          }
+
+          // Active scenarios
+          const scenarios = Array.isArray(whatIfData?.scenarios)
+            ? whatIfData.scenarios.filter((s: { isEnabled: boolean }) => s.isEnabled)
+            : [];
+
+          let runningBalance = data.currentCashToday;
+          const computedWeeks: WeekData[] = data.cashRadarWeeks.map((baseW: WeekData, idx: number) => {
+            let modInflow = baseW.inflow;
+            let modOutflow = baseW.outflow;
+            const extraNotes: string[] = [];
+
+            scenarios.forEach((sc: { weekIndex: number; type: string; amount: number; name: string }) => {
+              if (sc.weekIndex === idx) {
+                const formattedAmt = sc.amount.toLocaleString(undefined, { maximumFractionDigits: 2 });
+                if (sc.type === "INFLOW") {
+                  modInflow += sc.amount;
+                  extraNotes.push(`${sc.name} (+฿${formattedAmt})`);
+                } else {
+                  modOutflow += sc.amount;
+                  extraNotes.push(`${sc.name} (-฿${formattedAmt})`);
+                }
+              }
+            });
+
+            if (idx === 0) {
+              runningBalance = data.currentCashToday + modInflow - modOutflow;
+            } else {
+              runningBalance = runningBalance + modInflow - modOutflow;
+            }
+
+            const bal = Math.round(runningBalance);
+            let status: "safe" | "below" | "short" = "safe";
+            if (bal <= 0) {
+              status = "short";
+            } else if (bal < activeBuffer) {
+              status = "below";
+            }
+
+            let finalNote = baseW.note;
+            if (extraNotes.length > 0) {
+              finalNote = (finalNote ? `${finalNote} • ` : "") + extraNotes.join(", ");
+            }
+
+            const heightPercent = Math.min(100, Math.max(16, Math.round((bal / Math.max(350000, activeBuffer * 2.2)) * 100)));
+
+            return {
+              ...baseW,
+              inflow: modInflow,
+              outflow: modOutflow,
+              balance: bal,
+              status,
+              heightPercent,
+              note: finalNote,
+            };
+          });
+
+          const enhancedSummary = {
+            ...data,
+            safetyBuffer: activeBuffer,
+            cashRadarWeeks: computedWeeks,
+          };
+
+          setFinancialSummary(enhancedSummary);
+          setWeeksData(computedWeeks);
+
+          const conflictIdx = computedWeeks.findIndex((w: WeekData) => w.status === "below" || w.status === "short");
           const targetIdx = conflictIdx !== -1 ? conflictIdx : 2;
-          setSelectedWeek(data.cashRadarWeeks[targetIdx] || data.cashRadarWeeks[0]);
+          setSelectedWeek(computedWeeks[targetIdx] || computedWeeks[0]);
           setSelectedWeekIndex(targetIdx);
         }
       })
@@ -567,11 +642,24 @@ export default function DashboardPage() {
 
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                    <Link
-                      href="/onboarding"
-                      className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer text-center"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          window.dispatchEvent(new Event("bizmate_open_bank_settings"));
+                        }
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer text-center flex items-center justify-center gap-1.5"
                     >
-                      Manage Banks &amp; Feeds ⚙️
+                      <span>Manage Banks &amp; Feeds</span>
+                      <span>⚙️</span>
+                    </button>
+                    <Link
+                      href="/dashboard/cash"
+                      className="px-4 py-2.5 rounded-xl bg-sky-500/25 hover:bg-sky-500/35 border border-sky-300/40 text-white text-xs font-bold transition-all shadow-xs cursor-pointer text-center flex items-center justify-center gap-1.5"
+                    >
+                      <span>Adjust What-If &amp; Buffer</span>
+                      <span>⚡</span>
                     </Link>
                     <Link
                       href="#joint-plan"
@@ -606,7 +694,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-3 text-[11px] font-mono">
                     <span className="flex items-center gap-1.5 text-blue-100 dark:text-slate-300">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-white dark:bg-sky-400" /> Safe (&ge; ฿80k)
+                      <span className="w-2.5 h-2.5 rounded-sm bg-white dark:bg-sky-400" /> Safe (&ge; ฿{((financialSummary?.safetyBuffer || 80000) / 1000).toFixed(0)}k)
                     </span>
                     <span className="flex items-center gap-1.5 text-amber-200 dark:text-amber-300">
                       <span className="w-2.5 h-2.5 rounded-sm bg-amber-300" /> Below Buffer
