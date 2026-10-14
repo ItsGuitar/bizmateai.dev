@@ -170,9 +170,10 @@ export function AppHeader({
       : undefined);
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        {/* Left Side: Logo & Primary Nav Links */}
+    <>
+      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          {/* Left Side: Logo & Primary Nav Links */}
         <div className="flex items-center gap-5 sm:gap-6">
           <Link href="/dashboard" className="inline-flex items-center gap-2 group shrink-0">
             <span
@@ -267,7 +268,7 @@ export function AppHeader({
               type="button"
               onClick={() => setIsBankSettingsOpen(true)}
               className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer text-xs flex items-center justify-center"
-              title="ตั้งค่าและจัดการบัญชีธนาคาร (Bank Settings)"
+              title="Manage Bank Connections (Multi-Bank Aggregation)"
               aria-label="Bank Settings"
             >
               <span className="text-sm leading-none">⚙️</span>
@@ -457,19 +458,20 @@ export function AppHeader({
           />
         </div>
       </div>
-
-      {/* Multi-Bank Settings Modal */}
-      <BankSettingsModal
-        isOpen={isBankSettingsOpen}
-        onClose={() => setIsBankSettingsOpen(false)}
-        onSettingsChanged={() => {
-          fetchNotifications();
-          if (onSelectBank) {
-            onSelectBank(currentBank);
-          }
-        }}
-      />
     </header>
+
+    {/* Multi-Bank Settings Modal rendered outside sticky header */}
+    <BankSettingsModal
+      isOpen={isBankSettingsOpen}
+      onClose={() => setIsBankSettingsOpen(false)}
+      onSettingsChanged={() => {
+        fetchNotifications();
+        if (onSelectBank) {
+          onSelectBank(currentBank);
+        }
+      }}
+    />
+  </>
   );
 }
 

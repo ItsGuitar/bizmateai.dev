@@ -116,7 +116,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
     // Client-side guard: at least 1 must remain enabled
     const currentActiveCount = connections.filter((c) => c.isEnabled).length;
     if (!nextEnabled && currentActiveCount <= 1) {
-      setErrorMessage("ต้องมีอย่างน้อย 1 ธนาคารที่เปิดใช้งานอยู่เสมอ (ห้ามปิดทั้งหมด)");
+      setErrorMessage("At least one bank account must remain active (cannot disable all banks).");
       setTimeout(() => setErrorMessage(null), 4000);
       return;
     }
@@ -148,7 +148,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
           localStorage.setItem("bizmate_enabled_banks", JSON.stringify(enabledIds));
           window.dispatchEvent(new Event("bizmate_bank_changed"));
         }
-        setSuccessToast(nextEnabled ? "เปิดการเชื่อมต่อธนาคารเรียบร้อย" : "ปิดการคำนวณธนาคารนี้ชั่วคราว");
+        setSuccessToast(nextEnabled ? "Bank account enabled successfully" : "Bank account paused from aggregation");
         setTimeout(() => setSuccessToast(null), 3000);
         if (onSettingsChanged) onSettingsChanged();
       }
@@ -181,7 +181,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
           localStorage.setItem("bizmate_enabled_banks", JSON.stringify(enabledIds));
           window.dispatchEvent(new Event("bizmate_bank_changed"));
         }
-        setSuccessToast("เปิดใช้งานทุกธนาคารพร้อมกัน (Open All) แล้ว");
+        setSuccessToast("All linked banks enabled (Open All)");
         setTimeout(() => setSuccessToast(null), 3000);
         if (onSettingsChanged) onSettingsChanged();
       }
@@ -228,7 +228,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
         setIsLinkingBank(false);
         setShowConsentSheet(false);
         setShowAddModal(false);
-        setSuccessToast("เพิ่มและเชื่อมต่อธนาคารใหม่สำเร็จ 👍");
+        setSuccessToast("New bank account linked successfully 👍");
         setTimeout(() => setSuccessToast(null), 3000);
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("bizmate_bank_changed"));
@@ -253,12 +253,12 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
   const targetBankToAdd = AVAILABLE_BANKS.find((b) => b.id === selectedNewBankId) || AVAILABLE_BANKS[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl relative my-auto flex flex-col max-h-[88vh]">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-xl">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-xl shrink-0">
               🏦
             </div>
             <div>
@@ -266,13 +266,14 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                 Bank Connections &amp; Accounts
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                จัดการและสลับการเชื่อมต่อบัญชีธนาคาร (Multi-Bank Aggregation)
+                Manage accounts &amp; Multi-Bank Liquidity Aggregation
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer text-sm font-bold"
+            className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer text-sm font-bold shrink-0"
+            aria-label="Close"
           >
             ✕
           </button>
@@ -296,10 +297,10 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
         <div className="mt-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700 dark:text-slate-300">
-              กำลังเปิดใช้งาน:
+              Active in Sum:
             </span>
             <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-              {activeCount} / {connections.length} ธนาคาร
+              {activeCount} / {connections.length} Accounts
             </span>
           </div>
           {connections.length > 1 && (
@@ -312,7 +313,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                   : "bg-blue-600 hover:bg-blue-700 text-white shadow-2xs"
               }`}
             >
-              Open All (เปิดทั้งหมด)
+              Open All
             </button>
           )}
         </div>
@@ -322,11 +323,11 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
           {isLoading ? (
             <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
               <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <span>กำลังโหลดบัญชีธนาคาร...</span>
+              <span>Loading bank accounts...</span>
             </div>
           ) : connections.length === 0 ? (
             <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
-              <span>ยังไม่มีธนาคารที่เชื่อมต่อ กรุณากด &quot;+ เพิ่มธนาคารใหม่&quot; ด้านล่าง</span>
+              <span>No bank accounts linked yet. Click &quot;+ Link New Bank&quot; below.</span>
             </div>
           ) : (
             connections.map((conn) => {
@@ -371,7 +372,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                   {/* Toggle Switch */}
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                      {conn.isEnabled ? "เปิด" : "ปิด"}
+                      {conn.isEnabled ? "Enabled" : "Paused"}
                     </span>
                     <button
                       type="button"
@@ -381,6 +382,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                           ? "bg-blue-600 justify-end"
                           : "bg-slate-300 dark:bg-slate-700 justify-start"
                       }`}
+                      aria-label={`Toggle ${conn.bankName}`}
                     >
                       <div className="bg-white w-4 h-4 rounded-full shadow-md transition-transform duration-200" />
                     </button>
@@ -401,17 +403,17 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
               }}
               className="px-4 py-2.5 rounded-xl border border-blue-600/40 bg-blue-50/50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              <span>+ เพิ่มธนาคารใหม่</span>
+              <span>+ Link New Bank</span>
             </button>
           ) : (
-            <span className="text-[11px] text-slate-400">เชื่อมต่อครบทุกธนาคารแล้ว</span>
+            <span className="text-[11px] text-slate-400">All available banks connected</span>
           )}
 
           <button
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer"
           >
-            เสร็จสิ้น (Done)
+            Done
           </button>
         </div>
       </div>
@@ -420,11 +422,11 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
           SUB-MODAL: Select Unlinked Bank (Like Onboarding)
       ======================================================== */}
       {showAddModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative my-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                เลือกธนาคารที่ต้องการเชื่อมต่อเพิ่ม
+                Select Bank Account to Connect
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -479,7 +481,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                 onClick={() => setShowAddModal(false)}
                 className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
               >
-                ยกเลิก
+                Cancel
               </button>
               <button
                 onClick={() => {
@@ -487,7 +489,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                 }}
                 className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer"
               >
-                ตรวจสอบสิทธิ์ Read-Only →
+                Review Read-Only Scope →
               </button>
             </div>
           </div>
@@ -499,11 +501,11 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
       ======================================================== */}
       {showConsentSheet && (
         <div
-          className="fixed inset-0 z-70 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs p-0 sm:p-4 animate-in fade-in"
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
           onClick={() => !isLinkingBank && setShowConsentSheet(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative animate-in slide-in-from-bottom-8 duration-300"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -576,7 +578,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                 onClick={() => setShowConsentSheet(false)}
                 className="w-1/3 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                ยกเลิก
+                Cancel
               </button>
               <button
                 type="button"

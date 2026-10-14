@@ -107,7 +107,7 @@ export function UserProfileMenu({ user, onLogout, showAccountModal, onOpenBankSe
               <div className="flex-1">
                 <span>Bank Settings</span>
                 <span className="block text-[10px] text-blue-600 dark:text-blue-400 font-normal">
-                  จัดการบัญชีธนาคาร
+                  Manage accounts &amp; aggregation
                 </span>
               </div>
             </button>
