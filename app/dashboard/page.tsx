@@ -609,14 +609,14 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  <p className="text-xs text-blue-100 dark:text-slate-300 mt-2 max-w-lg leading-relaxed">
-                    Default Safety Buffer: <strong className="text-white font-bold">฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"}</strong>.
+                  <p className="text-xs text-blue-100/90 dark:text-slate-300 mt-2 max-w-lg leading-relaxed">
+                    Safety Buffer: <strong className="text-white font-bold">฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"}</strong>
                     {(() => {
                       const conflictWeek = weeksData.find((w) => w.status === "below" || w.status === "short");
                       if (conflictWeek) {
                         return (
                           <>
-                            {" "}Earliest projected low-cash threshold:{" "}
+                            {" "}• Low cash flagged:{" "}
                             <span
                               className="text-amber-300 dark:text-amber-400 font-bold underline cursor-pointer hover:text-white transition-colors"
                               onClick={() => {
@@ -626,22 +626,24 @@ export default function DashboardPage() {
                               }}
                             >
                               {conflictWeek.week} ({conflictWeek.date})
-                            </span>{" "}
-                            {financialSummary?.supplierHistory?.name && financialSummary.supplierHistory.pendingOrderAmount > 0
-                              ? `due to ${financialSummary.supplierHistory.name} ${financialSummary.supplierHistory.pendingOrderCurrency || "¥"}${financialSummary.supplierHistory.pendingOrderAmount.toLocaleString()} payment.`
-                              : "due to planned operational expenses."}
+                            </span>
                           </>
                         );
                       }
-                      return (
-                        <> Liquidity buffer maintained safely across all projected weeks.</>
-                      );
+                      return <> • Buffer safe across 13 weeks.</>;
                     })()}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/dashboard/cash"
+                      className="px-4 py-2.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 dark:bg-white dark:hover:bg-slate-100 font-bold text-xs shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>Cash Radar &amp; Scenarios</span>
+                      <span>⚡</span>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => {
@@ -649,24 +651,12 @@ export default function DashboardPage() {
                           window.dispatchEvent(new Event("bizmate_open_bank_settings"));
                         }
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer text-center flex items-center justify-center gap-1.5"
+                      className="p-2.5 rounded-xl bg-white/15 hover:bg-white/25 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-white border border-white/25 dark:border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      title="Manage Bank Accounts"
                     >
-                      <span>Manage Banks &amp; Feeds</span>
                       <span>⚙️</span>
+                      <span className="hidden sm:inline">Banks</span>
                     </button>
-                    <Link
-                      href="/dashboard/cash"
-                      className="px-4 py-2.5 rounded-xl bg-sky-500/25 hover:bg-sky-500/35 border border-sky-300/40 text-white text-xs font-bold transition-all shadow-xs cursor-pointer text-center flex items-center justify-center gap-1.5"
-                    >
-                      <span>Adjust What-If &amp; Buffer</span>
-                      <span>⚡</span>
-                    </Link>
-                    <Link
-                      href="#joint-plan"
-                      className="px-4 py-2.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-white text-xs font-bold shadow-md transition-all transform hover:-translate-y-0.5 cursor-pointer text-center"
-                    >
-                      View Joint Remedy Plan →
-                    </Link>
                   </div>
 
                   {/* Mascot Bot2 sitting inside hero card */}
@@ -690,7 +680,6 @@ export default function DashboardPage() {
                       <span>13-Week Cash Radar Forecast</span>
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
                     </Link>
-                    <span className="text-[11px] font-mono text-blue-200/80 dark:text-slate-400">(Live statement-backed rolling liquidity)</span>
                   </div>
                   <div className="flex items-center gap-3 text-[11px] font-mono">
                     <span className="flex items-center gap-1.5 text-blue-100 dark:text-slate-300">
@@ -941,27 +930,23 @@ export default function DashboardPage() {
                     ⚡
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                      The Agents&apos; Joint Plan: Liquidity &amp; Safety Optimization
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Remedy Plan: Liquidity &amp; Safety
                     </h2>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      Synchronized remedy safeguarding your ฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"} cash buffer.
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Safeguarding ฿{financialSummary?.safetyBuffer?.toLocaleString() || "80,000"} buffer
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 self-start sm:self-center">
+                <div className="flex items-center gap-2 self-start sm:self-center">
                   <Link
                     href="/dashboard/plan"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 shadow-xs hover:shadow-md transition-all cursor-pointer"
-                    title="View transparent deliberation trace showing how the 6 agents synchronized this plan"
+                    className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 transition-all cursor-pointer"
                   >
-                    <span>How they decided</span>
+                    <span>View Plan</span>
                     <span>→</span>
                   </Link>
-                  <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-2.5 py-1 rounded-xl border border-amber-300 dark:border-amber-800">
-                    Transparent Deliberation
-                  </span>
                 </div>
               </div>
 
@@ -1028,20 +1013,11 @@ export default function DashboardPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 text-xs text-slate-500 dark:text-slate-400 border-t border-amber-200/60 dark:border-amber-800/40">
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5 text-[11px]">
                   <span>🛡️</span>
-                  <span>Zero-Surprise: Actions require your sign-off in Central Inbox.</span>
+                  <span>Zero-Surprise: Actions require your sign-off in Central Inbox</span>
                 </span>
-                <div className="flex items-center gap-3">
-                  <Link
-                    href="/dashboard/plan"
-                    className="font-bold text-amber-800 dark:text-amber-400 hover:underline flex items-center gap-1"
-                  >
-                    <span>Read full trace</span>
-                    <span>→</span>
-                  </Link>
-                  <span className="font-mono text-[11px]">12 Oct 2026</span>
-                </div>
+                <span className="font-mono text-[11px] text-slate-400">12 Oct 2026</span>
               </div>
             </div>
           ) : (
