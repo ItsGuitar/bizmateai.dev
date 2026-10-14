@@ -95,10 +95,25 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const connections = await prisma.userBankConnection.findMany({
+    let connections = await prisma.userBankConnection.findMany({
       where: { userId: auth.userId },
       orderBy: { linkedAt: "asc" },
     });
+
+    // If user has zero connections in db, auto-seed with kbank default
+    if (connections.length === 0) {
+      const config = BANK_DATASETS.kbank;
+      const initialConn = await prisma.userBankConnection.create({
+        data: {
+          userId: auth.userId,
+          bankId: "kbank",
+          bankName: config.bankName,
+          companyName: config.defaultCompany,
+          isEnabled: true,
+        },
+      });
+      connections = [initialConn];
+    }
 
     return NextResponse.json({
       connections,

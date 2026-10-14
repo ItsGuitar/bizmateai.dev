@@ -104,14 +104,18 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
     }
   };
 
+  const [togglingBankId, setTogglingBankId] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       fetchConnections();
     }
   }, [isOpen]);
 
-  // Toggle individual bank
+  // Toggle individual bank with instant optimistic update & smooth loading
   const handleToggleBank = async (bankId: string, currentEnabled: boolean) => {
+    if (togglingBankId) return; // Prevent concurrent spam
+
     const nextEnabled = !currentEnabled;
     // Client-side guard: at least 1 must remain enabled
     const currentActiveCount = connections.filter((c) => c.isEnabled).length;
@@ -124,7 +128,25 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
     const session = getSession();
     if (!session?.token) return;
 
+    // 1. Instant Optimistic UI Update & Instant Event Broadcast
+    const previousConnections = [...connections];
+    const optimisticConnections = connections.map((c) =>
+      c.bankId === bankId ? { ...c, isEnabled: nextEnabled } : c
+    );
+    setConnections(optimisticConnections);
+    setTogglingBankId(bankId);
     setErrorMessage(null);
+
+    const optimisticEnabledIds = optimisticConnections
+      .filter((c) => c.isEnabled)
+      .map((c) => c.bankId);
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bizmate_enabled_banks", JSON.stringify(optimisticEnabledIds));
+      window.dispatchEvent(new CustomEvent("bizmate_bank_changed", { detail: { enabledIds: optimisticEnabledIds } }));
+    }
+    if (onSettingsChanged) onSettingsChanged();
+
     try {
       const res = await fetch("/api/financial/link-bank", {
         method: "PATCH",
@@ -136,6 +158,13 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
       });
       const data = await res.json();
       if (!res.ok) {
+        // Rollback on server error
+        setConnections(previousConnections);
+        const rolledBackIds = previousConnections.filter((c) => c.isEnabled).map((c) => c.bankId);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("bizmate_enabled_banks", JSON.stringify(rolledBackIds));
+          window.dispatchEvent(new CustomEvent("bizmate_bank_changed", { detail: { enabledIds: rolledBackIds } }));
+        }
         setErrorMessage(data.error || "Failed to update bank status");
         setTimeout(() => setErrorMessage(null), 4000);
         return;
@@ -143,27 +172,50 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
 
       if (data.connections) {
         setConnections(data.connections);
-        const enabledIds = data.connections.filter((c: BankConnection) => c.isEnabled).map((c: BankConnection) => c.bankId);
+        const finalEnabledIds = data.connections.filter((c: BankConnection) => c.isEnabled).map((c: BankConnection) => c.bankId);
         if (typeof window !== "undefined") {
-          localStorage.setItem("bizmate_enabled_banks", JSON.stringify(enabledIds));
-          window.dispatchEvent(new Event("bizmate_bank_changed"));
+          localStorage.setItem("bizmate_enabled_banks", JSON.stringify(finalEnabledIds));
+          window.dispatchEvent(new CustomEvent("bizmate_bank_changed", { detail: { enabledIds: finalEnabledIds } }));
         }
-        setSuccessToast(nextEnabled ? "Bank account enabled successfully" : "Bank account paused from aggregation");
-        setTimeout(() => setSuccessToast(null), 3000);
+        setSuccessToast(nextEnabled ? "Bank account enabled" : "Bank account paused from aggregation");
+        setTimeout(() => setSuccessToast(null), 2500);
         if (onSettingsChanged) onSettingsChanged();
       }
     } catch {
+      // Rollback on network failure
+      setConnections(previousConnections);
+      const rolledBackIds = previousConnections.filter((c) => c.isEnabled).map((c) => c.bankId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("bizmate_enabled_banks", JSON.stringify(rolledBackIds));
+        window.dispatchEvent(new CustomEvent("bizmate_bank_changed", { detail: { enabledIds: rolledBackIds } }));
+      }
       setErrorMessage("Network error updating bank status");
       setTimeout(() => setErrorMessage(null), 4000);
+    } finally {
+      setTogglingBankId(null);
     }
   };
 
-  // Open All banks
+  // Open All banks with optimistic update
   const handleOpenAll = async () => {
+    if (togglingBankId) return;
+
     const session = getSession();
     if (!session?.token) return;
 
+    const previousConnections = [...connections];
+    const optimisticConnections = connections.map((c) => ({ ...c, isEnabled: true }));
+    setConnections(optimisticConnections);
+    setTogglingBankId("all");
     setErrorMessage(null);
+
+    const allBankIds = optimisticConnections.map((c) => c.bankId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bizmate_enabled_banks", JSON.stringify(allBankIds));
+      window.dispatchEvent(new CustomEvent("bizmate_bank_changed", { detail: { enabledIds: allBankIds } }));
+    }
+    if (onSettingsChanged) onSettingsChanged();
+
     try {
       const res = await fetch("/api/financial/link-bank", {
         method: "PATCH",
@@ -179,15 +231,18 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
         const enabledIds = data.connections.map((c: BankConnection) => c.bankId);
         if (typeof window !== "undefined") {
           localStorage.setItem("bizmate_enabled_banks", JSON.stringify(enabledIds));
-          window.dispatchEvent(new Event("bizmate_bank_changed"));
+          window.dispatchEvent(new CustomEvent("bizmate_bank_changed", { detail: { enabledIds } }));
         }
         setSuccessToast("All linked banks enabled (Open All)");
-        setTimeout(() => setSuccessToast(null), 3000);
+        setTimeout(() => setSuccessToast(null), 2500);
         if (onSettingsChanged) onSettingsChanged();
       }
     } catch {
+      setConnections(previousConnections);
       setErrorMessage("Failed to enable all banks");
       setTimeout(() => setErrorMessage(null), 4000);
+    } finally {
+      setTogglingBankId(null);
     }
   };
 
@@ -300,20 +355,23 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
               Active in Sum:
             </span>
             <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-              {activeCount} / {connections.length} Accounts
+              {activeCount} / {connections.length} {connections.length === 1 ? "Account" : "Accounts"}
             </span>
           </div>
           {connections.length > 1 && (
             <button
               onClick={handleOpenAll}
-              disabled={activeCount === connections.length}
-              className={`font-bold text-xs px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeCount === connections.length
+              disabled={activeCount === connections.length || togglingBankId !== null}
+              className={`font-bold text-xs px-2.5 py-1 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeCount === connections.length || togglingBankId !== null
                   ? "text-slate-400 dark:text-slate-600 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white shadow-2xs"
               }`}
             >
-              Open All
+              {togglingBankId === "all" && (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              <span>Open All</span>
             </button>
           )}
         </div>
@@ -339,7 +397,7 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
               return (
                 <div
                   key={conn.id}
-                  className={`p-3.5 rounded-2xl border transition-all duration-200 flex items-center justify-between ${
+                  className={`p-3.5 rounded-2xl border transition-all duration-300 flex items-center justify-between ${
                     conn.isEnabled
                       ? "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 shadow-2xs"
                       : "bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-60"
@@ -376,15 +434,20 @@ export function BankSettingsModal({ isOpen, onClose, onSettingsChanged }: BankSe
                     </span>
                     <button
                       type="button"
+                      disabled={togglingBankId !== null}
                       onClick={() => handleToggleBank(conn.bankId, conn.isEnabled)}
-                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 cursor-pointer ${
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-all duration-300 relative cursor-pointer ${
                         conn.isEnabled
                           ? "bg-blue-600 justify-end"
                           : "bg-slate-300 dark:bg-slate-700 justify-start"
-                      }`}
+                      } ${togglingBankId !== null ? "opacity-75 cursor-wait" : ""}`}
                       aria-label={`Toggle ${conn.bankName}`}
                     >
-                      <div className="bg-white w-4 h-4 rounded-full shadow-md transition-transform duration-200" />
+                      <div className="bg-white w-4 h-4 rounded-full shadow-md transition-transform duration-300 flex items-center justify-center">
+                        {togglingBankId === conn.bankId && (
+                          <div className="w-2.5 h-2.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        )}
+                      </div>
                     </button>
                   </div>
                 </div>

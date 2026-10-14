@@ -193,6 +193,18 @@ export default function CollaborativePlanPage() {
   const [activeTab, setActiveTab] = useState<"trace" | "comparison" | "actions">("trace");
   const [selectedBank, setSelectedBank] = useState<string>("kbank");
   const [summary, setSummary] = useState<any>(null);
+  const [enabledBankIds, setEnabledBankIds] = useState<string[]>([]);
+
+  const fetchPlanSummary = (bankChoice: string, activeIds: string[]) => {
+    let effectiveQuery = `bankId=${bankChoice}`;
+    if (activeIds.length > 0) {
+      effectiveQuery = `bankIds=${activeIds.join(",")}`;
+    }
+    fetch(`/api/financial/summary?${effectiveQuery}`)
+      .then((r) => r.json())
+      .then((d) => setSummary(d))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     const session = getSession();
@@ -202,25 +214,37 @@ export default function CollaborativePlanPage() {
     }
     setUser(session.user);
 
-    if (typeof window !== "undefined") {
-      const storedBank = localStorage.getItem("bizmate_selected_bank") || "kbank";
-      setSelectedBank(storedBank);
-      fetch(`/api/financial/summary?bankId=${storedBank}`)
-        .then((r) => r.json())
-        .then((d) => setSummary(d))
-        .catch(() => {});
-    }
+    const syncBankData = () => {
+      if (typeof window !== "undefined") {
+        const storedBank = localStorage.getItem("bizmate_selected_bank") || "kbank";
+        setSelectedBank(storedBank);
+        let ids: string[] = [];
+        try {
+          const raw = localStorage.getItem("bizmate_enabled_banks");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) ids = parsed;
+          }
+        } catch {}
+        setEnabledBankIds(ids);
+        fetchPlanSummary(storedBank, ids);
+      }
+    };
+
+    syncBankData();
+    window.addEventListener("bizmate_bank_changed", syncBankData);
+    return () => {
+      window.removeEventListener("bizmate_bank_changed", syncBankData);
+    };
   }, [router]);
 
   const handleSelectBank = (bankId: string) => {
     setSelectedBank(bankId);
     if (typeof window !== "undefined") {
       localStorage.setItem("bizmate_selected_bank", bankId);
+      window.dispatchEvent(new Event("bizmate_bank_changed"));
     }
-    fetch(`/api/financial/summary?bankId=${bankId}`)
-      .then((r) => r.json())
-      .then((d) => setSummary(d))
-      .catch(() => {});
+    fetchPlanSummary(bankId, enabledBankIds);
   };
 
   const rawDebtor = summary?.buyerHabits?.[0];

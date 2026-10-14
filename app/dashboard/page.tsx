@@ -196,14 +196,26 @@ export default function DashboardPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [selectedBank, setSelectedBank] = useState<string>("kbank");
+  const [enabledBankIds, setEnabledBankIds] = useState<string[]>([]);
+  const [isRefreshingData, setIsRefreshingData] = useState<boolean>(false);
 
-  // Check stored bank connection state and selected bank on mount
+  // Check stored bank connection state, active banks and selected bank on mount
   useEffect(() => {
     const handleSyncBanks = () => {
       if (typeof window !== "undefined") {
         const storedBankState = localStorage.getItem("bizmate_bank_connected");
         const storedBankChoice = localStorage.getItem("bizmate_selected_bank") || "kbank";
         setSelectedBank(storedBankChoice);
+
+        try {
+          const raw = localStorage.getItem("bizmate_enabled_banks");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              setEnabledBankIds(parsed);
+            }
+          }
+        } catch {}
 
         if (storedBankState === "true") {
           setIsBankConnected(true);
@@ -244,7 +256,9 @@ export default function DashboardPage() {
 
     // Check if user has multiple enabled banks
     let effectiveQuery = `bankId=${selectedBank}`;
-    if (typeof window !== "undefined") {
+    if (enabledBankIds.length > 0) {
+      effectiveQuery = `bankIds=${enabledBankIds.join(",")}`;
+    } else if (typeof window !== "undefined") {
       try {
         const raw = localStorage.getItem("bizmate_enabled_banks");
         if (raw) {
@@ -256,8 +270,10 @@ export default function DashboardPage() {
       } catch {}
     }
 
+    setIsRefreshingData(true);
+
     // Fetch live financial summary computed for active banks
-    fetch(`/api/financial/summary?${effectiveQuery}`)
+    const fetchSummary = fetch(`/api/financial/summary?${effectiveQuery}`)
       .then((r) => r.json())
       .then((data) => {
         if (data && data.cashRadarWeeks) {
@@ -272,7 +288,7 @@ export default function DashboardPage() {
       .catch((err) => console.error("Error loading financial summary:", err));
 
     // Fetch initial sample transactions from statement
-    fetch(`/api/financial/transactions?limit=8&${effectiveQuery}`)
+    const fetchTx = fetch(`/api/financial/transactions?limit=8&${effectiveQuery}`)
       .then((r) => r.json())
       .then((data) => {
         if (data && data.transactions) {
@@ -283,8 +299,9 @@ export default function DashboardPage() {
 
     // Fetch inbox items count & items
     const session = getSession();
+    let fetchInbox = Promise.resolve();
     if (session?.token) {
-      fetch(`/api/inbox?bankConnected=true&${effectiveQuery}`, {
+      fetchInbox = fetch(`/api/inbox?bankConnected=true&${effectiveQuery}`, {
         headers: { Authorization: `Bearer ${session.token}` },
       })
         .then((r) => r.json())
@@ -296,7 +313,11 @@ export default function DashboardPage() {
         })
         .catch(() => {});
     }
-  }, [isBankConnected, selectedBank]);
+
+    Promise.allSettled([fetchSummary, fetchTx, fetchInbox]).finally(() => {
+      setIsRefreshingData(false);
+    });
+  }, [isBankConnected, selectedBank, enabledBankIds]);
 
   // Load Session and verify data
   useEffect(() => {
@@ -476,7 +497,9 @@ export default function DashboardPage() {
         <section className="mb-8">
           {isBankConnected ? (
             /* STATE A: THE BIG HERO BOX - CASH TODAY & 13-WEEK RADAR */
-            <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-700 dark:via-indigo-800 dark:to-slate-900 text-white shadow-2xl border border-blue-500/30 dark:border-slate-800 relative overflow-hidden transition-all duration-300 animate-fade-in-up">
+            <div className={`rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-700 dark:via-indigo-800 dark:to-slate-900 text-white shadow-2xl border border-blue-500/30 dark:border-slate-800 relative overflow-hidden transition-all duration-300 animate-fade-in-up ${
+              isRefreshingData ? "opacity-90 transition-opacity" : "opacity-100"
+            }`}>
               {/* Subtle ambient gradient aura */}
               <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/10 dark:bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -490,10 +513,18 @@ export default function DashboardPage() {
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/15 dark:bg-slate-800/80 text-white dark:text-slate-200 border border-white/20 dark:border-slate-700">
                       Read-Only Sync
                     </span>
+                    {isRefreshingData && (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/40 flex items-center gap-1 animate-pulse">
+                        <span className="w-2 h-2 border border-white border-t-transparent rounded-full animate-spin inline-block" />
+                        Aggregating Banks...
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-baseline gap-3 mt-2">
-                    <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white font-mono drop-shadow-sm">
+                    <h1 className={`text-4xl sm:text-5xl font-black tracking-tight text-white font-mono drop-shadow-sm transition-opacity duration-300 ${
+                      isRefreshingData ? "opacity-70" : "opacity-100"
+                    }`}>
                       {financialSummary?.formattedCurrentCash || "฿145,628"}
                     </h1>
                     {financialSummary?.buyerHabits?.[0] && (
