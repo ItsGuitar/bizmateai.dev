@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
 import { getSession, AuthUser } from "@/lib/auth-client";
-import { BANK_DATASETS } from "@/lib/financial-service";
 
 interface WeekForecast {
   week: string;
@@ -77,6 +76,18 @@ interface StatementTransaction {
   };
 }
 
+export interface CustomScenario {
+  id: string;
+  name: string;
+  type: "INFLOW" | "OUTFLOW";
+  weekIndex: number; // 0 to 12
+  weekLabel: string; // W1 to W13
+  amount: number;
+  isEnabled: boolean;
+  isCustom?: boolean;
+  createdAt?: string;
+}
+
 export default function CashAgentHubPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -98,11 +109,21 @@ export default function CashAgentHubPage() {
   const [weekTransactions, setWeekTransactions] = useState<StatementTransaction[]>([]);
   const [isLoadingWeekTxns, setIsLoadingWeekTxns] = useState<boolean>(false);
 
-  // What-If Scenario Toggles (In-memory stress test per instruction.md)
+  // Baseline Preset Scenario Toggles (In-memory standard demo)
   const [scenarioDebtorLate, setScenarioDebtorLate] = useState<boolean>(false); // Boutique Siam / key debtor pays 3 weeks late
   const [scenarioPlatformHold, setScenarioPlatformHold] = useState<boolean>(false); // TikTok/Platforms hold payouts 7 days
   const [scenarioExtraInventory, setScenarioExtraInventory] = useState<boolean>(false); // Order ฿100k extra inventory
   const [scenarioToast, setScenarioToast] = useState<string | null>(null);
+
+  // User-Created Dynamic What-If Scenarios (Persisted in PostgreSQL database via Prisma)
+  const [customScenarios, setCustomScenarios] = useState<CustomScenario[]>([]);
+  const [isAddScenarioModalOpen, setIsAddScenarioModalOpen] = useState<boolean>(false);
+  const [isSavingScenario, setIsSavingScenario] = useState<boolean>(false);
+  const [newScenarioName, setNewScenarioName] = useState<string>("");
+  const [newScenarioType, setNewScenarioType] = useState<"INFLOW" | "OUTFLOW">("OUTFLOW");
+  const [newScenarioWeek, setNewScenarioWeek] = useState<number>(2); // 0-indexed (W3 = 2)
+  const [newScenarioAmount, setNewScenarioAmount] = useState<string>("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Check auth session
   useEffect(() => {
@@ -132,8 +153,28 @@ export default function CashAgentHubPage() {
     };
   }, []);
 
+  // Fetch custom scenarios from database
+  const fetchCustomScenarios = useCallback(async (bankId: string) => {
+    const session = getSession();
+    if (!session?.token) return;
+
+    try {
+      const res = await fetch(`/api/financial/what-if?bankId=${encodeURIComponent(bankId)}`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.scenarios) {
+          setCustomScenarios(data.scenarios);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load custom what-if scenarios from DB:", err);
+    }
+  }, []);
+
   // Fetch summary data when bank changes
-  const fetchSummary = async (bankId: string) => {
+  const fetchSummary = useCallback(async (bankId: string) => {
     setIsLoading(true);
     try {
       // Check multi-bank settings
@@ -166,12 +207,15 @@ export default function CashAgentHubPage() {
         setSelectedWeek(data.cashRadarWeeks[0]);
         setSelectedWeekIndex(0);
       }
+
+      // Also load custom scenarios for this bank
+      await fetchCustomScenarios(bankId);
     } catch (err) {
       console.error("Error fetching financial summary for Cash Agent:", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchCustomScenarios]);
 
   useEffect(() => {
     if (isBankConnected) {
@@ -179,12 +223,12 @@ export default function CashAgentHubPage() {
     } else {
       setIsLoading(false);
     }
-  }, [selectedBankId, isBankConnected]);
+  }, [selectedBankId, isBankConnected, fetchSummary]);
 
   // Current active buffer threshold
   const activeBuffer = customBuffer !== null ? customBuffer : (summaryData?.safetyBuffer || 80000);
 
-  // Compute 13-week forecast with What-if stress testing mutations (Purely in-memory)
+  // Compute 13-week forecast with What-if stress testing mutations (In-memory real-time application)
   const computedWeeks = useMemo(() => {
     if (!summaryData?.cashRadarWeeks) return [];
 
@@ -192,13 +236,11 @@ export default function CashAgentHubPage() {
     const baseWeeks: WeekForecast[] = summaryData.cashRadarWeeks.map((w) => ({ ...w }));
 
     // Dynamic adjustments
-    // Scenario 1: Key debtor pays 3 weeks late -> Shift inflow of ~฿35k/48k from W1/W2 to W4/W5
+    // Preset Scenario 1: Key debtor pays 3 weeks late
     const debtorAmount = summaryData.buyerHabits?.[0]?.currentOverdueAmount || 35000;
-
-    // Scenario 2: TikTok / platform hold payouts for 7 days -> Shift ~฿30k from W2 to W3 or W3 to W4
+    // Preset Scenario 2: TikTok / platform hold payouts for 7 days
     const platformHoldAmt = 30000;
-
-    // Scenario 3: Order ฿100k extra inventory in Week 2 -> Outflow increases by ฿100k in W2
+    // Preset Scenario 3: Order ฿100k extra inventory in Week 2
     const inventoryExtraAmt = 100000;
 
     let runningBalance = summaryData.currentCashToday;
@@ -208,7 +250,7 @@ export default function CashAgentHubPage() {
       let modifiedOutflow = w.outflow;
       let extraNotes: string[] = [];
 
-      // Apply Scenario 1 (Debtor pays 3 weeks late)
+      // 1. Preset Scenario 1 (Debtor pays 3 weeks late)
       if (scenarioDebtorLate) {
         if (idx === 0) {
           modifiedInflow = Math.max(0, modifiedInflow - debtorAmount);
@@ -219,7 +261,7 @@ export default function CashAgentHubPage() {
         }
       }
 
-      // Apply Scenario 2 (Platform holds 7 days)
+      // 2. Preset Scenario 2 (Platform holds 7 days)
       if (scenarioPlatformHold) {
         if (idx === 1) {
           modifiedInflow = Math.max(0, modifiedInflow - platformHoldAmt);
@@ -230,7 +272,7 @@ export default function CashAgentHubPage() {
         }
       }
 
-      // Apply Scenario 3 (Order ฿100k extra inventory)
+      // 3. Preset Scenario 3 (Order ฿100k extra inventory)
       if (scenarioExtraInventory) {
         if (idx === 1) {
           modifiedOutflow += inventoryExtraAmt;
@@ -238,9 +280,21 @@ export default function CashAgentHubPage() {
         }
       }
 
+      // 4. Custom User-Created Scenarios (Active & applied to this specific week)
+      customScenarios.forEach((sc) => {
+        if (sc.isEnabled && sc.weekIndex === idx) {
+          if (sc.type === "INFLOW") {
+            modifiedInflow += sc.amount;
+            extraNotes.push(`${sc.name} (+฿${(sc.amount / 1000).toFixed(0)}k)`);
+          } else {
+            modifiedOutflow += sc.amount;
+            extraNotes.push(`${sc.name} (-฿${(sc.amount / 1000).toFixed(0)}k)`);
+          }
+        }
+      });
+
       // Calculate running closing balance
       if (idx === 0) {
-        // First week: balance from current cash today + net
         runningBalance = summaryData.currentCashToday + modifiedInflow - modifiedOutflow;
       } else {
         runningBalance = runningBalance + modifiedInflow - modifiedOutflow;
@@ -280,6 +334,7 @@ export default function CashAgentHubPage() {
     scenarioDebtorLate,
     scenarioPlatformHold,
     scenarioExtraInventory,
+    customScenarios,
   ]);
 
   // Update selected week when computedWeeks recalculate
@@ -335,13 +390,120 @@ export default function CashAgentHubPage() {
     setTimeout(() => setBufferToast(null), 4500);
   };
 
-  // Reset what-if scenarios
+  // Reset all scenarios (both presets and custom toggles)
   const handleResetScenarios = () => {
     setScenarioDebtorLate(false);
     setScenarioPlatformHold(false);
     setScenarioExtraInventory(false);
-    setScenarioToast("What-if scenarios reset to baseline ledger forecast.");
-    setTimeout(() => setScenarioToast(null), 3000);
+    // Turn off all custom scenarios in-memory
+    setCustomScenarios((prev) => prev.map((s) => ({ ...s, isEnabled: false })));
+    setScenarioToast("All what-if stress scenarios reset to baseline ledger forecast.");
+    setTimeout(() => setScenarioToast(null), 3500);
+  };
+
+  // Toggle custom scenario active state (persisted via PATCH)
+  const handleToggleCustomScenario = async (id: string, currentState: boolean) => {
+    const nextState = !currentState;
+    // Optimistic UI update
+    setCustomScenarios((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, isEnabled: nextState } : s))
+    );
+
+    const session = getSession();
+    if (session?.token) {
+      try {
+        await fetch("/api/financial/what-if", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({ id, isEnabled: nextState }),
+        });
+      } catch (err) {
+        console.error("Failed to patch scenario state:", err);
+      }
+    }
+  };
+
+  // Delete custom scenario (persisted via DELETE)
+  const handleDeleteCustomScenario = async (id: string, name: string) => {
+    // Optimistic remove
+    setCustomScenarios((prev) => prev.filter((s) => s.id !== id));
+    setScenarioToast(`Deleted scenario "${name}" from database.`);
+    setTimeout(() => setScenarioToast(null), 3500);
+
+    const session = getSession();
+    if (session?.token) {
+      try {
+        await fetch(`/api/financial/what-if?id=${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${session.token}` },
+        });
+      } catch (err) {
+        console.error("Failed to delete scenario from DB:", err);
+      }
+    }
+  };
+
+  // Add new scenario (persisted via POST)
+  const handleCreateScenario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (!newScenarioName.trim()) {
+      setFormError("Please enter a descriptive scenario name.");
+      return;
+    }
+
+    const amountNum = parseFloat(newScenarioAmount.replace(/,/g, ""));
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setFormError("Please enter a valid positive number for amount.");
+      return;
+    }
+
+    const session = getSession();
+    if (!session?.token) {
+      setFormError("Authentication session expired. Please sign in again.");
+      return;
+    }
+
+    setIsSavingScenario(true);
+    try {
+      const res = await fetch("/api/financial/what-if", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+        },
+        body: JSON.stringify({
+          bankId: selectedBankId,
+          name: newScenarioName.trim(),
+          type: newScenarioType,
+          weekIndex: newScenarioWeek,
+          amount: amountNum,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create scenario");
+      }
+
+      // Add to state and close modal
+      setCustomScenarios((prev) => [...prev, data.scenario]);
+      setIsAddScenarioModalOpen(false);
+      setNewScenarioName("");
+      setNewScenarioAmount("");
+      setNewScenarioWeek(2);
+      setScenarioToast(`Created and applied scenario "${data.scenario.name}" to W${data.scenario.weekIndex + 1}!`);
+      setTimeout(() => setScenarioToast(null), 4000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save scenario";
+      setFormError(msg);
+    } finally {
+      setIsSavingScenario(false);
+    }
   };
 
   // Find lowest cash week
@@ -537,8 +699,8 @@ export default function CashAgentHubPage() {
               </div>
             </div>
 
-            {/* WHAT-IF INTERACTIVE SCENARIOS (instruction.md: CR-01 What-if Chips) */}
-            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
+            {/* WHAT-IF INTERACTIVE SCENARIOS (instruction.md: CR-01 What-if Chips + Custom Scenarios) */}
+            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-base">🧪</span>
@@ -546,74 +708,153 @@ export default function CashAgentHubPage() {
                     Interactive What-If Stress Scenarios
                   </h2>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    In-Memory Simulation (Safe)
+                    Live Database Persistence &amp; Dynamic Simulation
                   </span>
                 </div>
-                {(scenarioDebtorLate || scenarioPlatformHold || scenarioExtraInventory) && (
+                <div className="flex items-center gap-3">
+                  {(scenarioDebtorLate || scenarioPlatformHold || scenarioExtraInventory || customScenarios.some((s) => s.isEnabled)) && (
+                    <button
+                      onClick={handleResetScenarios}
+                      className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <span>↺ Reset all to baseline</span>
+                    </button>
+                  )}
                   <button
-                    onClick={handleResetScenarios}
-                    className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer flex items-center gap-1"
+                    onClick={() => {
+                      setFormError(null);
+                      setIsAddScenarioModalOpen(true);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-all shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1.5"
                   >
-                    <span>↺ Reset to baseline forecast</span>
+                    <span>+ New Scenario</span>
                   </button>
-                )}
+                </div>
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3.5">
-                Toggle hypothetical operational events to stress-test your liquidity without affecting actual ledger entries.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Test hypothetical cash inflows, delays, or emergency capital outflows. Custom scenarios are safely saved in your database and can be toggled or removed anytime.
               </p>
 
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Chip 1: Debtor pays late */}
-                <button
-                  onClick={() => {
-                    setScenarioDebtorLate((prev) => !prev);
-                    setScenarioToast(!scenarioDebtorLate ? "Scenario active: Key debtor pays 3 weeks late (Inflow shifted to W4)." : "Scenario disabled.");
-                  }}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
-                    scenarioDebtorLate
-                      ? "bg-amber-500 text-white border-amber-600 shadow-sm"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <span>{scenarioDebtorLate ? "✓" : "+"}</span>
-                  <span>Boutique Siam / Key Debtor pays 3 weeks late</span>
-                  <span className="text-[10px] font-mono opacity-80">(~฿35k delay)</span>
-                </button>
+              {/* Baseline Presets Group */}
+              <div className="mb-4">
+                <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-2">
+                  System Suggested Stress Tests:
+                </span>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Preset 1: Debtor pays late */}
+                  <button
+                    onClick={() => {
+                      setScenarioDebtorLate((prev) => !prev);
+                      setScenarioToast(!scenarioDebtorLate ? "Preset active: Key debtor pays 3 weeks late (Inflow shifted to W4)." : "Preset disabled.");
+                    }}
+                    className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
+                      scenarioDebtorLate
+                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    <span>{scenarioDebtorLate ? "✓" : "+"}</span>
+                    <span>Boutique Siam / Key Debtor pays 3 weeks late</span>
+                    <span className="text-[10px] font-mono opacity-80">(~฿35k delay)</span>
+                  </button>
 
-                {/* Chip 2: TikTok holds payout */}
-                <button
-                  onClick={() => {
-                    setScenarioPlatformHold((prev) => !prev);
-                    setScenarioToast(!scenarioPlatformHold ? "Scenario active: Platform holds payouts for 7 days (Shifted to W3)." : "Scenario disabled.");
-                  }}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
-                    scenarioPlatformHold
-                      ? "bg-amber-500 text-white border-amber-600 shadow-sm"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <span>{scenarioPlatformHold ? "✓" : "+"}</span>
-                  <span>TikTok Shop / Platforms hold payouts for 7 days</span>
-                  <span className="text-[10px] font-mono opacity-80">(~฿30k hold)</span>
-                </button>
+                  {/* Preset 2: TikTok holds payout */}
+                  <button
+                    onClick={() => {
+                      setScenarioPlatformHold((prev) => !prev);
+                      setScenarioToast(!scenarioPlatformHold ? "Preset active: Platform holds payouts for 7 days (Shifted to W3)." : "Preset disabled.");
+                    }}
+                    className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
+                      scenarioPlatformHold
+                        ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    <span>{scenarioPlatformHold ? "✓" : "+"}</span>
+                    <span>TikTok Shop / Platforms hold payouts for 7 days</span>
+                    <span className="text-[10px] font-mono opacity-80">(~฿30k hold)</span>
+                  </button>
 
-                {/* Chip 3: Order ฿100k extra inventory */}
-                <button
-                  onClick={() => {
-                    setScenarioExtraInventory((prev) => !prev);
-                    setScenarioToast(!scenarioExtraInventory ? "Scenario active: Order ฿100k extra inventory in W2 (Outflow injected)." : "Scenario disabled.");
-                  }}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
-                    scenarioExtraInventory
-                      ? "bg-rose-500 text-white border-rose-600 shadow-sm"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <span>{scenarioExtraInventory ? "✓" : "+"}</span>
-                  <span>Order ฿100k extra inventory</span>
-                  <span className="text-[10px] font-mono opacity-80">(-฿100k Outflow in W2)</span>
-                </button>
+                  {/* Preset 3: Order ฿100k extra inventory */}
+                  <button
+                    onClick={() => {
+                      setScenarioExtraInventory((prev) => !prev);
+                      setScenarioToast(!scenarioExtraInventory ? "Preset active: Order ฿100k extra inventory in W2 (Outflow injected)." : "Preset disabled.");
+                    }}
+                    className={`px-3.5 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
+                      scenarioExtraInventory
+                        ? "bg-rose-500 text-white border-rose-600 shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    <span>{scenarioExtraInventory ? "✓" : "+"}</span>
+                    <span>Order ฿100k extra inventory</span>
+                    <span className="text-[10px] font-mono opacity-80">(-฿100k Outflow in W2)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* User Custom Scenarios List */}
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">
+                    Your Custom Scenarios ({customScenarios.length} Saved in DB):
+                  </span>
+                </div>
+
+                {customScenarios.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500">
+                    <span>No custom scenarios yet. Click <strong>&quot;+ New Scenario&quot;</strong> to name an event, pick a week (W1-W13), and test custom cash amounts!</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {customScenarios.map((sc) => {
+                      const isOutflow = sc.type === "OUTFLOW";
+                      return (
+                        <div
+                          key={sc.id}
+                          className={`pl-3 pr-2 py-1.5 rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 border ${
+                            sc.isEnabled
+                              ? isOutflow
+                                ? "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border-rose-300 dark:border-rose-800 shadow-xs"
+                                : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800 shadow-xs"
+                              : "bg-slate-100 dark:bg-slate-800/70 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 opacity-60"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCustomScenario(sc.id, sc.isEnabled)}
+                            className="flex items-center gap-1.5 cursor-pointer text-left"
+                            title={sc.isEnabled ? "Click to disable" : "Click to activate"}
+                          >
+                            <span className="text-sm font-bold">
+                              {sc.isEnabled ? "✓" : "○"}
+                            </span>
+                            <span>{sc.name}</span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/70 dark:bg-black/40">
+                              {sc.weekLabel}: {isOutflow ? "-" : "+"}฿{sc.amount.toLocaleString()}
+                            </span>
+                          </button>
+
+                          {/* Delete scenario button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCustomScenario(sc.id, sc.name);
+                            }}
+                            className="ml-1 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                            title="Delete scenario from database"
+                            aria-label="Delete Scenario"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -867,6 +1108,173 @@ export default function CashAgentHubPage() {
         )}
       </main>
 
+      {/* CREATE NEW WHAT-IF SCENARIO MODAL (User-Added Scenarios Persisted in PostgreSQL) */}
+      {isAddScenarioModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🧪</span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Add What-If Stress Scenario
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddScenarioModalOpen(false)}
+                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {formError && (
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                ⚠️ {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateScenario} className="space-y-4">
+              {/* Field 1: Scenario Name */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Scenario Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Marketing Campaign, New Machine Downpayment, Big Retail Order"
+                  value={newScenarioName}
+                  onChange={(e) => setNewScenarioName(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                  required
+                />
+              </div>
+
+              {/* Field 2: Flow Type (Inflow vs Outflow) */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Cash Flow Direction
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewScenarioType("OUTFLOW")}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                      newScenarioType === "OUTFLOW"
+                        ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700 shadow-xs"
+                        : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    <span>💸 Outflow (Expense / Delay)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewScenarioType("INFLOW")}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                      newScenarioType === "INFLOW"
+                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 shadow-xs"
+                        : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    <span>💰 Inflow (Revenue / Grant)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Field 3: Target Week (W1 to W13) */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Target Week (W1 - W13)
+                </label>
+                <select
+                  value={newScenarioWeek}
+                  onChange={(e) => setNewScenarioWeek(Number(e.target.value))}
+                  className="w-full text-xs font-semibold px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/40 cursor-pointer"
+                >
+                  {computedWeeks.map((w, idx) => (
+                    <option key={w.week} value={idx}>
+                      {w.week} ({w.date}) - Baseline Bal: ฿{w.balance.toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Field 4: Amount */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Amount in THB (฿) <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-xs font-mono text-slate-400">
+                    ฿
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1000"
+                    placeholder="e.g. 50000"
+                    value={newScenarioAmount}
+                    onChange={(e) => setNewScenarioAmount(e.target.value)}
+                    className="w-full text-xs font-mono pl-8 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                    required
+                  />
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono mt-1 block">
+                  Quick amounts:{" "}
+                  <button
+                    type="button"
+                    onClick={() => setNewScenarioAmount("30000")}
+                    className="text-sky-600 hover:underline cursor-pointer mr-1.5"
+                  >
+                    ฿30k
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewScenarioAmount("50000")}
+                    className="text-sky-600 hover:underline cursor-pointer mr-1.5"
+                  >
+                    ฿50k
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewScenarioAmount("100000")}
+                    className="text-sky-600 hover:underline cursor-pointer mr-1.5"
+                  >
+                    ฿100k
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewScenarioAmount("200000")}
+                    className="text-sky-600 hover:underline cursor-pointer"
+                  >
+                    ฿200k
+                  </button>
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsAddScenarioModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingScenario}
+                  className="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  {isSavingScenario ? "Saving to Database..." : "Save & Simulate"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* SAFETY BUFFER SETTINGS MODAL (instruction.md: CR-01 Safety Buffer Settings Sheet) */}
       {isBufferModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -879,6 +1287,7 @@ export default function CashAgentHubPage() {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsBufferModalOpen(false)}
                 className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
@@ -924,12 +1333,14 @@ export default function CashAgentHubPage() {
 
             <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100 dark:border-slate-800">
               <button
+                type="button"
                 onClick={() => setIsBufferModalOpen(false)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={() => handleApplyBuffer(bufferPresetChoice)}
                 className="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm"
               >
@@ -954,6 +1365,7 @@ export default function CashAgentHubPage() {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsWeekDetailOpen(false)}
                 className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
               >
@@ -1043,6 +1455,7 @@ export default function CashAgentHubPage() {
 
             <div className="pt-2 flex items-center justify-end border-t border-slate-100 dark:border-slate-800 shrink-0">
               <button
+                type="button"
                 onClick={() => setIsWeekDetailOpen(false)}
                 className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold cursor-pointer transition-colors"
               >

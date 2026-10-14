@@ -21,6 +21,24 @@ model User {
   inboxItems    InboxApproval[]
   auditLogs     AuditLog[]
   bankConnections UserBankConnection[]
+  whatIfScenarios WhatIfScenario[]
+}
+
+model WhatIfScenario {
+  id          String   @id @default(cuid())
+  userId      String
+  bankId      String   @default("kbank") // kbank | scb | bbl | personal
+  name        String
+  type        String   @default("OUTFLOW") // INFLOW | OUTFLOW
+  weekIndex   Int      // 0 to 12 (corresponding to W1 to W13)
+  weekLabel   String   // W1 to W13
+  amount      Float
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, bankId])
 }
 
 model ChatSession {
