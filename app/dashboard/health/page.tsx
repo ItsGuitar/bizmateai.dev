@@ -120,6 +120,21 @@ export default function HealthAgentHubPage() {
   // Factor Detail Inspection
   const [selectedFactor, setSelectedFactor] = useState<HealthScoreFactor | null>(null);
 
+  // Hybrid Generative AI Insights State (Rule-based statistical scoring + Generative AI explanation)
+  const [aiExplanation, setAiExplanation] = useState<{
+    summaryExecutive: string;
+    encouragingFeedback: string;
+    pillarInsights: Array<{
+      pillar: string;
+      score: number;
+      status: string;
+      humanExplanation: string;
+      actionableAdvice: string;
+    }>;
+  } | null>(null);
+  const [isLoadingAi, setIsLoadingAi] = useState<boolean>(false);
+  const [explanationLocale, setExplanationLocale] = useState<"th" | "en">("th");
+
   // Bank sync and session verification
   useEffect(() => {
     const session = getSession();
@@ -174,12 +189,51 @@ export default function HealthAgentHubPage() {
       const data = await res.json();
       if (res.ok) {
         setSummaryData(data);
+        fetchAiExplanation(bankId, enabledIds, explanationLocale);
       }
     } catch (err) {
       console.error("Failed to fetch health score telemetry:", err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchAiExplanation = async (bankId: string, enabledIds: string[], locale: "th" | "en") => {
+    setIsLoadingAi(true);
+    try {
+      const res = await fetch("/api/financial/health-explanation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bankId,
+          bankIds: enabledIds,
+          locale,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.summaryExecutive) {
+        setAiExplanation(data);
+      }
+    } catch (err) {
+      console.error("Failed to load AI explanation:", err);
+    } finally {
+      setIsLoadingAi(false);
+    }
+  };
+
+  const handleChangeLocale = (newLocale: "th" | "en") => {
+    setExplanationLocale(newLocale);
+    let enabledIds: string[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("bizmate_enabled_banks");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) enabledIds = parsed;
+        }
+      } catch {}
+    }
+    fetchAiExplanation(selectedBankId, enabledIds, newLocale);
   };
 
   const handleSwitchBank = (bankId: string) => {
@@ -366,11 +420,22 @@ export default function HealthAgentHubPage() {
                     </div>
                   </div>
 
+                  {/* Hybrid AI Architecture Indicator */}
+                  <div className="mt-2.5 flex items-center gap-2 text-[10px] font-mono">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bold">
+                      Rule-Based Scoring (Auditable • No Black Box)
+                    </span>
+                    <span className="text-slate-400">+</span>
+                    <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800 font-bold">
+                      Generative AI Explanation
+                    </span>
+                  </div>
+
                   {/* Operational Boundaries */}
                   <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px]">
                     <div className="flex items-center gap-1.5 text-slate-500">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span><strong>Auto:</strong> Monitors transaction hygiene &amp; calculates 7 factors</span>
+                      <span><strong>Auto:</strong> Rule-based statistical credit scoring running on backend</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-slate-500">
                       <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -406,6 +471,75 @@ export default function HealthAgentHubPage() {
                 </span>
                 <span>Deterministic Hygiene Engine</span>
               </div>
+            </div>
+
+            {/* Generative AI Explanation Card (Synthesizes 7 Statistical Pillars into Human-Friendly & Encouraging Insights) */}
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-sky-600/10 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-slate-900 border border-blue-200 dark:border-blue-900/60 shadow-xs mb-6 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
+                    ✨
+                  </span>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Generative AI Health Diagnosis &amp; Encouraging Feedback</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 font-semibold">
+                        Grounded on Rule-Based Scoring
+                      </span>
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Language Switcher */}
+                <div className="flex items-center gap-1 font-mono text-[11px] shrink-0">
+                  <span className="text-slate-400 text-[10px] uppercase mr-1">Language:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeLocale("th")}
+                    className={`px-2 py-1 rounded-lg cursor-pointer transition-colors ${
+                      explanationLocale === "th"
+                        ? "bg-blue-600 text-white font-bold"
+                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    ไทย (TH)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeLocale("en")}
+                    className={`px-2 py-1 rounded-lg cursor-pointer transition-colors ${
+                      explanationLocale === "en"
+                        ? "bg-blue-600 text-white font-bold"
+                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    English (EN)
+                  </button>
+                </div>
+              </div>
+
+              {isLoadingAi ? (
+                <div className="py-6 flex items-center justify-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                  <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <span>Synthesizing empathetic diagnosis from 7 statistical pillars...</span>
+                </div>
+              ) : aiExplanation ? (
+                <div className="space-y-3 text-xs">
+                  <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                    {aiExplanation.summaryExecutive}
+                  </p>
+                  <div className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-blue-200/80 dark:border-blue-900/50 flex items-start gap-2.5">
+                    <span className="text-base shrink-0 mt-0.5">🌟</span>
+                    <p className="text-blue-900 dark:text-blue-200 leading-relaxed font-semibold">
+                      {aiExplanation.encouragingFeedback}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  Click refresh or toggle language to view AI-generated human diagnosis.
+                </p>
+              )}
             </div>
 
             {/* Score Ring Component & Overview Card */}
@@ -520,7 +654,7 @@ export default function HealthAgentHubPage() {
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                              {factor.evidence}
+                              {aiExplanation?.pillarInsights?.[idx]?.humanExplanation || factor.evidence}
                             </p>
                           </div>
 
@@ -797,12 +931,34 @@ export default function HealthAgentHubPage() {
               </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
                 <span className="text-slate-400 font-mono text-[10px] uppercase block mb-1">
-                  Ledger Evidence
+                  Ledger Evidence (Rule-Based Data)
                 </span>
                 <p className="text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                   {selectedFactor.evidence}
                 </p>
               </div>
+
+              {/* Generative AI Plain-Language Explanation */}
+              {aiExplanation && (
+                <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2">
+                  <div>
+                    <span className="text-blue-800 dark:text-blue-300 font-bold block mb-0.5">
+                      💡 คำอธิบายความหมาย (Plain-Language Insight)
+                    </span>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                      {aiExplanation.pillarInsights.find((p) => p.pillar === selectedFactor.name)?.humanExplanation || "เกณฑ์นี้สะท้อนวินัยการเงินและการบริหารสภาพคล่องของธุรกิจ"}
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-blue-200/60 dark:border-blue-900/40">
+                    <span className="text-blue-800 dark:text-blue-300 font-bold block mb-0.5">
+                      🎯 คำแนะนำเชิงปฏิบัติการ (Actionable Step)
+                    </span>
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                      {aiExplanation.pillarInsights.find((p) => p.pillar === selectedFactor.name)?.actionableAdvice || "รักษาประวัติการชำระเงินที่สม่ำเสมอเพื่อคงระดับคะแนนที่ดีเยี่ยม"}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
