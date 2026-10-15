@@ -248,6 +248,8 @@ export function AppHeader({
                 onClick={() => setIsToolsOpen((prev) => !prev)}
                 className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer ${
                   pathname.includes("/cash") ||
+                  pathname.includes("/health") ||
+                  pathname.includes("/funding") ||
                   pathname.includes("/plan") ||
                   pathname.includes("/collections") ||
                   pathname.includes("/true-cost") ||
@@ -300,6 +302,42 @@ export function AppHeader({
                   </Link>
 
                   <Link
+                    href="/dashboard/health"
+                    onClick={() => setIsToolsOpen(false)}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                      pathname.includes("/health")
+                        ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base shrink-0">
+                      🩺
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold">Health Score &amp; Passport</div>
+                      <div className="text-[10px] text-slate-400">7-factor hygiene &amp; readiness</div>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/funding"
+                    onClick={() => setIsToolsOpen(false)}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
+                      pathname.includes("/funding")
+                        ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base shrink-0">
+                      💰
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold">Funding Marketplace</div>
+                      <div className="text-[10px] text-slate-400">Cheapest credit &amp; supplier terms</div>
+                    </div>
+                  </Link>
+
+                  <Link
                     href="/dashboard/plan"
                     onClick={() => setIsToolsOpen(false)}
                     className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
@@ -308,7 +346,7 @@ export function AppHeader({
                         : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
                     }`}
                   >
-                    <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base shrink-0">
+                    <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base shrink-0">
                       ⚡
                     </span>
                     <div>
@@ -650,15 +688,51 @@ export function AppHeader({
                 </Link>
 
                 <Link
-                  href="/dashboard/plan"
+                  href="/dashboard/health"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
-                    currentNav === "plan"
+                    pathname.includes("/health")
+                      ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm shrink-0">
+                    🩺
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold">Health Score &amp; Passport</div>
+                    <div className="text-[10px] text-slate-400">7-factor credit hygiene</div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/funding"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    pathname.includes("/funding")
                       ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold"
                       : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm shrink-0">
+                    💰
+                  </span>
+                  <div>
+                    <div className="text-xs font-bold">Funding Marketplace</div>
+                    <div className="text-[10px] text-slate-400">Cheapest capital &amp; supplier terms</div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/plan"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    currentNav === "plan"
+                      ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm shrink-0">
                     ⚡
                   </span>
                   <div>

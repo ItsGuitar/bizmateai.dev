@@ -52,11 +52,11 @@ REAL-TIME 6-AGENT TELEMETRY & LEDGER SIGNALS:
 
   return `You are BizMateAI, an autonomous multi-agent financial copilot for SMEs (operating for the business: "${businessName}").
 You coordinate 6 specialized financial agents under strict explainable AI principles:
-1. "cash": 13-Week Cash Radar, rolling buffer projections, liquidity stress-testing (Action: /dashboard#joint-plan).
-2. "health": Financial Health Score (0-100), 7-factor hygiene evaluation, credit readiness (Action: /dashboard#health-score).
-3. "funding": Working capital matching, supplier payment term extensions (60 days), cheapest non-bank credit (Action: /dashboard#joint-plan).
-4. "collections": Accounts Receivable (AR) recovery, buyer payment habit profiling, polite LINE follow-ups (Action: /dashboard#inbox-approvals).
-5. "true-cost": Real APR analysis, cross-border FX corridors, intercepting predatory loans & invoice fraud (Action: /dashboard#activity-stream).
+1. "cash": 13-Week Cash Radar, rolling buffer projections, liquidity stress-testing (Action: /dashboard/cash).
+2. "health": Financial Health Score (0-100), 7-factor hygiene evaluation, credit readiness (Action: /dashboard/health).
+3. "funding": Working capital matching, supplier payment term extensions (60 days), cheapest non-bank credit (Action: /dashboard/funding).
+4. "collections": Accounts Receivable (AR) recovery, buyer payment habit profiling, polite LINE follow-ups (Action: /dashboard/collections).
+5. "true-cost": Real APR analysis, cross-border FX corridors, intercepting predatory loans & invoice fraud (Action: /dashboard/true-cost).
 6. "trust": Security gatekeeper, PDPA consent manager, audit logs, Face ID step-up guardrail (Action: /dashboard#audit-ledger).
 
 ${dynamicAgentTelemetry}
@@ -257,7 +257,7 @@ function fallbackAgentReasoning(
       agentId: "funding",
       content: `ประวัติการค้ากับ ${supplier.name} พบประวัติการทำธุรกรรมต่อเนื่อง ${supplier.monthsActive} เดือน รวม ${supplier.totalTransfersCount} รายการ สำหรับยอดค้างชำระ ${supplier.pendingOrderCurrency || "¥"}${supplier.pendingOrderAmount.toLocaleString()} (~฿${supplier.pendingOrderThb.toLocaleString()}) ที่จะถึงกำหนด ทางเลือกที่คุ้มที่สุดคือการขอขยายเทอมเป็น 60 วัน (ค่าธรรมเนียมเพียง 1.1%) ซึ่งประหยัดกว่าการกู้เงินด่วนธนาคารหรือสินเชื่อภายนอกครับ`,
       reasoning: `Funding Agent ตรวจสอบประวัติคู่ค้า ${supplier.name} และประเมินทางเลือกสภาพคล่องที่ต้นทุนต่ำที่สุด`,
-      actionRoute: "/dashboard#joint-plan",
+      actionRoute: "/dashboard/funding",
     };
   }
 
@@ -272,7 +272,7 @@ function fallbackAgentReasoning(
       reasoning: debtor
         ? `Collections Agent คำนวณค่าเฉลี่ยความล่าช้าในการชำระเงินของ ${debtor.name} (${debtor.averageDelayDays.toFixed(1)} วัน) และร่างข้อความตามนโยบาย Zero-Surprise`
         : `Collections Agent ตรวจสอบสถานะลูกหนี้ทั้งหมดใน AR Ledger`,
-      actionRoute: "/dashboard#inbox-approvals",
+      actionRoute: "/dashboard/collections",
     };
   }
 
@@ -292,7 +292,7 @@ function fallbackAgentReasoning(
       agentId: "health",
       content: `คะแนนสุขภาพทางการเงินของ ${businessName} อยู่ที่ ${summary.healthScore.overallScore}/100 (${summary.healthScore.ratingGrade}) ครับ อยู่ในเกณฑ์ ${summary.healthScore.creditStatus} จุดแข็งคือไม่เคยมีเช็คเด้งหรือเงินติดลบในประวัติ Statement จุดที่ควรให้ความสำคัญคือการบริหารรอบเงินทุนหมุนเวียนและการติดตามลูกหนี้ตามกำหนดครับ`,
       reasoning: `Health Agent ประเมินสุขอนามัยทางการเงิน 7 มิติจากประวัติ Statement รายรับรายจ่ายย้อนหลังของ ${businessName}`,
-      actionRoute: "/dashboard#health-score",
+      actionRoute: "/dashboard/health",
     };
   }
 

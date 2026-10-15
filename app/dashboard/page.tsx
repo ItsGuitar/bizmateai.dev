@@ -33,7 +33,7 @@ const AGENTS_LIST = [
     stat: "78 / 100 Health Score",
     insight: "Prime credit eligible • 7-factor hygiene sound",
     actionLabel: "Score Breakdown",
-    href: "#health-score",
+    href: "/dashboard/health",
   },
   {
     id: "funding",
@@ -44,8 +44,8 @@ const AGENTS_LIST = [
     badge: "1.1% Rate",
     stat: "60 Days Terms Match",
     insight: "Chen Tech deferral saves ฿80k buffer on 26 Oct",
-    actionLabel: "Compare 6 Options",
-    href: "#funding-options",
+    actionLabel: "Compare Options",
+    href: "/dashboard/funding",
   },
   {
     id: "collections",
@@ -883,7 +883,7 @@ export default function DashboardPage() {
             </div>
             {isBankConnected ? (
               <Link
-                href="#health-score"
+                href="/dashboard/health"
                 className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
               >
                 <span>Score details</span>
