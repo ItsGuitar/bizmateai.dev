@@ -176,6 +176,45 @@ export default function DashboardPage() {
   const [activeDocCount, setActiveDocCount] = useState<number>(0);
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
 
+  // Daily Brief Narrative State (ขั้นตอนที่ 4: Explain the Daily Brief)
+  const [dailyBrief, setDailyBrief] = useState<string | null>(null);
+  const [isBriefLoading, setIsBriefLoading] = useState(false);
+
+  const fetchDailyBrief = async (result: PipelineOutput) => {
+    try {
+      setIsBriefLoading(true);
+      const res = await fetch("/api/ai/daily-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          healthScore: result.health.totalScore,
+          mood: result.health.mood,
+          factoryLevel: result.health.factoryLevel,
+          cashNow: result.forecasts.base?.[0]?.closingCash || 0,
+          runwayWeeks: result.health.runwayWeeks,
+          safetyCushion: 500000,
+          financingNeed: result.financing.needHigh || 0,
+          issues: result.rankedIssues.map((iss) => ({
+            id: iss.id,
+            title: iss.title,
+            detail: iss.detail,
+            severity: iss.severity,
+            agent: iss.agent,
+          })),
+          language: "Thai",
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.summary) {
+        setDailyBrief(data.summary);
+      }
+    } catch (err) {
+      console.error("Failed to fetch daily brief:", err);
+    } finally {
+      setIsBriefLoading(false);
+    }
+  };
+
   // Dynamic truck models per slot: randomly pick any truck 1-7
   const [slotTruckMap, setSlotTruckMap] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
@@ -218,6 +257,9 @@ export default function DashboardPage() {
         setHasCalculation(data.hasCalculation);
         setCalcResult(data.result);
         setActiveDocCount(data.activeCount || 0);
+        if (data.result) {
+          fetchDailyBrief(data.result);
+        }
       }
     } catch (err) {
       console.error("Failed to load calculation snapshot:", err);
@@ -255,6 +297,7 @@ export default function DashboardPage() {
         setHasCalculation(true);
         setCalcResult(e.detail.result);
         setActiveDocCount(e.detail.activeCount || 0);
+        fetchDailyBrief(e.detail.result);
       }
     };
     window.addEventListener("bizmate_calculated", handleCalcEvent);
@@ -893,6 +936,50 @@ export default function DashboardPage() {
                     );
                   })
                 )}
+              </div>
+
+              {/* Step 4: Explain the Daily Brief (สรุปสถานการณ์ประจำวันหน้า Home) */}
+              <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <span className="text-blue-500">✨</span>
+                    <span>Daily Brief Summary</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200/60 dark:border-blue-900/40">
+                      AI Story
+                    </span>
+                  </div>
+                  {calcResult && (
+                    <button
+                      type="button"
+                      onClick={() => fetchDailyBrief(calcResult)}
+                      disabled={isBriefLoading}
+                      className="text-[11px] font-medium text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                      title="Regenerate Daily Brief"
+                    >
+                      <span className={isBriefLoading ? "animate-spin" : ""}>🔄</span>
+                      <span>{isBriefLoading ? "Summarizing..." : "Refresh"}</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-slate-50/80 dark:from-slate-800/60 dark:via-slate-800/30 dark:to-slate-800/80 border border-blue-100/80 dark:border-slate-700/60 text-xs sm:text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+                  {isBriefLoading ? (
+                    <div className="flex items-center gap-2 py-1 text-slate-400 dark:text-slate-500 text-xs">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                      <span>กำลังวิเคราะห์และสรุปสถานการณ์ประจำวัน...</span>
+                    </div>
+                  ) : dailyBrief ? (
+                    <p className="line-clamp-3 whitespace-pre-line font-medium text-slate-800 dark:text-slate-200">
+                      {dailyBrief}
+                    </p>
+                  ) : (
+                    <p className="text-slate-400 dark:text-slate-500 text-xs italic">
+                      {calcResult
+                        ? "กดปุ่ม Refresh เพื่อให้ BizMateAI สรุปเรื่องราวสุขภาพโรงงานประจำวัน"
+                        : "นำเข้าเอกสารและคำนวณตัวเลขเพื่อสร้างสรุปสถานการณ์ประจำวัน"}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

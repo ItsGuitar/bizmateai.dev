@@ -3,7 +3,7 @@
 // NEXT_PUBLIC_ out of client bundles, but routing all model config through here (API routes and
 // server actions only) is the contract that keeps the key on the server, full stop.
 
-export type AiTaskType = "document_reading" | "qa" | "chat" | "reword_reminder";
+export type AiTaskType = "document_reading" | "qa" | "chat" | "reword_reminder" | "daily_brief";
 
 // Low temperature everywhere: this product never lets the model invent a number, so creativity
 // is a liability here, not a feature. Document reading gets the lowest setting since a misread
@@ -14,6 +14,7 @@ export const TEMPERATURE: Record<AiTaskType, number> = {
   qa: 0.2,
   chat: 0.2,
   reword_reminder: 0.3,
+  daily_brief: 0.2,
 };
 
 export const MODEL_NAME = "gemini-3.5-flash-lite";
