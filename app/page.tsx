@@ -162,25 +162,25 @@ export default function WelcomePage() {
         </button>
       </section>
 
-      {/* SCREEN 2: Financial Capabilities Section */}
+      {/* SCREEN 2: Unified Platform Capabilities Section */}
       <section
         id="agents-section"
-        className="w-full max-w-6xl mx-auto px-6 py-16 sm:py-24 flex flex-col items-center text-center z-10"
+        className="w-full max-w-7xl mx-auto px-6 py-16 sm:py-24 flex flex-col items-center text-center z-10"
       >
         <div className="max-w-xl mb-12">
           <span className="text-xs font-mono uppercase tracking-widest text-blue-600 dark:text-blue-400 font-bold">
-            Unified Financial Intelligence
+            Unified Financial Platform
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-1">
             How BizMateAI Powers Your Business
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            Automating cash radar, working capital, and AR follow-ups, always with your final OK.
+            Automating cash radar, working capital, multi-bank telemetry, and collections under strict zero-surprise guardrails.
           </p>
         </div>
 
-        {/* 6 High-End Agent Cards - Centered Layout with staggered cascade */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6 mb-12">
+        {/* High-End Feature Capability Cards - 4 Columns on XL screens */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 mb-12">
           {AGENTS.map((agent, index) => {
             const delayClasses = [
               "delay-100",
@@ -218,7 +218,7 @@ export default function WelcomePage() {
                     </span>
                   </div>
 
-                  {/* Centered Agent Name & Role */}
+                  {/* Centered Capability Name & Role */}
                   <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {agent.name}
                   </h3>

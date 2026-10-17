@@ -29,6 +29,14 @@ export function AskBizMateChat() {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Explicitly hide chat widget on landing page, login, register, and onboarding
+  const isExcludedPage =
+    !pathname ||
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/onboarding");
+
   // Extract page context slug
   const pageSlug = pathname?.split("/")[2] || "home";
   const currentPersona = PAGE_CONTEXT_NAMES[pageSlug] || PAGE_CONTEXT_NAMES.home;
@@ -58,6 +66,7 @@ export function AskBizMateChat() {
 
   // Only announce when user actually navigates to a DIFFERENT page route
   useEffect(() => {
+    if (isExcludedPage) return;
     if (lastPageSlugRef.current === pageSlug) return;
     lastPageSlugRef.current = pageSlug;
 
@@ -70,7 +79,11 @@ export function AskBizMateChat() {
         timestamp: "Just now",
       },
     ]);
-  }, [pageSlug, currentPersona.title]);
+  }, [pageSlug, currentPersona.title, isExcludedPage]);
+
+  if (isExcludedPage) {
+    return null;
+  }
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

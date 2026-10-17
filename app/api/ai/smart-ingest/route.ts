@@ -199,11 +199,15 @@ export async function POST(req: Request) {
         console.warn("PDF text parse attempt failed, falling back to OCR:", e);
       }
 
-      // Clean non-printable characters and whitespace
-      const cleanText = extractedText.replace(/\s+/g, " ").trim();
+      // Clean non-printable characters, whitespace, and pdf2json page break artifacts
+      const contentOnlyText = extractedText
+        .replace(/----------------Page \(\d+\) Break----------------/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
 
-      // THRESHOLD CHECK: If extracted text has meaningful content (> 15 characters), it's a Digital Text PDF
-      if (cleanText.length >= 15) {
+      // THRESHOLD CHECK: If extracted text has meaningful content (> 20 characters), it's a Digital Text PDF
+      if (contentOnlyText.length >= 20) {
+        const cleanText = contentOnlyText;
         // Fast LLM-assisted text structuring (text-only is ~20x cheaper and 5x faster than vision OCR)
         const masking = createMaskingAdapter();
         const maskedPrompt = masking.mask("company", "BizMateAI SME", "Company");
@@ -281,11 +285,11 @@ Reply with ONLY a valid compact JSON object in this exact format:
         });
       }
 
-      // If text < 60 chars, it's a scanned/image PDF -> requires OCR Fallback
+      // If text < 20 chars, it's a scanned/image PDF -> requires OCR Fallback
       return NextResponse.json({
         ok: true,
         method: "requires_ocr_fallback",
-        extractedTextLength: cleanText.length,
+        extractedTextLength: contentOnlyText.length,
         message: "PDF contains scanned images with no readable text layer. Proceeding to Vision OCR & Redaction.",
       });
     }

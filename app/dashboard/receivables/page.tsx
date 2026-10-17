@@ -160,7 +160,13 @@ export default function ReceivablesPage() {
     () =>
       displayedInvoices.map((inv) => {
         const buyer = dynamicBuyers.find((b) => b.name === inv.buyerName) || getBuyerModel(inv.buyerName, dynamicBuyers);
-        const dueDate = new Date(`${inv.dueDate}T00:00:00Z`);
+        let dueDate = new Date(`${inv.dueDate}T00:00:00Z`);
+        if (isNaN(dueDate.getTime())) {
+          dueDate = new Date(inv.dueDate || Date.now());
+        }
+        if (isNaN(dueDate.getTime())) {
+          dueDate = new Date();
+        }
         const payment = expectedOpenInvoicePayment(dueDate, buyer, AS_OF);
         const chase = chaseStepForOverdue(payment.overdueDays);
         return { invoice: inv, buyer, dueDate, payment, chase };
@@ -483,7 +489,7 @@ export default function ReceivablesPage() {
                   {buyerBreakdowns.map(({ buyer, letterNow }) => (
                     <th key={buyer.name} className="text-left pb-3 px-3 align-bottom min-w-[8.5rem]">
                       <div className="font-bold text-slate-900 dark:text-white truncate">{buyer.name}</div>
-                      <div className={`text-xl font-black ${GRADE_COLOR[letterNow]}`}>{letterNow}</div>
+                      <div className={`text-xl font-black ${GRADE_COLOR[letterNow] || "text-slate-500"}`}>{letterNow}</div>
                     </th>
                   ))}
                 </tr>
@@ -521,7 +527,7 @@ export default function ReceivablesPage() {
                   <td className="py-3 pr-4 font-bold text-slate-900 dark:text-white">Score → Grade</td>
                   {buyerBreakdowns.map(({ buyer, scoreNow, letterNow }) => (
                     <td key={buyer.name} className="py-3 px-3 font-bold text-slate-900 dark:text-white">
-                      {scoreNow.toFixed(0)} pts → <span className={GRADE_COLOR[letterNow]}>{letterNow}</span>
+                      {scoreNow.toFixed(0)} pts → <span className={GRADE_COLOR[letterNow] || "text-slate-500"}>{letterNow}</span>
                     </td>
                   ))}
                 </tr>

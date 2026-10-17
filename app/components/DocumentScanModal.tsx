@@ -105,6 +105,58 @@ export function DocumentScanModal({
 
   const [ingestMethod, setIngestMethod] = useState<"excel_direct" | "pdf_text_direct" | "ocr_vision" | null>(null);
 
+
+  const [rawPdfFile, setRawPdfFile] = useState<File | null>(null);
+  const [isConvertingPdf, setIsConvertingPdf] = useState(false);
+
+  // Helper to render first page of PDF file to image data URL via pdfjs-dist
+  const renderPdfToImage = async (file: File): Promise<string> => {
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.js");
+    if (typeof window !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+    const pdfDoc = await loadingTask.promise;
+    const page = await pdfDoc.getPage(1);
+    
+    // Scale viewport to high-res (2.0x for crisp OCR text recognition)
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not acquire canvas 2D rendering context");
+    
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    await page.render({
+      canvasContext: ctx,
+      viewport: viewport,
+    }).promise;
+    
+    return canvas.toDataURL("image/png");
+  };
+
+  const switchToVisionOcrForPdf = async (fileToRender?: File) => {
+    const targetFile = fileToRender || rawPdfFile;
+    if (!targetFile) return;
+    setIsConvertingPdf(true);
+    setErrorMsg(null);
+    try {
+      const dataUrl = await renderPdfToImage(targetFile);
+      setImageSrc(dataUrl);
+      setFinalImageSrc(null);
+      setIngestMethod("ocr_vision");
+      setRedactionBoxes([]);
+      setStep("redact");
+    } catch (err: any) {
+      console.error("Failed to render PDF to image:", err);
+      setErrorMsg(`Could not render PDF preview: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsConvertingPdf(false);
+    }
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -113,6 +165,7 @@ export function DocumentScanModal({
 
     // 1. EXCEL / CSV FILES (.xlsx, .xls, .csv) -> ZERO OCR NEEDED (AI Table Reasoning)
     if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls") || lowerName.endsWith(".csv")) {
+      setRawPdfFile(null);
       setStep("analyzing");
       setErrorMsg(null);
       try {
@@ -145,6 +198,7 @@ export function DocumentScanModal({
 
     // 2. PDF FILES (.pdf) -> TEST IF DIGITAL TEXT LAYER EXISTS FIRST
     if (lowerName.endsWith(".pdf") || file.type === "application/pdf") {
+      setRawPdfFile(file);
       setStep("analyzing");
       setErrorMsg(null);
       try {
@@ -170,16 +224,18 @@ export function DocumentScanModal({
         }
 
         // Subcase B: Scanned image PDF -> REQUIRES OCR FALLBACK
-        setIngestMethod("ocr_vision");
-        setPdfPreviewText(data.previewText || "PDF document content");
-        setStep("redact");
-        // For PDF in redaction viewer, set a placeholder preview or direct proceed
-        setImageSrc("/images/bot08_tablet.png");
+        // Render PDF directly to canvas so user can see it, redact it, and run Vision OCR
+        await switchToVisionOcrForPdf(file);
         return;
-      } catch (err) {
-        console.warn("Smart PDF check failed, proceeding to image OCR:", err);
-        setErrorMsg("Failed to process PDF text. Please ensure file is not password protected.");
-        setStep("upload");
+      } catch (err: any) {
+        console.warn("Smart PDF check failed, rendering PDF directly for OCR:", err);
+        // Fallback directly to client PDF render
+        try {
+          await switchToVisionOcrForPdf(file);
+        } catch (renderErr: any) {
+          setErrorMsg("Failed to render PDF: " + (renderErr.message || "Check file"));
+          setStep("upload");
+        }
         return;
       }
     }
@@ -565,11 +621,25 @@ export function DocumentScanModal({
               )}
 
               {ingestMethod === "pdf_text_direct" && (
-                <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-200/70 dark:bg-blue-900/60 uppercase">
-                    Digital PDF (No OCR)
-                  </span>
-                  <span>Extracted directly from digital PDF text layer. No OCR required, saving vision compute quota.</span>
+                <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs text-blue-800 dark:text-blue-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-200/70 dark:bg-blue-900/60 uppercase shrink-0">
+                      Digital PDF (No OCR)
+                    </span>
+                    <span>Extracted directly from digital PDF text layer. No OCR required, saving vision compute quota.</span>
+                  </div>
+                  {rawPdfFile && (
+                    <button
+                      type="button"
+                      disabled={isConvertingPdf}
+                      onClick={() => switchToVisionOcrForPdf()}
+                      className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium text-[11px] shadow-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                      title="Render PDF pages visually and run full Multimodal Vision AI OCR"
+                    >
+                      <span>📷</span>
+                      <span>{isConvertingPdf ? "Rendering PDF..." : "Switch to Vision OCR"}</span>
+                    </button>
+                  )}
                 </div>
               )}
 
