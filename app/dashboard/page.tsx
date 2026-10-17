@@ -619,20 +619,20 @@ export default function DashboardPage() {
               />
 
               {/* Factory Building & Chimney Green Smoke */}
-              <div className="absolute inset-x-0 bottom-[20%] h-[30%] flex items-end justify-center z-[1] -translate-x-[12%]">
+              <div className="absolute inset-x-0 bottom-[22%] h-[44%] flex items-end justify-center z-[1] -translate-x-[10%]">
                 <div className="relative h-full flex items-end justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/images/visualization/level${currentFactoryLevel}_factory.png`}
                     alt="Factory"
-                    className="h-full w-auto object-contain drop-shadow-lg transition-opacity"
+                    className="h-full w-auto object-contain drop-shadow-xl transition-opacity"
                   />
 
                   {/* Green Mint Smoke for Green-Eligible Candidate */}
                   {isGreenEligible && (
-                    <div className="absolute -top-7 right-[32%] pointer-events-none flex flex-col items-center">
-                      <div className="w-5 h-5 rounded-full bg-emerald-400/70 blur-[3px] animate-green-smoke-1" />
-                      <div className="w-6 h-6 rounded-full bg-teal-300/60 blur-[4px] animate-green-smoke-2 -mt-2" />
+                    <div className="absolute -top-8 right-[32%] pointer-events-none flex flex-col items-center">
+                      <div className="w-6 h-6 rounded-full bg-emerald-400/70 blur-[3px] animate-green-smoke-1" />
+                      <div className="w-7 h-7 rounded-full bg-teal-300/60 blur-[4px] animate-green-smoke-2 -mt-2.5" />
                     </div>
                   )}
                 </div>
