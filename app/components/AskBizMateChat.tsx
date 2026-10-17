@@ -89,6 +89,15 @@ export function AskBizMateChat() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
+    // Extract up to last 5 QA pairs (10 messages) excluding welcome
+    const recentHistory = messages
+      .filter((m) => m.id !== "m-welcome")
+      .slice(-10)
+      .map((m) => ({
+        role: m.sender === "user" ? "user" : "assistant",
+        text: m.text,
+      }));
+
     try {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -96,6 +105,7 @@ export function AskBizMateChat() {
         body: JSON.stringify({
           message: userText,
           pageContext: pageSlug,
+          history: recentHistory,
         }),
       });
 
@@ -133,6 +143,41 @@ export function AskBizMateChat() {
       router.push(action.href);
       setIsOpen(false);
     }
+  };
+
+  // Helper to format text with bold (**text**), inline code (`code`), and clean paragraphs
+  const renderFormattedMessage = (rawText: string) => {
+    // 1. Clean up any accidental raw route paths like (`/dashboard/...`) or (/dashboard/...)
+    const sanitized = rawText.replace(/\(?`?\/dashboard\/[a-zA-Z0-9_\-\/]+`?\)?/g, "").replace(/\s{2,}/g, " ");
+
+    const paragraphs = sanitized.split("\n").filter((p) => p.trim() !== "");
+
+    return paragraphs.map((paragraph, pIdx) => {
+      // Split by bold (**bold**) and inline code (`code`)
+      const parts = paragraph.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+
+      return (
+        <p key={pIdx} className="leading-relaxed">
+          {parts.map((part, idx) => {
+            if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+              return (
+                <strong key={idx} className="font-semibold text-slate-900 dark:text-white">
+                  {part.slice(2, -2)}
+                </strong>
+              );
+            }
+            if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+              return (
+                <code key={idx} className="px-1 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700/80 font-mono text-[11px] text-blue-600 dark:text-blue-300">
+                  {part.slice(1, -1)}
+                </code>
+              );
+            }
+            return part;
+          })}
+        </p>
+      );
+    });
   };
 
   const quickPrompts = [
@@ -237,7 +282,10 @@ export function AskBizMateChat() {
                         : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-none border border-slate-200/60 dark:border-slate-700/60"
                     }`}
                   >
-                    <p className="whitespace-pre-line">{msg.text}</p>
+                    {/* Formatted Markdown Content */}
+                    <div className="space-y-1.5 leading-relaxed">
+                      {renderFormattedMessage(msg.text)}
+                    </div>
 
                     {/* Tool Data Card */}
                     {msg.tool && (
