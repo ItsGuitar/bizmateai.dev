@@ -984,7 +984,7 @@ export default function DashboardPage() {
                       <span>Analyzing metrics and synthesizing daily brief...</span>
                     </div>
                   ) : dailyBrief ? (
-                    <p className="line-clamp-3 whitespace-pre-line font-medium text-slate-800 dark:text-slate-200">
+                    <p className="whitespace-pre-line font-medium text-slate-800 dark:text-slate-200">
                       {dailyBrief}
                     </p>
                   ) : (
