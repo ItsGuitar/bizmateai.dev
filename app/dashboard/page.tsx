@@ -657,15 +657,15 @@ export default function DashboardPage() {
                   className="absolute top-0.5 sm:top-2 right-2 sm:right-8 md:right-12 z-10"
                   title={`Liquidity Runway: ${runwayWeeks} weeks of cash before 0`}
                 >
-                  <div className="grid grid-cols-4 sm:flex items-end justify-end gap-1 sm:gap-1.5">
+                  <div className="grid grid-cols-4 sm:flex items-end justify-end gap-x-1.5 gap-y-1 sm:gap-1.5">
                     {Array.from({ length: Math.min(8, Math.max(1, Math.round(runwayWeeks / 1.75))) }).map((_, stackIdx) => {
                       const stackHeight = Math.min(6, Math.max(1, Math.round((runwayWeeks - stackIdx) / 1.5)));
                       return (
-                        <div key={stackIdx} className="flex flex-col-reverse items-center">
+                        <div key={stackIdx} className="flex flex-col-reverse items-center justify-end">
                           {Array.from({ length: stackHeight }).map((_, coinIdx) => (
                             <div
                               key={coinIdx}
-                              className="w-3 h-0.5 sm:w-4 sm:h-1.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border border-yellow-200/90 shadow-xs -mt-0.5"
+                              className="w-3.5 h-1.5 sm:w-4 sm:h-2 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border border-yellow-200/90 shadow-sm -mt-0.5"
                             />
                           ))}
                         </div>
@@ -702,21 +702,20 @@ export default function DashboardPage() {
                         key={slot.slotId}
                         onAnimationIteration={() => handleTruckCycle(slot.slotId)}
                         className={`absolute pointer-events-none transition-opacity duration-500 ${
-                          isLTR ? "z-20 animate-truck-ltr" : "z-10 animate-truck-rtl"
+                          isLTR
+                            ? "z-20 animate-truck-ltr top-1/2 -translate-y-[60%] sm:-translate-y-[85%]"
+                            : "z-10 animate-truck-rtl top-0 -translate-y-[45%] sm:-translate-y-[65%]"
                         } ${truckModel.widthClass}`}
                         style={{
-                          top: isUpper ? "-55px" : "calc(50% - 45px)",
                           animationDuration: `${slot.duration}s`,
                           animationDelay: `${slot.delay}s`,
                         }}
                       >
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={`/images/visualization/${truckModel.src}`}
                           alt={truckModel.name}
-                          width={140}
-                          height={70}
                           className="w-full h-auto object-contain drop-shadow-md select-none"
-                          priority
                         />
                       </div>
                     );
