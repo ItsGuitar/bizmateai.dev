@@ -238,15 +238,6 @@ export default function DataIngestPage() {
                 Store, verify, and run deterministic 7-stage calculation chains on paperwork.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsScanModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <span>📷 Scan Document (Invoice / PO)</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -421,25 +412,26 @@ export default function DataIngestPage() {
         )}
 
         {/* Scan Entry Point Card */}
+        {/* Scan & Ingest Entry Point Card */}
         <div
           onClick={() => setIsScanModalOpen(true)}
           className="p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition-all group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform shrink-0">
-              📄
+              📁
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Scan Any Document (Invoice / PO / Receipt)
+                Upload or Scan Document (Excel / PDF / Image)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Drop your image or PDF. Multimodal AI automatically detects the document type, extracts line items, credit terms, and evaluates certainty score.
+                Drop spreadsheets, digital PDFs, or scanned photos. Excel and text PDFs are parsed directly without OCR; photos support privacy redaction before Vision OCR.
               </p>
             </div>
           </div>
-          <span className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 shrink-0">
-            Scan & Auto-Classify →
+          <span className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 shadow-xs transition-colors">
+            Upload & Ingest →
           </span>
         </div>
 
