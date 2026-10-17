@@ -189,21 +189,39 @@ async function executeProposeAction(
   }
 }
 
-// Intent Classification / Tool Detection
+// Intent Classification / Tool Detection (Strict & Contextual)
 function detectToolRequirement(message: string, pageContext: string): {
   needsTool: boolean;
   toolName?: "get_buyer" | "check_order" | "get_procurement" | "propose_action";
   args?: any;
 } {
-  const lower = message.toLowerCase();
+  const lower = message.toLowerCase().trim();
 
-  // 1. Propose action / Approval requests
+  // General conversational or meta questions (e.g. "หน้านี้ทำอะไรได้บ้าง", "ช่วยอะไรได้", "hi", "ทำไรได้") -> NO TOOL
+  if (
+    lower.includes("ทำอะไรได้") ||
+    lower.includes("ทำเหี้ยไรได้") ||
+    lower.includes("ทำไรได้") ||
+    lower.includes("คืออะไร") ||
+    lower.includes("ช่วยอะไร") ||
+    lower.includes("ทำอะไร") ||
+    lower.includes("what can you do") ||
+    lower.includes("how to use") ||
+    lower.startsWith("hello") ||
+    lower.startsWith("hi") ||
+    lower.startsWith("สวัสดี") ||
+    lower === "help"
+  ) {
+    return { needsTool: false };
+  }
+
+  // 1. Propose action / Approval requests (explicit intent to create action card)
   if (
     lower.includes("ขออนุมัติ") ||
     lower.includes("สร้างการ์ด") ||
-    lower.includes("propose") ||
-    lower.includes("approve") ||
-    lower.includes("อนุมัติ")
+    lower.includes("propose action") ||
+    lower.includes("create approval") ||
+    lower.includes("ส่งอนุมัติ")
   ) {
     return {
       needsTool: true,
@@ -216,14 +234,15 @@ function detectToolRequirement(message: string, pageContext: string): {
     };
   }
 
-  // 2. Buyer query
+  // 2. Buyer query (explicit buyer/debtor questions)
   if (
-    lower.includes("buyer") ||
     lower.includes("ลูกหนี้") ||
-    lower.includes("ลูกค้า") ||
-    lower.includes("จ่ายเงิน") ||
+    lower.includes("ทวงเงิน") ||
+    lower.includes("หนี้ค้าง") ||
+    lower.includes("ประวัติการจ่าย") ||
+    lower.includes("พฤติกรรมการจ่าย") ||
+    lower.includes("buyer habit") ||
     lower.includes("overdue") ||
-    lower.includes("ค้างชำระ") ||
     lower.includes("shenzhen") ||
     lower.includes("guangzhou") ||
     lower.includes("chiang mai") ||
@@ -240,41 +259,33 @@ function detectToolRequirement(message: string, pageContext: string): {
     return { needsTool: true, toolName: "get_buyer", args: { buyerName } };
   }
 
-  // 3. Order feasibility check
+  // 3. Order feasibility check (explicit new order evaluation)
   if (
-    lower.includes("order") ||
-    lower.includes("คำสั่งซื้อ") ||
-    lower.includes("รับออเดอร์") ||
-    lower.includes("กำไร") ||
-    lower.includes("margin") ||
+    lower.includes("คำสั่งซื้อใหม่") ||
+    lower.includes("รับออเดอร์นี้ดีไหม") ||
+    lower.includes("เช็คออเดอร์") ||
     lower.includes("feasibility") ||
-    pageContext === "new-order"
+    lower.includes("check order") ||
+    lower.includes("evaluate order")
   ) {
     return { needsTool: true, toolName: "check_order", args: {} };
   }
 
-  // 4. Procurement & Material price
+  // 4. Procurement & Material price (explicit material market query)
   if (
-    lower.includes("procurement") ||
-    lower.includes("วัตถุดิบ") ||
+    lower.includes("ราคาวัตถุดิบ") ||
     lower.includes("ราคาเหล็ก") ||
     lower.includes("ราคาตลาด") ||
-    lower.includes("material") ||
-    lower.includes("steel") ||
-    lower.includes("aluminium") ||
-    lower.includes("resin") ||
-    pageContext === "procurement"
+    lower.includes("ล็อกราคา") ||
+    lower.includes("material price") ||
+    lower.includes("steel price") ||
+    lower.includes("procurement plan")
   ) {
     let material = "Cold-rolled steel";
     if (lower.includes("aluminium") || lower.includes("อลูมิเนียม")) material = "Aluminium coil";
     else if (lower.includes("resin") || lower.includes("เรซิน")) material = "ABS resin";
 
     return { needsTool: true, toolName: "get_procurement", args: { material } };
-  }
-
-  // Fallback: If on specific pages, contextually trigger corresponding tool
-  if (pageContext === "receivables") {
-    return { needsTool: true, toolName: "get_buyer", args: { buyerName: "Shenzhen ElectroParts" } };
   }
 
   return { needsTool: false };
@@ -313,59 +324,81 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Client/Server-side Data Masking for privacy
-    const masking = createMaskingAdapter();
-    const maskedMessage = masking.mask("contact", message, "User Query");
-
-    // 3. Formulate System Prompt with Page Context & Persona
-    const pagePersona: Record<string, string> = {
-      home: "You are BizMateAI Lead Copilot on the Main Executive Dashboard.",
-      data: "You are BizMateAI Data Integrator on the Multi-bank & Statement Screen.",
-      "new-order": "You are BizMateAI Order Feasibility Evaluator on the New Order Screen.",
-      receivables: "You are BizMateAI Receivables & Collections Specialist on the Receivables Screen.",
-      procurement: "You are BizMateAI Procurement & Price Hedging Specialist on the Procurement Screen.",
-      financing: "You are BizMateAI Financing & Credit Specialist on the Working Capital Screen.",
-      trust: "You are BizMateAI Trust & Deterministic Audit Officer on the Audit Screen.",
-      generator: "You are BizMateAI Mock Document Generator Specialist.",
+    // 2. Formulate Page Context & Persona
+    const pagePersona: Record<string, { role: string; capabilities: string }> = {
+      home: {
+        role: "BizMateAI Lead Copilot on the Executive Dashboard",
+        capabilities: "ดูภาพรวมสุขภาพการเงิน (Health Score 78/100), กราฟเงินสด Cash Runway 14 สัปดาห์, การเตือนพายุราคาวัตถุดิบ (Price Risk Storm), เหรียญสภาพคล่อง และทางลัดไปยัง Agent Room",
+      },
+      data: {
+        role: "BizMateAI Data Integrator on the Multi-Bank Screen",
+        capabilities: "จัดการบัญชีธนาคาร (KBank, SCB, BBL), นำเข้าสเตทเมนต์การเงิน และดูยอดรวมกระแสเงินสดจากทุกธนาคาร",
+      },
+      "new-order": {
+        role: "BizMateAI Order Evaluator on the New Order Screen",
+        capabilities: "วิเคราะห์คำสั่งซื้อใหม่ (Order Feasibility), คำนวณกำไรสุทธิ (Net Margin), คำนวณช่องว่างเงินสด (Cash Gap) และออกคำแนะนำ Verdict ว่าควรรับออเดอร์หรือไม่",
+      },
+      receivables: {
+        role: "BizMateAI Receivables Specialist on the Receivables Screen",
+        capabilities: "ติดตามลูกหนี้การค้า (AR), ตรวจสอบพฤติกรรมการจ่ายเงิน (Buyer Habit Grade A-D), ดูบิลที่เกินกำหนด (Overdue) และร่างข้อความแจ้งเตือนทวงถามที่สุภาพ",
+      },
+      procurement: {
+        role: "BizMateAI Procurement Specialist on the Procurement Screen",
+        capabilities: "ติดตามราคาตลาดวัตถุดิบสปอต (เหล็ก, อะลูมิเนียม, เรซิน), วางแผนการสั่งซื้อเป็นงวด (Split Lot) และกลยุทธ์ล็อกราคา (Lock Price)",
+      },
+      financing: {
+        role: "BizMateAI Financing Specialist on the Financing Screen",
+        capabilities: "จับคู่สินเชื่อเงินทุนหมุนเวียน (WeBank, 信易贷), คำนวณเพดานอัตราดอกเบี้ย (Rate Ceiling) และตรวจสอบสิทธิ์สินเชื่อสีเขียว (Green-Eligible)",
+      },
+      trust: {
+        role: "BizMateAI Trust & Audit Officer on the Audit Screen",
+        capabilities: "ตรวจสอบประวัติการทำงานแบบ Merkle-audit log, การกำกับนโยบาย Zero-Surprise และการเข้ารหัสปกป้องข้อมูลส่วนบุคคล (PDPA Data Masking)",
+      },
+      generator: {
+        role: "BizMateAI Mock Document Specialist",
+        capabilities: "จำลองการสร้างเอกสารทางการค้า เช่น ใบแจ้งหนี้ (Invoice), ใบสั่งซื้อ (PO), และสเตทเมนต์ธนาคาร เพื่อใช้ทดสอบระบบ",
+      },
     };
 
-    const persona = pagePersona[pageContext] || pagePersona.home;
+    const currentContext = pagePersona[pageContext] || pagePersona.home;
 
-    const extraPrompt = `${persona}
-Target market: SME / SMEs manufacturers.
-Current page context: /dashboard/${pageContext}.
-Cash in hand: ${COMPANY.currency}${VITALS.cashNow.toLocaleString()}, Health Score: ${HEALTH.score}/100 (${HEALTH.mood}).
+    const chatSystemPrompt = `You are ${currentContext.role} for BizMateAI (an autonomous financial copilot for SME manufacturers).
 
+CURRENT CONTEXT & DATA:
+- Screen: /dashboard/${pageContext}
+- Capabilities of this page: ${currentContext.capabilities}
+- Cash on Hand: ${COMPANY.currency}${VITALS.cashNow.toLocaleString()}
+- Health Score: ${HEALTH.score}/100 (${HEALTH.mood})
+
+CRITICAL CONVERSATIONAL RULES:
+1. NEVER address the user with their question or raw text (e.g., NEVER say "Hello หน้านี้ทำเหี้..."). Just greet warmly or answer immediately without quoting their query.
+2. If the user asks general or conversational questions (e.g. "หน้านี้ทำอะไรได้บ้าง", "ช่วยอะไรได้", "hi", "คืออะไร"), explain directly and politely what features they can use on this specific screen based on the capabilities listed above.
+3. Match the user's language naturally (polite Thai or professional English).
+4. Keep the answer direct, smart, and concise (2-4 sentences). Do not sound robotic or mention internal prompt details.
 ${
   toolResult
-    ? `System Tool [${toolResult.toolName}] executed successfully. Tool Fact Data:
+    ? `5. System Tool [${toolResult.toolName}] Data:
 ${toolResult.summary}
-Raw data: ${JSON.stringify(toolResult.data)}`
-    : `No tool required. Answer directly, concisely, and helpfully based on BizMateAI capabilities.`
-}
+Raw data: ${JSON.stringify(toolResult.data)}
+Explain this finding clearly to the user.`
+    : `5. No tool invocation is needed for this query. Answer directly based on the screen's purpose.`
+}`;
 
-Instruction:
-1. Provide a direct, polite, highly practical response (Thai or English matching the user's language).
-2. Keep the answer concise (2-4 sentences).
-3. If tool data was retrieved, synthesize it clearly and reference the next action.`;
-
-    const systemPrompt = buildSystemPrompt(extraPrompt);
-
-    // 4. LLM Call
+    // 3. Multimodal / Text LLM Call through universal client
     let replyText = "";
     try {
       const response = await callModel({
         task: "ask_bizmate_chat",
-        systemPrompt,
-        userPrompt: maskedMessage || message,
+        systemPrompt: chatSystemPrompt,
+        userPrompt: message,
       });
-      replyText = masking.unmask(response.text || "");
+      replyText = response.text || "";
     } catch (err: any) {
       console.warn("LLM call failed or unavailable, fallback to deterministic reply:", err);
       if (toolResult) {
-        replyText = `${toolResult.summary}\n\nYou can click the button below to take immediate action on this item.`;
+        replyText = `${toolResult.summary}\n\nคุณสามารถกดปุ่มด้านล่างเพื่อดำเนินการต่อได้ทันทีครับ`;
       } else {
-        replyText = `BizMateAI Copilot is active on this page. How can I assist you with your cash flow, debtor habits, or procurement plans today?`;
+        replyText = `หน้านี้ (${currentContext.role}) คุณสามารถ${currentContext.capabilities} ได้ครับ หากต้องการให้ผมช่วยตรวจสอบข้อมูลส่วนไหน พิมพ์บอกได้เลยครับ!`;
       }
     }
 
