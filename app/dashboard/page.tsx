@@ -571,12 +571,37 @@ export default function DashboardPage() {
                 style={{ opacity: Math.max(0, (100 - currentHealthScore) / 100) * 0.65 }}
               />
 
-              {/* Price Risk Storm Cloud & Lightning Flash */}
+              {/* Price Risk Storm Cloud, Realistic Rain Streaks & Lightning Flash */}
               {isPriceStorm && (
-                <div className="absolute inset-0 z-[2] pointer-events-none">
-                  <div className="absolute inset-x-0 top-0 h-[48%] bg-gradient-to-b from-slate-900/90 via-slate-850/70 to-transparent" />
+                <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-slate-900/95 via-slate-850/80 to-transparent" />
                   <div className="absolute inset-0 bg-blue-100/30 mix-blend-overlay animate-lightning" />
-                  <div className="absolute top-3 right-3 sm:right-16 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/80 border border-amber-500/60 shadow-lg backdrop-blur-xs">
+                  
+                  {/* Dense Realistic Slanted Rain Streaks */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {Array.from({ length: 28 }).map((_, idx) => {
+                      const leftPos = (idx * 3.65 + (idx % 3) * 1.5) % 100;
+                      const duration = 0.55 + ((idx * 7) % 5) * 0.08; // 0.55s - 0.95s
+                      const delay = -(((idx * 13) % 20) / 10);        // staggered negative delay
+                      const streakHeight = 28 + ((idx * 9) % 24);     // 28px - 52px
+                      return (
+                        <div
+                          key={idx}
+                          className="animate-rain-streak"
+                          style={{
+                            left: `${leftPos}%`,
+                            height: `${streakHeight}px`,
+                            animationDuration: `${duration}s`,
+                            animationDelay: `${delay}s`,
+                            opacity: 0.6 + ((idx % 4) * 0.1),
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* Price Risk Storm Badge positioned at top right */}
+                  <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 border border-amber-500/70 shadow-lg backdrop-blur-xs">
                     <span className="text-xs animate-bounce">⚡</span>
                     <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">
                       Price Risk Storm (&gt;3% Material Rise)
