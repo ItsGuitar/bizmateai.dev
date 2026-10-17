@@ -106,90 +106,115 @@ interface DeliveryTruckConfig {
   duration: number;         // seconds across screen
   delay: number;            // animation delay in seconds
   widthClass: string;
-  minLevel: 1 | 2 | 3 | 4 | 5; // Level at which this truck starts appearing
 }
 
-const FACTORY_TRUCKS: DeliveryTruckConfig[] = [
-  // Upper lane: drives Right to Left (natural truck direction facing left)
-  // Lower lane: drives Left to Right (flipped truck direction)
+// All 7 truck types with extra large dimensions and balanced lane assignments
+const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
   {
     id: "truck-1",
     src: "truck1.png",
-    name: "Standard Hauler",
+    name: "Hauler Alpha",
     direction: "rtl",
     lane: "upper",
-    duration: 12,
+    duration: 13,
     delay: 0,
-    widthClass: "w-11 sm:w-14",
-    minLevel: 1,
+    widthClass: "w-20 sm:w-28 md:w-32",
   },
   {
     id: "truck-2",
     src: "truck2.png",
-    name: "Heavy Cargo",
+    name: "Heavy Cargo Beta",
     direction: "ltr",
     lane: "lower",
-    duration: 14,
+    duration: 15,
     delay: -5,
-    widthClass: "w-12 sm:w-16",
-    minLevel: 1,
+    widthClass: "w-22 sm:w-30 md:w-36",
   },
   {
     id: "truck-3",
     src: "truck3.png",
-    name: "Logistics Carrier",
+    name: "Carrier Gamma",
     direction: "rtl",
     lane: "upper",
-    duration: 11,
-    delay: -6,
-    widthClass: "w-11 sm:w-15",
-    minLevel: 2,
+    duration: 12,
+    delay: -8,
+    widthClass: "w-20 sm:w-28 md:w-32",
   },
   {
     id: "truck-4",
     src: "truck4.png",
-    name: "Express Delivery",
+    name: "Express Delta",
     direction: "ltr",
     lane: "lower",
-    duration: 9.5,
-    delay: -2,
-    widthClass: "w-10 sm:w-13",
-    minLevel: 3,
+    duration: 11,
+    delay: -3,
+    widthClass: "w-18 sm:w-24 md:w-28",
   },
   {
     id: "truck-5",
     src: "truck5.png",
-    name: "Industrial Transporter",
+    name: "Transporter Epsilon",
     direction: "rtl",
     lane: "upper",
-    duration: 13,
-    delay: -9,
-    widthClass: "w-12 sm:w-16",
-    minLevel: 4,
+    duration: 14,
+    delay: -10,
+    widthClass: "w-22 sm:w-30 md:w-36",
   },
   {
     id: "truck-6",
     src: "truck6.png",
-    name: "Material Hauler",
+    name: "Freight Zeta",
     direction: "ltr",
     lane: "lower",
-    duration: 11.5,
-    delay: -8,
-    widthClass: "w-11 sm:w-14",
-    minLevel: 4,
+    duration: 12.5,
+    delay: -7,
+    widthClass: "w-20 sm:w-28 md:w-32",
   },
   {
     id: "truck-7",
     src: "truck7.png",
-    name: "Container Fleet",
+    name: "Fleet Eta",
     direction: "rtl",
     lane: "upper",
-    duration: 10,
-    delay: -3.5,
-    widthClass: "w-13 sm:w-16",
-    minLevel: 5,
+    duration: 11.5,
+    delay: -6,
+    widthClass: "w-22 sm:w-30 md:w-36",
   },
 ];
+
+// Low-density, clear spacing across factory levels 1 to 5:
+// Level 1: 1 truck (truck2) - peaceful, rare truck
+// Level 2: 2 trucks (truck1, truck4) - 1 in each lane
+// Level 3: 3 trucks (truck2, truck5, truck6) - gentle flow
+// Level 4: 4 trucks (truck1, truck3, truck4, truck7) - active and clear
+// Level 5: 5 trucks (truck1, truck2, truck4, truck5, truck7) - prosperous fleet without clutter
+const LEVEL_TRUCKS: Record<1 | 2 | 3 | 4 | 5, DeliveryTruckConfig[]> = {
+  1: [
+    { ...ALL_TRUCK_MODELS[1], duration: 18, delay: 0 },   // truck2
+  ],
+  2: [
+    { ...ALL_TRUCK_MODELS[0], duration: 16, delay: 0 },   // truck1 upper RTL
+    { ...ALL_TRUCK_MODELS[3], duration: 15, delay: -8 },  // truck4 lower LTR
+  ],
+  3: [
+    { ...ALL_TRUCK_MODELS[1], duration: 14, delay: 0 },   // truck2 lower LTR
+    { ...ALL_TRUCK_MODELS[4], duration: 15, delay: -7 },  // truck5 upper RTL
+    { ...ALL_TRUCK_MODELS[5], duration: 13, delay: -11 }, // truck6 lower LTR
+  ],
+  4: [
+    { ...ALL_TRUCK_MODELS[0], duration: 13, delay: 0 },   // truck1 upper RTL
+    { ...ALL_TRUCK_MODELS[2], duration: 12, delay: -6 },  // truck3 upper RTL
+    { ...ALL_TRUCK_MODELS[3], duration: 12, delay: -4 },  // truck4 lower LTR
+    { ...ALL_TRUCK_MODELS[6], duration: 13, delay: -10 }, // truck7 upper RTL
+  ],
+  5: [
+    { ...ALL_TRUCK_MODELS[0], duration: 11, delay: 0 },   // truck1 upper RTL
+    { ...ALL_TRUCK_MODELS[1], duration: 12, delay: -6 },  // truck2 lower LTR
+    { ...ALL_TRUCK_MODELS[3], duration: 10, delay: -3 },  // truck4 lower LTR
+    { ...ALL_TRUCK_MODELS[4], duration: 12, delay: -8 },  // truck5 upper RTL
+    { ...ALL_TRUCK_MODELS[6], duration: 11, delay: -5 },  // truck7 upper RTL
+  ],
+};
 
 const SEVERITY_STYLE: Record<string, string> = {
   high: "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300",
@@ -692,7 +717,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Roadway with Animated Delivery Trucks */}
-                <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-600 dark:bg-slate-700 overflow-hidden">
+                <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-600 dark:bg-slate-700 overflow-hidden shadow-inner">
                   {/* Road Center Divider Dashed Line */}
                   <div
                     className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 opacity-80 pointer-events-none z-0"
@@ -703,7 +728,7 @@ export default function DashboardPage() {
                   />
 
                   {/* Delivery Trucks active for this Factory Level */}
-                  {FACTORY_TRUCKS.filter((t) => currentFactoryLevel >= t.minLevel).map((truck) => {
+                  {LEVEL_TRUCKS[currentFactoryLevel].map((truck) => {
                     const isUpper = truck.lane === "upper";
                     return (
                       <div
@@ -712,7 +737,7 @@ export default function DashboardPage() {
                           truck.direction === "rtl" ? "animate-truck-rtl" : "animate-truck-ltr"
                         } ${truck.widthClass}`}
                         style={{
-                          top: isUpper ? "2px" : "calc(50% + 2px)",
+                          top: isUpper ? "0px" : "calc(50% - 2px)",
                           animationDuration: `${truck.duration}s`,
                           animationDelay: `${truck.delay}s`,
                         }}
@@ -720,8 +745,8 @@ export default function DashboardPage() {
                         <Image
                           src={`/images/visualization/${truck.src}`}
                           alt={truck.name}
-                          width={80}
-                          height={40}
+                          width={140}
+                          height={70}
                           className="w-full h-auto object-contain drop-shadow-md select-none"
                           priority
                         />
