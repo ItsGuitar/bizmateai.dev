@@ -321,9 +321,9 @@ export default function FinancingPage() {
             <Image
               src="/images/bot09_run.png"
               alt=""
-              width={46}
-              height={46}
-              className="w-11 h-11 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+              width={64}
+              height={64}
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain select-none pointer-events-none drop-shadow-md shrink-0 hidden sm:block"
             />
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
               {([

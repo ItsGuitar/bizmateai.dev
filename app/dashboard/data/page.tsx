@@ -275,9 +275,9 @@ export default function DataIngestPage() {
             <Image
               src="/images/bot08_tablet.png"
               alt=""
-              width={46}
-              height={46}
-              className="w-11 h-11 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+              width={64}
+              height={64}
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain select-none pointer-events-none drop-shadow-md shrink-0 hidden sm:block"
             />
             <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
               {activeCount} of {docs.length} Active in Calculations

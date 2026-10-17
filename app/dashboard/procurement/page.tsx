@@ -227,9 +227,9 @@ export default function ProcurementPage() {
           <Image
             src="/images/bot05_box_side.png"
             alt=""
-            width={48}
-            height={48}
-            className="w-12 h-12 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+            width={64}
+            height={64}
+            className="w-14 h-14 sm:w-16 sm:h-16 object-contain select-none pointer-events-none drop-shadow-md shrink-0 hidden sm:block"
           />
         </div>
 

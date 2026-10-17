@@ -116,6 +116,13 @@ export default function DashboardPage() {
   const [activeDocCount, setActiveDocCount] = useState<number>(0);
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
 
+  // Visualization Dev/Debug overrides
+  const [devDebugOpen, setDevDebugOpen] = useState(false);
+  const [devStormOverride, setDevStormOverride] = useState<boolean | null>(null);
+  const [devGreenOverride, setDevGreenOverride] = useState<boolean | null>(null);
+  const [devRunwayOverride, setDevRunwayOverride] = useState<number | null>(null);
+  const [devLevelOverride, setDevLevelOverride] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTestingMasking, setIsTestingMasking] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -224,13 +231,13 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Derive dynamic metrics from calculation snapshot
+  // Derive dynamic metrics from calculation snapshot (with dev overrides if active)
   const currentHealthScore = calcResult ? calcResult.health.totalScore : 0;
-  const currentFactoryLevel = calcResult ? calcResult.health.factoryLevel : 1;
+  const currentFactoryLevel = devLevelOverride ?? (calcResult ? calcResult.health.factoryLevel : 1);
   const currentMood = calcResult ? calcResult.health.mood : "Struggling";
-  const runwayWeeks = calcResult ? calcResult.health.runwayWeeks : 12;
-  const isPriceStorm = Boolean(calcResult?.health?.alerts?.priceStorm);
-  const isGreenEligible = Boolean(calcResult?.health?.alerts?.greenEligible);
+  const runwayWeeks = devRunwayOverride ?? (calcResult ? calcResult.health.runwayWeeks : 12);
+  const isPriceStorm = devStormOverride !== null ? devStormOverride : Boolean(calcResult?.health?.alerts?.priceStorm);
+  const isGreenEligible = devGreenOverride !== null ? devGreenOverride : Boolean(calcResult?.health?.alerts?.greenEligible);
 
   const maxCash = weeks.length > 0 ? Math.max(...weeks.map((w) => Math.max(w.base, w.stress)), VITALS.cushion) * 1.05 : VITALS.cushion * 1.5;
 
@@ -260,13 +267,13 @@ export default function DashboardPage() {
 
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5">
         <div className="animate-fade-in-up flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3.5">
             <Image
               src="/images/bot10_wave.png"
               alt="Welcome Bot"
-              width={56}
-              height={56}
-              className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-sm select-none pointer-events-none"
+              width={80}
+              height={80}
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md select-none pointer-events-none shrink-0"
             />
             <div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -296,13 +303,13 @@ export default function DashboardPage() {
         {/* Empty State Banner if no data selected or not calculated */}
         {(!hasCalculation || activeDocCount === 0) && (
           <div className="animate-fade-in-up p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
+            <div className="flex items-center gap-4">
               <Image
                 src="/images/bot07_confused.png"
                 alt="No Data"
-                width={52}
-                height={52}
-                className="w-11 h-11 object-contain shrink-0 drop-shadow-xs"
+                width={72}
+                height={72}
+                className="w-16 h-16 object-contain shrink-0 drop-shadow-md"
               />
               <div>
                 <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200">
@@ -337,16 +344,140 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-5 items-start animate-fade-in-up delay-100">
           {/* Factory visual */}
           <div className="w-full bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 flex flex-col items-center text-center relative overflow-hidden">
+            {/* Dev Debug Toggle Button */}
+            <div className="w-full flex items-center justify-between pb-2 mb-1 border-b border-slate-100 dark:border-slate-800">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <span>🏭 Growing Factory Visualization</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setDevDebugOpen((prev) => !prev)}
+                className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer flex items-center gap-1 ${
+                  devDebugOpen || devStormOverride !== null || devGreenOverride !== null || devRunwayOverride !== null || devLevelOverride !== null
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+                title="Open Visual State Debugging Panel"
+              >
+                <span>🛠️ Dev Debug</span>
+                <span className="text-[10px]">{devDebugOpen ? "▲" : "▼"}</span>
+              </button>
+            </div>
+
+            {/* Dev Debug Interactive Control Bar */}
+            {devDebugOpen && (
+              <div className="w-full mb-3 p-3 rounded-2xl bg-purple-50/80 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900 flex flex-wrap items-center justify-between gap-2.5 text-xs animate-fade-in text-left">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold font-mono text-[11px] text-purple-900 dark:text-purple-300">
+                    TEST VISUALS:
+                  </span>
+                  
+                  {/* Storm Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setDevStormOverride((prev) => (prev === true ? false : prev === false ? null : true))}
+                    className={`px-2.5 py-1 rounded-lg font-semibold cursor-pointer border text-xs transition-colors flex items-center gap-1 ${
+                      devStormOverride === true
+                        ? "bg-slate-900 text-amber-400 border-amber-500 shadow-xs"
+                        : devStormOverride === false
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    <span>⚡ Storm:</span>
+                    <span className="font-mono font-bold">
+                      {devStormOverride === true ? "ON" : devStormOverride === false ? "OFF" : "AUTO"}
+                    </span>
+                  </button>
+
+                  {/* Green Smoke Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setDevGreenOverride((prev) => (prev === true ? false : prev === false ? null : true))}
+                    className={`px-2.5 py-1 rounded-lg font-semibold cursor-pointer border text-xs transition-colors flex items-center gap-1 ${
+                      devGreenOverride === true
+                        ? "bg-emerald-600 text-white border-emerald-500 shadow-xs"
+                        : devGreenOverride === false
+                        ? "bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-300"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                    }`}
+                  >
+                    <span>🌱 Green Smoke:</span>
+                    <span className="font-mono font-bold">
+                      {devGreenOverride === true ? "ON" : devGreenOverride === false ? "OFF" : "AUTO"}
+                    </span>
+                  </button>
+
+                  {/* Runway Coins Selector */}
+                  <div className="flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-500 text-[11px] font-semibold">🪙 Coins:</span>
+                    {[
+                      { label: "1w", val: 1 },
+                      { label: "5w", val: 5 },
+                      { label: "14w", val: 14 },
+                    ].map((btn) => (
+                      <button
+                        key={btn.label}
+                        type="button"
+                        onClick={() => setDevRunwayOverride((prev) => (prev === btn.val ? null : btn.val))}
+                        className={`px-1.5 py-0.5 rounded text-[11px] font-mono font-bold cursor-pointer ${
+                          devRunwayOverride === btn.val
+                            ? "bg-amber-500 text-white"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Factory Level Selector */}
+                  <div className="flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-500 text-[11px] font-semibold">🏭 Lv:</span>
+                    {([1, 2, 3, 4, 5] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setDevLevelOverride((prev) => (prev === lvl ? null : lvl))}
+                        className={`w-5 h-5 rounded text-[11px] font-mono font-bold cursor-pointer flex items-center justify-center ${
+                          currentFactoryLevel === lvl
+                            ? "bg-purple-600 text-white"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        {lvl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reset button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDevStormOverride(null);
+                    setDevGreenOverride(null);
+                    setDevRunwayOverride(null);
+                    setDevLevelOverride(null);
+                    setToastMessage("Visuals restored to backend calculation.");
+                  }}
+                  className="px-2 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold cursor-pointer ml-auto"
+                >
+                  Reset Auto
+                </button>
+              </div>
+            )}
+
             {calcResult && (
               <div
-                className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 flex items-center justify-center z-10"
+                className="absolute top-12 right-3.5 w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 flex items-center justify-center z-10"
                 title="Active calculation"
               >
                 <LeafIcon className="w-3.5 h-3.5" />
               </div>
             )}
 
-              {/* Factory visualization: the illustrated scene */}
+            {/* Factory visualization: the illustrated scene */}
             <div className={`w-full aspect-[2.2/1] min-h-[280px] rounded-2xl ${
               isPriceStorm
                 ? "bg-gradient-to-b from-slate-800 via-slate-700 to-slate-900"

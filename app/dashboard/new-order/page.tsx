@@ -209,9 +209,9 @@ export default function NewOrderPage() {
             <Image
               src="/images/bot10_wave.png"
               alt=""
-              width={46}
-              height={46}
-              className="w-11 h-11 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+              width={64}
+              height={64}
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain select-none pointer-events-none drop-shadow-md shrink-0 hidden sm:block"
             />
             <button
               type="button"
