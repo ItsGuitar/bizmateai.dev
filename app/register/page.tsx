@@ -4,11 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
-import { saveSession } from "@/lib/auth-client";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -21,12 +19,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-
-    const cleanName = businessName.trim();
-    if (!cleanName) {
-      setError("Please enter your business or company name.");
-      return;
-    }
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes("@")) {
@@ -51,7 +43,6 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          businessName: cleanName,
           email: cleanEmail,
           password,
         }),
@@ -65,11 +56,10 @@ export default function RegisterPage() {
         return;
       }
 
-      saveSession(data.token, data.user, true);
-      setSuccess("Account created successfully! Preparing your financial agents...");
+      setSuccess("Account created! Redirecting you to sign in...");
 
       setTimeout(() => {
-        router.push("/onboarding");
+        router.push("/login?registered=1");
       }, 600);
     } catch (err) {
       console.error("Register client error:", err);
@@ -178,26 +168,6 @@ export default function RegisterPage() {
                 <span>{success}</span>
               </div>
             )}
-
-            {/* Business Name Field */}
-            <div>
-              <label
-                htmlFor="businessName"
-                className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1"
-              >
-                Business / Company Name
-              </label>
-              <input
-                id="businessName"
-                type="text"
-                required
-                disabled={isLoading}
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="e.g. Ploy Select Co., Ltd."
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 focus:scale-[1.01] transition-all placeholder:text-slate-400 disabled:opacity-50"
-              />
-            </div>
 
             {/* Work Email Field */}
             <div>
@@ -413,15 +383,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <Link
-                href="/pdpa"
-                target="_blank"
-                className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 font-semibold underline underline-offset-2 flex items-center gap-1"
-              >
-                <span>Read Full 6-Section Document</span>
-                <span>↗</span>
-              </Link>
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 flex flex-col sm:flex-row items-center justify-end gap-3">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   type="button"

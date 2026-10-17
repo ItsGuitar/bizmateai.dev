@@ -47,6 +47,9 @@ next-env.d.ts
 AGENTS.md
 instruction.md
 DESIGN_SYSTEM.md
+CLAUDE.md
+NEW_DESIGN.md
+์NEW_DESIGN.md
 
 # sqlite dev database
 *.db

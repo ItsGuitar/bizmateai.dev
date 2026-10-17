@@ -1,19 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { saveSession } from "@/lib/auth-client";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("registered") === "1") {
+      setSuccess("Account created! Sign in to finish setting up your business.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,10 +64,28 @@ export default function LoginPage() {
       }
 
       saveSession(data.token, data.user, rememberMe);
-      setSuccess("Authenticated! Redirecting to dashboard...");
+
+      let destination = "/dashboard";
+      try {
+        const profileRes = await fetch("/api/business-profile", {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        const profileData = await profileRes.json();
+        if (!profileData?.profile) {
+          destination = "/onboarding";
+        }
+      } catch (profileErr) {
+        console.error("Business profile check failed:", profileErr);
+      }
+
+      setSuccess(
+        destination === "/onboarding"
+          ? "Authenticated! Let's finish setting up your business..."
+          : "Authenticated! Redirecting to dashboard..."
+      );
 
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(destination);
       }, 500);
     } catch (err) {
       console.error("Login client error:", err);

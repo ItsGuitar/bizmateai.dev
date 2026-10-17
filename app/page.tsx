@@ -335,17 +335,8 @@ export default function WelcomePage() {
       )}
 
       {/* Clean Bottom Footer */}
-      <footer className="w-full border-t border-slate-200/70 dark:border-slate-900 py-6 text-center text-xs text-slate-500 z-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
+      <footer className="w-full border-t border-slate-200/70 dark:border-slate-900 py-6 text-center text-xs text-slate-500 z-10">
         <span>BizMateAI SME Financial Copilot • Bank-Grade Deterministic Security</span>
-        <div className="flex items-center gap-4 text-xs font-medium">
-          <Link href="/docs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-            API Docs (Swagger)
-          </Link>
-          <span>•</span>
-          <Link href="/pdpa" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-            PDPA Compliance
-          </Link>
-        </div>
       </footer>
     </div>
   );

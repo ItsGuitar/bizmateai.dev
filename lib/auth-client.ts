@@ -32,6 +32,22 @@ export function getSession(): { token: string; user: AuthUser } | null {
   }
 }
 
+export function updateSessionUser(patch: Partial<AuthUser>) {
+  if (typeof window === "undefined") return;
+
+  const storage = localStorage.getItem("bizmate_user") ? localStorage : sessionStorage;
+  const userJson = storage.getItem("bizmate_user");
+  if (!userJson) return;
+
+  try {
+    const user = JSON.parse(userJson) as AuthUser;
+    const updated = { ...user, ...patch };
+    storage.setItem("bizmate_user", JSON.stringify(updated));
+  } catch {
+    // Corrupt cached session: leave it alone, the next login will overwrite it.
+  }
+}
+
 export function clearSession() {
   if (typeof window === "undefined") return;
 

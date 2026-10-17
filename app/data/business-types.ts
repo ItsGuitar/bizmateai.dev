@@ -1,0 +1,15 @@
+export const BUSINESS_TYPES: string[] = [
+  "Sole proprietorship",
+  "Ordinary partnership",
+  "Registered ordinary partnership",
+  "Limited partnership",
+  "Private limited company",
+  "Public limited company",
+  "Branch office (foreign company)",
+  "Representative office",
+  "Regional office",
+  "Joint venture",
+  "Cooperative",
+  "Foundation / Association",
+  "Other",
+];
