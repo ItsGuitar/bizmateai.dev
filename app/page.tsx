@@ -84,12 +84,12 @@ export default function WelcomePage() {
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mt-1 text-slate-900 dark:text-white leading-tight max-w-2xl animate-fade-in-up delay-100">
             Never run out of cash. <br className="hidden sm:inline" />
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent">
-              Built for cross-border SMEs.
+              Built for factories waiting on buyer payments.
             </span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal max-w-lg mt-2 leading-relaxed animate-fade-in-up delay-200">
-            Your unified financial copilot. See cash shortfalls before they happen, get the cheapest capital, and never get surprised by a payment.
+            Your supplier finance copilot. Check a new order before you commit cash, chase buyers who pay 30 to 120 days late, and get the cheapest financing for the gap in between.
           </p>
         </div>
 
@@ -169,13 +169,13 @@ export default function WelcomePage() {
       >
         <div className="max-w-xl mb-12">
           <span className="text-xs font-mono uppercase tracking-widest text-blue-600 dark:text-blue-400 font-bold">
-            Unified Financial Platform
+            Lead Agent + 3 Specialists
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-1">
-            How BizMateAI Powers Your Business
+            How BizMateAI Covers Your Order-to-Cash Cycle
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            Automating cash radar, working capital, multi-bank telemetry, and collections under strict zero-surprise guardrails.
+            Forecasting cash, chasing buyers, planning material buys, and matching financing, every outside action waits for your approval.
           </p>
         </div>
 
@@ -336,7 +336,7 @@ export default function WelcomePage() {
 
       {/* Clean Bottom Footer */}
       <footer className="w-full border-t border-slate-200/70 dark:border-slate-900 py-6 text-center text-xs text-slate-500 z-10">
-        <span>BizMateAI SME Financial Copilot • Bank-Grade Deterministic Security</span>
+        <span>BizMateAI Supplier Finance Copilot • Bank-Grade Deterministic Security</span>
       </footer>
     </div>
   );
