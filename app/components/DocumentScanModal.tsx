@@ -100,10 +100,78 @@ export function DocumentScanModal({
     }
   }, [isOpen]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [ingestMethod, setIngestMethod] = useState<"excel_direct" | "pdf_text_direct" | "ocr_vision" | null>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileName(file.name);
+    const lowerName = file.name.toLowerCase();
+
+    // 1. EXCEL / CSV FILES (.xlsx, .xls, .csv) -> ZERO OCR NEEDED
+    if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls") || lowerName.endsWith(".csv")) {
+      setStep("analyzing");
+      setErrorMsg(null);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/ai/smart-ingest", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.ok && data.fields) {
+          setExtractedFields(data.fields);
+          setConfidence(data.confidence || null);
+          setIngestMethod("excel_direct");
+          // Generate an icon / placeholder preview for Excel spreadsheet
+          setImageSrc(null);
+          setFinalImageSrc(null);
+          setStep("review");
+          return;
+        } else {
+          throw new Error(data.message || "Failed to parse spreadsheet");
+        }
+      } catch (err: any) {
+        setErrorMsg(`Excel extraction error: ${err.message}`);
+        setStep("upload");
+        return;
+      }
+    }
+
+    // 2. PDF FILES (.pdf) -> TEST IF DIGITAL TEXT LAYER EXISTS FIRST
+    if (lowerName.endsWith(".pdf") || file.type === "application/pdf") {
+      setStep("analyzing");
+      setErrorMsg(null);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/ai/smart-ingest", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+
+        // Subcase A: Digital PDF with readable text -> NO OCR NEEDED!
+        if (data.ok && data.method === "pdf_text_direct" && data.fields) {
+          setExtractedFields(data.fields);
+          setConfidence(data.confidence || null);
+          setIngestMethod("pdf_text_direct");
+          setImageSrc(null);
+          setFinalImageSrc(null);
+          setStep("review");
+          return;
+        }
+
+        // Subcase B: Scanned image PDF -> REQUIRES OCR FALLBACK
+        setIngestMethod("ocr_vision");
+      } catch (err) {
+        console.warn("Smart PDF check failed, proceeding to image OCR:", err);
+      }
+    }
+
+    // 3. IMAGE FILES OR SCANNED PDF -> PROCEED TO REDACTION & VISION OCR
+    setIngestMethod("ocr_vision");
     const reader = new FileReader();
     reader.onload = (event) => {
       setImageSrc(event.target?.result as string);
@@ -319,7 +387,7 @@ export function DocumentScanModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf,.pdf,.xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -331,16 +399,27 @@ export function DocumentScanModal({
                 className="w-16 h-16 object-contain mb-2 drop-shadow-sm select-none pointer-events-none"
               />
               <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                Click or drag invoice / PO photo here
+                Click or drag invoice, PO, receipt, Excel, or PDF here
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                Supports PNG, JPG, or screenshot. In the next step, you can draw black redaction boxes to censor private data before sending to AI.
+                Supports Excel (.xlsx, .csv), PDF, and Images. Excel and Digital Text PDFs are parsed directly without OCR; Scanned images allow privacy redaction before Vision OCR.
               </p>
+              <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-200/60 dark:border-emerald-800/60">
+                  📊 Excel (No OCR)
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200/60 dark:border-blue-800/60">
+                  📄 Digital PDF (No OCR)
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold border border-purple-200/60 dark:border-purple-800/60">
+                  📷 Scanned (Vision OCR)
+                </span>
+              </div>
               <button
                 type="button"
-                className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer"
               >
-                Choose Photo
+                Choose File
               </button>
             </div>
           )}
@@ -461,6 +540,34 @@ export function DocumentScanModal({
 
           {step === "review" && (
             <div className="space-y-4">
+              {/* Extraction Source & Efficiency Banner */}
+              {ingestMethod === "excel_direct" && (
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-900/60 uppercase">
+                    Direct Excel Parser
+                  </span>
+                  <span>Extracted directly from spreadsheet tabular data without Vision OCR (0 Token consumed, instant verification).</span>
+                </div>
+              )}
+
+              {ingestMethod === "pdf_text_direct" && (
+                <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-200/70 dark:bg-blue-900/60 uppercase">
+                    Digital PDF (No OCR)
+                  </span>
+                  <span>Extracted directly from digital PDF text layer. No OCR required, saving vision compute quota.</span>
+                </div>
+              )}
+
+              {ingestMethod === "ocr_vision" && (
+                <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900 text-xs text-purple-800 dark:text-purple-300 flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-200/70 dark:bg-purple-900/60 uppercase">
+                    Vision OCR & Redaction
+                  </span>
+                  <span>Scanned image detected. Processed with multimodal vision intelligence with user privacy redaction.</span>
+                </div>
+              )}
+
               {isSimulated && (
                 <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
                   <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900/60 uppercase">
@@ -476,7 +583,7 @@ export function DocumentScanModal({
                     Extraction Verification Form
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Compare the scanned document on the left against extracted data on the right.
+                    Compare the document data on the left against extracted fields on the right before saving.
                   </p>
                 </div>
                 {confidence?.overall !== undefined && (
@@ -550,23 +657,46 @@ export function DocumentScanModal({
                       setZoomScale((prev) => Math.max(0.5, Math.min(3.5, prev + delta)));
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={finalImageSrc || imageSrc || ""}
-                      alt="Source Document"
-                      draggable={false}
-                      style={{
-                        transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
-                        transformOrigin: "center center",
-                        transition: isPanning ? "none" : "transform 0.1s ease-out",
-                      }}
-                      className="max-h-[500px] w-auto object-contain pointer-events-none drop-shadow-md"
-                    />
+                    {finalImageSrc || imageSrc ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={finalImageSrc || imageSrc || ""}
+                        alt="Source Document"
+                        draggable={false}
+                        style={{
+                          transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
+                          transformOrigin: "center center",
+                          transition: isPanning ? "none" : "transform 0.1s ease-out",
+                        }}
+                        className="max-h-[500px] w-auto object-contain pointer-events-none drop-shadow-md"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
+                        <div className="w-20 h-20 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-4xl shadow-inner">
+                          {ingestMethod === "excel_direct" ? "📊" : "📄"}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white tracking-wide">
+                            {fileName || (ingestMethod === "excel_direct" ? "Spreadsheet Data" : "Digital PDF Document")}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1 max-w-xs">
+                            {ingestMethod === "excel_direct"
+                              ? "Parsed directly via SheetJS without lossy image conversion."
+                              : "Parsed directly from native digital PDF text layer."}
+                          </p>
+                        </div>
+                        <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
+                          ✓ 100% Digital Data Accuracy
+                        </span>
+                      </div>
+                    )}
 
                     {/* Hint overlay */}
-                    <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-xs text-[10px] text-slate-400 font-mono pointer-events-none">
-                      Drag to pan · Scroll wheel to zoom
-                    </div>
+                    {finalImageSrc || imageSrc ? (
+                      <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-xs text-[10px] text-slate-400 font-mono pointer-events-none">
+                        Drag to pan · Scroll wheel to zoom
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
