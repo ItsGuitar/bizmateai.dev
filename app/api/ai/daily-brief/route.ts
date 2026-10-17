@@ -2,8 +2,18 @@ import { NextResponse } from "next/server";
 import { buildSystemPrompt } from "@/lib/ai/guardrails";
 import { callModel } from "@/lib/ai/client";
 import { createMaskingAdapter } from "@/lib/ai/masking";
+import crypto from "crypto";
 
 const TASK = "daily_brief" as const;
+
+// Server-side in-memory cache keyed by calculation fingerprint
+// Preserves Gemini API limits across browser reloads and repeated navigations (TTL: 6 hours)
+interface CachedEntry {
+  summary: string;
+  timestamp: number;
+}
+const briefCache = new Map<string, CachedEntry>();
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 export async function POST(req: Request) {
   try {
@@ -18,7 +28,39 @@ export async function POST(req: Request) {
       financingNeed = 0,
       issues = [],
       language = "Thai",
+      forceRefresh = false,
     } = body;
+
+    // 0. Compute deterministic fingerprint of input data
+    const inputFingerprint = crypto
+      .createHash("sha256")
+      .update(
+        JSON.stringify({
+          healthScore,
+          mood,
+          factoryLevel,
+          cashNow: Math.round(cashNow / 1000), // round to nearest thousand to absorb micro-jitter
+          runwayWeeks,
+          safetyCushion,
+          financingNeed: Math.round(financingNeed / 1000),
+          issueIds: issues.map((i: any) => `${i.id || i.title}:${i.severity}`).sort(),
+          language,
+        })
+      )
+      .digest("hex");
+
+    // Check server-side memory cache (saves Gemini limit on page refresh or tab re-opening)
+    if (!forceRefresh) {
+      const cached = briefCache.get(inputFingerprint);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        return NextResponse.json({
+          success: true,
+          summary: cached.summary,
+          asOf: new Date(cached.timestamp).toISOString(),
+          cached: true,
+        });
+      }
+    }
 
     // 1. Client/Server-side Data Masking for any party names in issues (PDPA Protection)
     const masking = createMaskingAdapter();
@@ -76,18 +118,34 @@ Output ONLY the clean 2-3 sentence summary paragraph. Do not include markdown he
       summaryText = response.text || "";
     } catch (err: any) {
       console.warn("LLM daily brief fallback:", err);
-      // Fallback deterministic brief in natural Thai
-      const topIssue = issues[0]?.title ? `โดยมีเรื่องเร่งด่วนคือ "${issues[0].title}" ที่ควรรีบดำเนินการ` : "และไม่มีรายการปัญหาค้างชำระที่น่ากังวล";
-      summaryText = `ภาพรวมสุขภาพโรงงานวันนี้อยู่ในเกณฑ์${mood === "Thriving" ? "ดีเยี่ยม" : mood === "Steady" ? "มั่นคง" : "ต้องเฝ้าระวัง"} (${healthScore}/100) มีสภาพคล่องเงินสดรองรับได้อีก ${runwayWeeks} สัปดาห์ ${topIssue} เพื่อรักษาสภาพคล่องให้อยู่เหนือเกณฑ์ปลอดภัย`;
+      // Fallback deterministic brief in natural language
+      if (language === "English") {
+        const topIssue = issues[0]?.title
+          ? `Priority attention is required for "${issues[0].title}".`
+          : "No immediate payment bottlenecks are detected.";
+        summaryText = `Overall factory financial health remains ${mood} (${healthScore}/100) with liquidity runway covering ${runwayWeeks} weeks. ${topIssue} Maintain operational cushion above safety thresholds.`;
+      } else {
+        const topIssue = issues[0]?.title
+          ? `โดยมีเรื่องเร่งด่วนคือ "${issues[0].title}" ที่ควรรีบดำเนินการ`
+          : "และไม่มีรายการปัญหาค้างชำระที่น่ากังวล";
+        summaryText = `ภาพรวมสุขภาพโรงงานวันนี้อยู่ในเกณฑ์${mood === "Thriving" ? "ดีเยี่ยม" : mood === "Steady" ? "มั่นคง" : "ต้องเฝ้าระวัง"} (${healthScore}/100) มีสภาพคล่องเงินสดรองรับได้อีก ${runwayWeeks} สัปดาห์ ${topIssue} เพื่อรักษาสภาพคล่องให้อยู่เหนือเกณฑ์ปลอดภัย`;
+      }
     }
 
     // 4. Unmask to restore any counterparty names if masked
     const unmaskedReply = masking.unmask(summaryText.trim());
 
+    // Save into server-side memory cache
+    briefCache.set(inputFingerprint, {
+      summary: unmaskedReply,
+      timestamp: Date.now(),
+    });
+
     return NextResponse.json({
       success: true,
       summary: unmaskedReply,
       asOf: new Date().toISOString(),
+      cached: false,
     });
   } catch (err: any) {
     console.error("Daily brief API error:", err);

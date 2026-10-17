@@ -180,7 +180,18 @@ export default function DashboardPage() {
   const [dailyBrief, setDailyBrief] = useState<string | null>(null);
   const [isBriefLoading, setIsBriefLoading] = useState(false);
 
-  const fetchDailyBrief = async (result: PipelineOutput) => {
+  const fetchDailyBrief = async (result: PipelineOutput, force = false) => {
+    // Client-side cache key based on calculation snapshot
+    const cacheKey = `bizmate_daily_brief_${result.health.totalScore}_${Math.round((result.forecasts.base?.[0]?.closingCash || 0) / 1000)}_${result.rankedIssues.length}`;
+
+    if (!force) {
+      const cached = typeof window !== "undefined" ? localStorage.getItem(cacheKey) : null;
+      if (cached) {
+        setDailyBrief(cached);
+        return;
+      }
+    }
+
     try {
       setIsBriefLoading(true);
       const res = await fetch("/api/ai/daily-brief", {
@@ -201,12 +212,16 @@ export default function DashboardPage() {
             severity: iss.severity,
             agent: iss.agent,
           })),
-          language: "Thai",
+          language: "English",
+          forceRefresh: force,
         }),
       });
       const data = await res.json();
       if (data.success && data.summary) {
         setDailyBrief(data.summary);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(cacheKey, data.summary);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch daily brief:", err);
@@ -951,10 +966,10 @@ export default function DashboardPage() {
                   {calcResult && (
                     <button
                       type="button"
-                      onClick={() => fetchDailyBrief(calcResult)}
+                      onClick={() => fetchDailyBrief(calcResult, true)}
                       disabled={isBriefLoading}
                       className="text-[11px] font-medium text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 disabled:opacity-50"
-                      title="Regenerate Daily Brief"
+                      title="Force Regenerate Daily Brief"
                     >
                       <span className={isBriefLoading ? "animate-spin" : ""}>🔄</span>
                       <span>{isBriefLoading ? "Summarizing..." : "Refresh"}</span>
@@ -966,7 +981,7 @@ export default function DashboardPage() {
                   {isBriefLoading ? (
                     <div className="flex items-center gap-2 py-1 text-slate-400 dark:text-slate-500 text-xs">
                       <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                      <span>กำลังวิเคราะห์และสรุปสถานการณ์ประจำวัน...</span>
+                      <span>Analyzing metrics and synthesizing daily brief...</span>
                     </div>
                   ) : dailyBrief ? (
                     <p className="line-clamp-3 whitespace-pre-line font-medium text-slate-800 dark:text-slate-200">
@@ -975,8 +990,8 @@ export default function DashboardPage() {
                   ) : (
                     <p className="text-slate-400 dark:text-slate-500 text-xs italic">
                       {calcResult
-                        ? "กดปุ่ม Refresh เพื่อให้ BizMateAI สรุปเรื่องราวสุขภาพโรงงานประจำวัน"
-                        : "นำเข้าเอกสารและคำนวณตัวเลขเพื่อสร้างสรุปสถานการณ์ประจำวัน"}
+                        ? "Click Refresh to generate a fresh daily financial narrative."
+                        : "Ingest and calculate documents to generate daily operational brief."}
                     </p>
                   )}
                 </div>
