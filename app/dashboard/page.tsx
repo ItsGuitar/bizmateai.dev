@@ -108,115 +108,52 @@ interface DeliveryTruckConfig {
   widthClass: string;
 }
 
-// All 7 truck types with extra large dimensions and balanced lane assignments
-const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
-  {
-    id: "truck-1",
-    src: "truck1.png",
-    name: "Hauler Alpha",
-    direction: "rtl",
-    lane: "upper",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-20 sm:w-28 md:w-32",
-  },
-  {
-    id: "truck-2",
-    src: "truck2.png",
-    name: "Heavy Cargo Beta",
-    direction: "ltr",
-    lane: "lower",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-22 sm:w-30 md:w-36",
-  },
-  {
-    id: "truck-3",
-    src: "truck3.png",
-    name: "Carrier Gamma",
-    direction: "rtl",
-    lane: "upper",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-20 sm:w-28 md:w-32",
-  },
-  {
-    id: "truck-4",
-    src: "truck4.png",
-    name: "Express Delta",
-    direction: "ltr",
-    lane: "lower",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-18 sm:w-24 md:w-28",
-  },
-  {
-    id: "truck-5",
-    src: "truck5.png",
-    name: "Transporter Epsilon",
-    direction: "rtl",
-    lane: "upper",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-22 sm:w-30 md:w-36",
-  },
-  {
-    id: "truck-6",
-    src: "truck6.png",
-    name: "Freight Zeta",
-    direction: "ltr",
-    lane: "lower",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-20 sm:w-28 md:w-32",
-  },
-  {
-    id: "truck-7",
-    src: "truck7.png",
-    name: "Fleet Eta",
-    direction: "rtl",
-    lane: "upper",
-    duration: 5.0,
-    delay: 0,
-    widthClass: "w-22 sm:w-30 md:w-36",
-  },
+// Available truck models (truck1.png - truck7.png) with customized responsive widths
+const TRUCK_POOL = [
+  { id: "truck1", src: "truck1.png", name: "Hauler 1", widthClass: "w-20 sm:w-28 md:w-32" },
+  { id: "truck2", src: "truck2.png", name: "Hauler 2", widthClass: "w-22 sm:w-30 md:w-36" },
+  { id: "truck3", src: "truck3.png", name: "Hauler 3", widthClass: "w-20 sm:w-28 md:w-32" },
+  { id: "truck4", src: "truck4.png", name: "Hauler 4", widthClass: "w-18 sm:w-24 md:w-28" },
+  { id: "truck5", src: "truck5.png", name: "Hauler 5", widthClass: "w-22 sm:w-30 md:w-36" },
+  { id: "truck6", src: "truck6.png", name: "Hauler 6", widthClass: "w-20 sm:w-28 md:w-32" },
+  { id: "truck7", src: "truck7.png", name: "Hauler 7", widthClass: "w-22 sm:w-30 md:w-36" },
 ];
 
-// Active trucks per factory level (1-5):
-// Crucial rules:
-// 1. Equal speed (duration) for all trucks within the same lane/level, preventing overtaking.
-// 2. Trucks in the same lane have equal duration and spaced delays (half-cycle spacing: delay = duration / 2).
-// 3. Lower lane (LTR: left to right) is in front with higher z-index (z-20) than upper lane (RTL: z-10).
-const LEVEL_TRUCKS: Record<1 | 2 | 3 | 4 | 5, DeliveryTruckConfig[]> = {
+interface LaneSlot {
+  slotId: string;
+  lane: "upper" | "lower";
+  direction: "rtl" | "ltr";
+  duration: number;
+  delay: number;
+}
+
+// Fixed motion slots per factory level (speed equalized per lane so no overtaking).
+// The truck image rendered in each slot cycles randomly each pass!
+const LEVEL_LANE_SLOTS: Record<1 | 2 | 3 | 4 | 5, LaneSlot[]> = {
   1: [
-    // Level 1: 1 truck passing smoothly
-    { ...ALL_TRUCK_MODELS[1], duration: 5.5, delay: 0 },
+    { slotId: "s1-1", lane: "lower", direction: "ltr", duration: 5.4, delay: 0 },
   ],
   2: [
-    // Level 2: 2 trucks (1 in each lane, identical speed 5.2s)
-    { ...ALL_TRUCK_MODELS[0], duration: 5.2, delay: 0 },
-    { ...ALL_TRUCK_MODELS[3], duration: 5.2, delay: -2.6 },
+    { slotId: "s2-1", lane: "upper", direction: "rtl", duration: 5.2, delay: 0 },
+    { slotId: "s2-2", lane: "lower", direction: "ltr", duration: 5.2, delay: -2.6 },
   ],
   3: [
-    // Level 3: 3 trucks (speed 4.8s, 2 in lower lane perfectly spaced, 1 in upper lane)
-    { ...ALL_TRUCK_MODELS[0], duration: 4.8, delay: 0 },
-    { ...ALL_TRUCK_MODELS[1], duration: 4.8, delay: -1.2 },
-    { ...ALL_TRUCK_MODELS[5], duration: 4.8, delay: -3.6 },
+    { slotId: "s3-1", lane: "upper", direction: "rtl", duration: 4.8, delay: 0 },
+    { slotId: "s3-2", lane: "lower", direction: "ltr", duration: 4.8, delay: -1.2 },
+    { slotId: "s3-3", lane: "lower", direction: "ltr", duration: 4.8, delay: -3.6 },
   ],
   4: [
-    // Level 4: 4 trucks (speed 4.4s, 2 in each lane spaced by half duration 2.2s so NO overtaking)
-    { ...ALL_TRUCK_MODELS[0], duration: 4.4, delay: 0 },
-    { ...ALL_TRUCK_MODELS[4], duration: 4.4, delay: -2.2 },
-    { ...ALL_TRUCK_MODELS[1], duration: 4.4, delay: -1.1 },
-    { ...ALL_TRUCK_MODELS[3], duration: 4.4, delay: -3.3 },
+    { slotId: "s4-1", lane: "upper", direction: "rtl", duration: 4.4, delay: 0 },
+    { slotId: "s4-2", lane: "upper", direction: "rtl", duration: 4.4, delay: -2.2 },
+    { slotId: "s4-3", lane: "lower", direction: "ltr", duration: 4.4, delay: -1.1 },
+    { slotId: "s4-4", lane: "lower", direction: "ltr", duration: 4.4, delay: -3.3 },
   ],
   5: [
-    // Level 5: 5 trucks (speed 4.0s, high fleet throughput, perfectly spaced with equal speed)
-    { ...ALL_TRUCK_MODELS[0], duration: 4.0, delay: 0 },
-    { ...ALL_TRUCK_MODELS[2], duration: 4.0, delay: -1.33 },
-    { ...ALL_TRUCK_MODELS[6], duration: 4.0, delay: -2.66 },
-    { ...ALL_TRUCK_MODELS[1], duration: 4.0, delay: -0.66 },
-    { ...ALL_TRUCK_MODELS[3], duration: 4.0, delay: -2.66 },
+    { slotId: "s5-1", lane: "upper", direction: "rtl", duration: 4.0, delay: 0 },
+    { slotId: "s5-2", lane: "upper", direction: "rtl", duration: 4.0, delay: -1.33 },
+    { slotId: "s5-3", lane: "upper", direction: "rtl", duration: 4.0, delay: -2.66 },
+    { slotId: "s5-4", lane: "lower", direction: "ltr", duration: 4.0, delay: -0.66 },
+    { slotId: "s5-5", lane: "lower", direction: "ltr", duration: 4.0, delay: -2.66 },
   ],
 };
 
@@ -238,6 +175,29 @@ export default function DashboardPage() {
   const [calcResult, setCalcResult] = useState<PipelineOutput | null>(null);
   const [activeDocCount, setActiveDocCount] = useState<number>(0);
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
+
+  // Dynamic truck models per slot: randomly pick any truck 1-7
+  const [slotTruckMap, setSlotTruckMap] = useState<Record<string, number>>(() => {
+    const initial: Record<string, number> = {};
+    for (let lvl = 1; lvl <= 5; lvl++) {
+      LEVEL_LANE_SLOTS[lvl as 1 | 2 | 3 | 4 | 5].forEach((slot, idx) => {
+        initial[slot.slotId] = (idx * 2 + 1) % TRUCK_POOL.length;
+      });
+    }
+    return initial;
+  });
+
+  const handleTruckCycle = (slotId: string) => {
+    setSlotTruckMap((prev) => {
+      const currentIdx = prev[slotId] ?? 0;
+      // Pick a random truck index different from current one
+      let nextIdx = Math.floor(Math.random() * TRUCK_POOL.length);
+      if (nextIdx === currentIdx) {
+        nextIdx = (nextIdx + 1) % TRUCK_POOL.length;
+      }
+      return { ...prev, [slotId]: nextIdx };
+    });
+  };
 
   // Visualization Dev/Debug overrides
   const [devDebugOpen, setDevDebugOpen] = useState(false);
@@ -731,25 +691,29 @@ export default function DashboardPage() {
                     }}
                   />
 
-                  {/* Delivery Trucks active for this Factory Level */}
-                  {LEVEL_TRUCKS[currentFactoryLevel].map((truck) => {
-                    const isUpper = truck.lane === "upper";
-                    const isLTR = truck.direction === "ltr";
+                  {/* Delivery Trucks active for this Factory Level (Randomized models on each cycle) */}
+                  {LEVEL_LANE_SLOTS[currentFactoryLevel].map((slot) => {
+                    const isUpper = slot.lane === "upper";
+                    const isLTR = slot.direction === "ltr";
+                    const truckIdx = slotTruckMap[slot.slotId] ?? 0;
+                    const truckModel = TRUCK_POOL[truckIdx % TRUCK_POOL.length];
+
                     return (
                       <div
-                        key={truck.id}
+                        key={slot.slotId}
+                        onAnimationIteration={() => handleTruckCycle(slot.slotId)}
                         className={`absolute pointer-events-none transition-opacity duration-500 ${
                           isLTR ? "z-20 animate-truck-ltr" : "z-10 animate-truck-rtl"
-                        } ${truck.widthClass}`}
+                        } ${truckModel.widthClass}`}
                         style={{
-                          top: isUpper ? "-14px" : "calc(50% - 10px)",
-                          animationDuration: `${truck.duration}s`,
-                          animationDelay: `${truck.delay}s`,
+                          top: isUpper ? "-55px" : "calc(50% - 45px)",
+                          animationDuration: `${slot.duration}s`,
+                          animationDelay: `${slot.delay}s`,
                         }}
                       >
                         <Image
-                          src={`/images/visualization/${truck.src}`}
-                          alt={truck.name}
+                          src={`/images/visualization/${truckModel.src}`}
+                          alt={truckModel.name}
                           width={140}
                           height={70}
                           className="w-full h-auto object-contain drop-shadow-md select-none"
