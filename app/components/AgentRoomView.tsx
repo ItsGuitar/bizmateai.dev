@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
 import type {
   AgentRoomEvent,
@@ -197,22 +198,40 @@ export function AgentRoomView({
           })}
 
           {isThinking && !isDone && (
-            <div className="flex items-center gap-2 px-3.5 py-3 text-xs text-slate-400 dark:text-slate-500">
-              <span className="flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 animate-bounce" />
-              </span>
-              <span>Thinking...</span>
+            <div className="flex items-center gap-3 px-3.5 py-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+              <Image
+                src="/images/bot07_confused.png"
+                alt="Thinking Bot"
+                width={36}
+                height={36}
+                className="w-8 h-8 object-contain shrink-0 animate-pulse"
+              />
+              <div className="flex items-center gap-2">
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" />
+                </span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">Agents collaborating & evaluating decisions...</span>
+              </div>
             </div>
           )}
 
           {/* Approval cards: shown once the run is done */}
           {isDone && (
             <div className="pt-2 space-y-2.5">
-              <p className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
-                Result · Needs your OK
-              </p>
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/images/bot03_celebrate.png"
+                  alt="Done Bot"
+                  width={32}
+                  height={32}
+                  className="w-7 h-7 object-contain drop-shadow-xs"
+                />
+                <p className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
+                  Result · Needs your OK
+                </p>
+              </div>
               {approvals.map((approval) => {
                 const agent = SUPPLIER_AGENTS[approval.agent];
                 const decision = approvalDecisions[approval.id];

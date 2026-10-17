@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useState, useEffect } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
 import { AgentRoomView } from "@/app/components/AgentRoomView";
@@ -363,12 +364,15 @@ export default function ReceivablesPage() {
         {/* Agent bar */}
         <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
-              style={{ backgroundColor: `${receivables.color}18`, color: receivables.color }}
-            >
-              {receivables.emoji}
-            </span>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1.5 shrink-0 bg-orange-50 dark:bg-orange-950/40 border border-orange-200/60 dark:border-orange-900/50">
+              <Image
+                src={receivables.botAvatar}
+                alt={receivables.name}
+                width={44}
+                height={44}
+                className="w-full h-full object-contain select-none pointer-events-none"
+              />
+            </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{receivables.name}</span>
@@ -584,13 +588,22 @@ export default function ReceivablesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Payment Reminder Draft
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {remindInvoice.buyerName} · {remindInvoice.no}
-                </p>
+              <div className="flex items-center gap-2.5">
+                <Image
+                  src="/images/bot01_thumbup.png"
+                  alt="Assistant"
+                  width={40}
+                  height={40}
+                  className="w-9 h-9 object-contain drop-shadow-xs"
+                />
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Payment Reminder Draft
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {remindInvoice.buyerName} · {remindInvoice.no}
+                  </p>
+                </div>
               </div>
               <button
                 type="button"

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
 import { Toast } from "@/app/components/Toast";
@@ -113,6 +114,7 @@ export default function DashboardPage() {
   const [hasCalculation, setHasCalculation] = useState<boolean | null>(null);
   const [calcResult, setCalcResult] = useState<PipelineOutput | null>(null);
   const [activeDocCount, setActiveDocCount] = useState<number>(0);
+  const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isTestingMasking, setIsTestingMasking] = useState(false);
@@ -255,11 +257,20 @@ export default function DashboardPage() {
 
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5">
         <div className="animate-fade-in-up flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              {greeting}, {displayName}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{COMPANY.name}</p>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/images/bot10_wave.png"
+              alt="Welcome Bot"
+              width={56}
+              height={56}
+              className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-sm select-none pointer-events-none"
+            />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                {greeting}, {displayName}
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{COMPANY.name}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
@@ -282,8 +293,14 @@ export default function DashboardPage() {
         {/* Empty State Banner if no data selected or not calculated */}
         {(!hasCalculation || activeDocCount === 0) && (
           <div className="animate-fade-in-up p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">⚠️</span>
+            <div className="flex items-center gap-3.5">
+              <Image
+                src="/images/bot07_confused.png"
+                alt="No Data"
+                width={52}
+                height={52}
+                className="w-11 h-11 object-contain shrink-0 drop-shadow-xs"
+              />
               <div>
                 <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200">
                   No Documents Selected for Financial Calculations
@@ -387,10 +404,20 @@ export default function DashboardPage() {
               </div>
 
               {/* Health score overlay */}
-              <div className="absolute top-3 left-3 w-32 bg-white/90 dark:bg-slate-900/85 backdrop-blur-sm rounded-xl p-2.5 shadow-sm text-left">
-                <p className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold tracking-wide">
-                  Health score
-                </p>
+              <div className="absolute top-3 left-3 min-w-[140px] bg-white/90 dark:bg-slate-900/85 backdrop-blur-sm rounded-xl p-2.5 shadow-sm text-left">
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold tracking-wide">
+                    Health score
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsScoreModalOpen(true)}
+                    className="text-[9px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                    title="View 5-part score breakdown"
+                  >
+                    How it works
+                  </button>
+                </div>
                 <p className="text-xl font-black text-slate-900 dark:text-white leading-none mt-0.5">
                   {currentHealthScore}
                   <span className="text-xs font-bold text-slate-400 dark:text-slate-500"> /100</span>
@@ -401,9 +428,18 @@ export default function DashboardPage() {
                     style={{ width: `${currentHealthScore}%` }}
                   />
                 </div>
-                <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mt-1">
-                  {currentMood}
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    {currentMood}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsScoreModalOpen(true)}
+                    className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  >
+                    View parts →
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -677,6 +713,208 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Health Score 5-Part Popup Drawer (Right side) */}
+      {isScoreModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60 backdrop-blur-xs animate-fade-in"
+          onClick={() => setIsScoreModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 p-6 overflow-y-auto space-y-5 animate-slide-left shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                    Health score {currentHealthScore}/100
+                  </h3>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    currentMood === "Thriving"
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                      : currentMood === "Steady"
+                      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
+                      : currentMood === "Strained"
+                      ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                      : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
+                  }`}>
+                    {currentMood}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Five parts, each from your own data. The factory level follows this score.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScoreModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Overall progress bar */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
+              <div className="flex justify-between items-center text-xs font-bold mb-2">
+                <span className="text-slate-700 dark:text-slate-300">Composite Health</span>
+                <span className="font-mono text-slate-900 dark:text-white">{currentHealthScore} / 100</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${HEALTH_BAR_COLOR[moodForScore(currentHealthScore)]}`}
+                  style={{ width: `${currentHealthScore}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+                Factory Level {currentFactoryLevel} of 5 · {calcResult?.health.runwayWeeks ?? 12} weeks of liquidity runway
+              </p>
+            </div>
+
+            {/* The 5 Parts */}
+            <div className="space-y-4">
+              {/* Part 1: Cash cushion */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    Cash cushion
+                  </span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    {calcResult ? calcResult.health.cashCushionScore : "15.2"} / 30
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, ((calcResult?.health.cashCushionScore ?? 15.2) / 30) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {calcResult?.health.details?.cushionDetail ??
+                    `Lowest cash in 13 weeks vs your ${COMPANY.currency}${(VITALS.cushion / 1000).toFixed(0)}k cushion`}
+                </p>
+              </div>
+
+              {/* Part 2: Buyer payments */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Buyer payments
+                  </span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    {calcResult ? calcResult.health.buyerPaymentsScore : "12.4"} / 25
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, ((calcResult?.health.buyerPaymentsScore ?? 12.4) / 25) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {calcResult?.health.details?.buyerPaymentsDetail ?? "22% of what buyers owe is overdue"}
+                </p>
+              </div>
+
+              {/* Part 3: Margin and input costs */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    Margin and input costs
+                  </span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    {calcResult ? calcResult.health.marginCostsScore : "14.4"} / 20
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-amber-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, ((calcResult?.health.marginCostsScore ?? 14.4) / 20) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {calcResult?.health.details?.marginCostsDetail ??
+                    "Net cash margin 7.0%; materials could rise 5% in 3 months"}
+                </p>
+              </div>
+
+              {/* Part 4: Buyer concentration */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500" />
+                    Buyer concentration
+                  </span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    {calcResult ? calcResult.health.concentrationScore : "7.5"} / 10
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-purple-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, ((calcResult?.health.concentrationScore ?? 7.5) / 10) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {calcResult?.health.details?.concentrationDetail ?? "Top buyer is 38% of sales"}
+                </p>
+              </div>
+
+              {/* Part 5: Debt load */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    Debt load
+                  </span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    {calcResult ? calcResult.health.debtLoadScore : "14.2"} / 15
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-rose-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, ((calcResult?.health.debtLoadScore ?? 14.2) / 15) * 100)}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {calcResult?.health.details?.debtLoadDetail ??
+                    `Interest ${COMPANY.currency}6k a month`}
+                </p>
+              </div>
+            </div>
+
+            {/* Footer action */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsScoreModalOpen(false);
+                  router.push("/dashboard/data");
+                }}
+                className="w-full py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer text-center block shadow-xs"
+              >
+                Ingest More Documents to Improve Score →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Toast message={toastMessage} onDone={() => setToastMessage(null)} />
     </div>

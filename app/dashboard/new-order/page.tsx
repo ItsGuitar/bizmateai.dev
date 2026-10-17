@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
 import { SearchableSelect } from "@/app/components/SearchableSelect";
@@ -186,12 +187,15 @@ export default function NewOrderPage() {
         {/* Agent bar */}
         <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
-              style={{ backgroundColor: `${lead.color}18`, color: lead.color }}
-            >
-              {lead.emoji}
-            </span>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1.5 shrink-0 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/50">
+              <Image
+                src={lead.botAvatar}
+                alt={lead.name}
+                width={44}
+                height={44}
+                className="w-full h-full object-contain select-none pointer-events-none"
+              />
+            </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{lead.name}</span>

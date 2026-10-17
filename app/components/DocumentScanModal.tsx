@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import type { InvoiceOcrFields, InvoiceOcrConfidence, InvoiceOcrResponse } from "@/app/api/ai/ocr-invoice/route";
 
 export interface RedactionBox {
@@ -171,7 +172,7 @@ export function DocumentScanModal({
     setStep("analyzing");
     setErrorMsg(null);
 
-    const img = new Image();
+    const img = new window.Image();
     img.crossOrigin = "anonymous";
     img.src = imageSrc;
 
@@ -322,7 +323,13 @@ export function DocumentScanModal({
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              <span className="text-4xl mb-3">📄</span>
+              <Image
+                src="/images/bot04_box_front.png"
+                alt="Document Bot"
+                width={72}
+                height={72}
+                className="w-16 h-16 object-contain mb-2 drop-shadow-sm select-none pointer-events-none"
+              />
               <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                 Click or drag invoice / PO photo here
               </h4>
@@ -430,11 +437,20 @@ export function DocumentScanModal({
           )}
 
           {step === "analyzing" && (
-            <div className="py-16 text-center flex flex-col items-center justify-center space-y-4">
-              <div className="w-12 h-12 rounded-full border-4 border-blue-600/20 border-t-blue-600 animate-spin" />
+            <div className="py-12 text-center flex flex-col items-center justify-center space-y-3">
+              <div className="relative">
+                <Image
+                  src="/images/bot08_tablet.png"
+                  alt="AI Inspecting"
+                  width={80}
+                  height={80}
+                  className="w-20 h-20 object-contain drop-shadow-md animate-pulse select-none pointer-events-none"
+                />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-blue-600/30 border-t-blue-600 animate-spin bg-white dark:bg-slate-900" />
+              </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Multimodal Vision AI is inspecting document...
+                  Vision AI is inspecting document...
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Extracting party names, dates, amounts, credit terms, and evaluating confidence levels.

@@ -93,6 +93,13 @@ export interface HealthScoreBreakdown {
   factoryLevel: 1 | 2 | 3 | 4 | 5;
   mood: "Thriving" | "Steady" | "Strained" | "Struggling";
   runwayWeeks: number;
+  details?: {
+    cushionDetail: string;
+    buyerPaymentsDetail: string;
+    marginCostsDetail: string;
+    concentrationDetail: string;
+    debtLoadDetail: string;
+  };
   alerts: {
     overdueWarning: boolean;
     priceStorm: boolean;
@@ -509,15 +516,22 @@ export async function runDeterministicPipeline(
   const runwayWeeks = zeroWeekIdx === -1 ? 14 : zeroWeekIdx + 1;
 
   const health: HealthScoreBreakdown = {
-    cashCushionScore: Math.round(cashCushionScore),
-    buyerPaymentsScore: Math.round(buyerPaymentsScore),
-    marginCostsScore,
-    concentrationScore,
-    debtLoadScore,
+    cashCushionScore: Math.round(cashCushionScore * 10) / 10,
+    buyerPaymentsScore: Math.round(buyerPaymentsScore * 10) / 10,
+    marginCostsScore: Math.round(marginCostsScore * 10) / 10,
+    concentrationScore: Math.round(concentrationScore * 10) / 10,
+    debtLoadScore: Math.round(debtLoadScore * 10) / 10,
     totalScore: totalHealth,
     factoryLevel,
     mood,
     runwayWeeks,
+    details: {
+      cushionDetail: `Lowest cash in 13 weeks vs your ${(config.safetyCushion / 1000).toFixed(0)}k cushion`,
+      buyerPaymentsDetail: `${Math.round(overdueShare * 100)}% of what buyers owe is overdue`,
+      marginCostsDetail: `Net cash margin ${(netMargin * 100).toFixed(1)}%; materials could rise 5% in 3 months`,
+      concentrationDetail: `Top buyer is ${Math.round(topBuyerShare * 100)}% of sales`,
+      debtLoadDetail: `Interest ${(estimatedInterest / 1000).toFixed(0)}k a month`,
+    },
     alerts: {
       overdueWarning: overdueDocs.length > 0,
       priceStorm: false,
