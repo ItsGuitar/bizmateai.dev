@@ -654,24 +654,26 @@ export default function DashboardPage() {
                 
                 {/* Coins Stacks / Weeks of Runway on the Courtyard Lawn */}
                 <div
-                  className="absolute top-1 sm:top-2 right-4 sm:right-8 md:right-12 flex items-end justify-center gap-1 sm:gap-1.5 z-10"
+                  className="absolute top-0.5 sm:top-2 right-2 sm:right-8 md:right-12 z-10"
                   title={`Liquidity Runway: ${runwayWeeks} weeks of cash before 0`}
                 >
-                  {Array.from({ length: Math.min(8, Math.max(1, Math.round(runwayWeeks / 1.75))) }).map((_, stackIdx) => {
-                    const stackHeight = Math.min(6, Math.max(1, Math.round((runwayWeeks - stackIdx) / 1.5)));
-                    return (
-                      <div key={stackIdx} className="flex flex-col-reverse items-center">
-                        {Array.from({ length: stackHeight }).map((_, coinIdx) => (
-                          <div
-                            key={coinIdx}
-                            className="w-3.5 h-1 sm:w-4 sm:h-1.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border border-yellow-200/90 shadow-xs -mt-0.5"
-                          />
-                        ))}
-                      </div>
-                    );
-                  })}
+                  <div className="grid grid-cols-4 sm:flex items-end justify-end gap-1 sm:gap-1.5">
+                    {Array.from({ length: Math.min(8, Math.max(1, Math.round(runwayWeeks / 1.75))) }).map((_, stackIdx) => {
+                      const stackHeight = Math.min(6, Math.max(1, Math.round((runwayWeeks - stackIdx) / 1.5)));
+                      return (
+                        <div key={stackIdx} className="flex flex-col-reverse items-center">
+                          {Array.from({ length: stackHeight }).map((_, coinIdx) => (
+                            <div
+                              key={coinIdx}
+                              className="w-3 h-0.5 sm:w-4 sm:h-1.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border border-yellow-200/90 shadow-xs -mt-0.5"
+                            />
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
                   {runwayWeeks <= 2 && (
-                    <span className="text-[9px] font-bold text-rose-300 animate-pulse ml-1 drop-shadow-md">
+                    <span className="block text-[8px] sm:text-[9px] font-bold text-rose-300 animate-pulse mt-0.5 text-right drop-shadow-md">
                       ⚠️ Low Runway (&lt;2w)
                     </span>
                   )}
