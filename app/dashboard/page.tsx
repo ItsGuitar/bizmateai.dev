@@ -654,12 +654,9 @@ export default function DashboardPage() {
                 
                 {/* Coins Stacks / Weeks of Runway on the Courtyard Lawn */}
                 <div
-                  className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 flex items-end justify-center gap-1 sm:gap-2 z-10 px-3 py-1 bg-black/20 backdrop-blur-xs rounded-xl"
+                  className="absolute top-1 sm:top-2 right-4 sm:right-8 md:right-12 flex items-end justify-center gap-1 sm:gap-1.5 z-10"
                   title={`Liquidity Runway: ${runwayWeeks} weeks of cash before 0`}
                 >
-                  <span className="text-[10px] font-mono font-bold text-amber-300 mr-1 hidden sm:inline">
-                    {runwayWeeks}w Runway
-                  </span>
                   {Array.from({ length: Math.min(8, Math.max(1, Math.round(runwayWeeks / 1.75))) }).map((_, stackIdx) => {
                     const stackHeight = Math.min(6, Math.max(1, Math.round((runwayWeeks - stackIdx) / 1.5)));
                     return (
@@ -674,7 +671,7 @@ export default function DashboardPage() {
                     );
                   })}
                   {runwayWeeks <= 2 && (
-                    <span className="text-[9px] font-bold text-rose-300 animate-pulse ml-1">
+                    <span className="text-[9px] font-bold text-rose-300 animate-pulse ml-1 drop-shadow-md">
                       ⚠️ Low Runway (&lt;2w)
                     </span>
                   )}
