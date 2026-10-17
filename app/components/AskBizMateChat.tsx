@@ -47,6 +47,7 @@ export function AskBizMateChat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastPageSlugRef = useRef<string>(pageSlug);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,18 +56,21 @@ export function AskBizMateChat() {
     }
   }, [isOpen, messages]);
 
-  // Update greeting when page changes
+  // Only announce when user actually navigates to a DIFFERENT page route
   useEffect(() => {
+    if (lastPageSlugRef.current === pageSlug) return;
+    lastPageSlugRef.current = pageSlug;
+
     setMessages((prev) => [
       ...prev,
       {
         id: `m-page-${Date.now()}`,
         sender: "bot",
-        text: `Switched to ${currentPersona.title} mode for /${pageSlug}. Ask me anything about this page!`,
+        text: `Switched to ${currentPersona.title} mode for /dashboard/${pageSlug === "home" ? "" : pageSlug}. How can I assist you on this screen?`,
         timestamp: "Just now",
       },
     ]);
-  }, [pathname, currentPersona.title, pageSlug]);
+  }, [pageSlug, currentPersona.title]);
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
