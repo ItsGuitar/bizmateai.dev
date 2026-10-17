@@ -265,22 +265,22 @@ body {
 @keyframes truckDriveRTL {
   0% {
     transform: translateX(0);
-    left: 105%;
+    left: 110%;
   }
   100% {
     transform: translateX(0);
-    left: -25%;
+    left: -35%;
   }
 }
 
 @keyframes truckDriveLTR {
   0% {
     transform: scaleX(-1);
-    left: -25%;
+    left: -35%;
   }
   100% {
     transform: scaleX(-1);
-    left: 105%;
+    left: 110%;
   }
 }
 

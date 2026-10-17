@@ -116,7 +116,7 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Hauler Alpha",
     direction: "rtl",
     lane: "upper",
-    duration: 13,
+    duration: 5.0,
     delay: 0,
     widthClass: "w-20 sm:w-28 md:w-32",
   },
@@ -126,8 +126,8 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Heavy Cargo Beta",
     direction: "ltr",
     lane: "lower",
-    duration: 15,
-    delay: -5,
+    duration: 5.0,
+    delay: 0,
     widthClass: "w-22 sm:w-30 md:w-36",
   },
   {
@@ -136,8 +136,8 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Carrier Gamma",
     direction: "rtl",
     lane: "upper",
-    duration: 12,
-    delay: -8,
+    duration: 5.0,
+    delay: 0,
     widthClass: "w-20 sm:w-28 md:w-32",
   },
   {
@@ -146,8 +146,8 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Express Delta",
     direction: "ltr",
     lane: "lower",
-    duration: 11,
-    delay: -3,
+    duration: 5.0,
+    delay: 0,
     widthClass: "w-18 sm:w-24 md:w-28",
   },
   {
@@ -156,8 +156,8 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Transporter Epsilon",
     direction: "rtl",
     lane: "upper",
-    duration: 14,
-    delay: -10,
+    duration: 5.0,
+    delay: 0,
     widthClass: "w-22 sm:w-30 md:w-36",
   },
   {
@@ -166,8 +166,8 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Freight Zeta",
     direction: "ltr",
     lane: "lower",
-    duration: 12.5,
-    delay: -7,
+    duration: 5.0,
+    delay: 0,
     widthClass: "w-20 sm:w-28 md:w-32",
   },
   {
@@ -176,43 +176,47 @@ const ALL_TRUCK_MODELS: DeliveryTruckConfig[] = [
     name: "Fleet Eta",
     direction: "rtl",
     lane: "upper",
-    duration: 11.5,
-    delay: -6,
+    duration: 5.0,
+    delay: 0,
     widthClass: "w-22 sm:w-30 md:w-36",
   },
 ];
 
-// Low-density, clear spacing across factory levels 1 to 5:
-// Level 1: 1 truck (truck2) - peaceful, rare truck
-// Level 2: 2 trucks (truck1, truck4) - 1 in each lane
-// Level 3: 3 trucks (truck2, truck5, truck6) - gentle flow
-// Level 4: 4 trucks (truck1, truck3, truck4, truck7) - active and clear
-// Level 5: 5 trucks (truck1, truck2, truck4, truck5, truck7) - prosperous fleet without clutter
+// Active trucks per factory level (1-5):
+// Crucial rules:
+// 1. Equal speed (duration) for all trucks within the same lane/level, preventing overtaking.
+// 2. Trucks in the same lane have equal duration and spaced delays (half-cycle spacing: delay = duration / 2).
+// 3. Lower lane (LTR: left to right) is in front with higher z-index (z-20) than upper lane (RTL: z-10).
 const LEVEL_TRUCKS: Record<1 | 2 | 3 | 4 | 5, DeliveryTruckConfig[]> = {
   1: [
-    { ...ALL_TRUCK_MODELS[1], duration: 18, delay: 0 },   // truck2
+    // Level 1: 1 truck passing smoothly
+    { ...ALL_TRUCK_MODELS[1], duration: 5.5, delay: 0 },
   ],
   2: [
-    { ...ALL_TRUCK_MODELS[0], duration: 16, delay: 0 },   // truck1 upper RTL
-    { ...ALL_TRUCK_MODELS[3], duration: 15, delay: -8 },  // truck4 lower LTR
+    // Level 2: 2 trucks (1 in each lane, identical speed 5.2s)
+    { ...ALL_TRUCK_MODELS[0], duration: 5.2, delay: 0 },
+    { ...ALL_TRUCK_MODELS[3], duration: 5.2, delay: -2.6 },
   ],
   3: [
-    { ...ALL_TRUCK_MODELS[1], duration: 14, delay: 0 },   // truck2 lower LTR
-    { ...ALL_TRUCK_MODELS[4], duration: 15, delay: -7 },  // truck5 upper RTL
-    { ...ALL_TRUCK_MODELS[5], duration: 13, delay: -11 }, // truck6 lower LTR
+    // Level 3: 3 trucks (speed 4.8s, 2 in lower lane perfectly spaced, 1 in upper lane)
+    { ...ALL_TRUCK_MODELS[0], duration: 4.8, delay: 0 },
+    { ...ALL_TRUCK_MODELS[1], duration: 4.8, delay: -1.2 },
+    { ...ALL_TRUCK_MODELS[5], duration: 4.8, delay: -3.6 },
   ],
   4: [
-    { ...ALL_TRUCK_MODELS[0], duration: 13, delay: 0 },   // truck1 upper RTL
-    { ...ALL_TRUCK_MODELS[2], duration: 12, delay: -6 },  // truck3 upper RTL
-    { ...ALL_TRUCK_MODELS[3], duration: 12, delay: -4 },  // truck4 lower LTR
-    { ...ALL_TRUCK_MODELS[6], duration: 13, delay: -10 }, // truck7 upper RTL
+    // Level 4: 4 trucks (speed 4.4s, 2 in each lane spaced by half duration 2.2s so NO overtaking)
+    { ...ALL_TRUCK_MODELS[0], duration: 4.4, delay: 0 },
+    { ...ALL_TRUCK_MODELS[4], duration: 4.4, delay: -2.2 },
+    { ...ALL_TRUCK_MODELS[1], duration: 4.4, delay: -1.1 },
+    { ...ALL_TRUCK_MODELS[3], duration: 4.4, delay: -3.3 },
   ],
   5: [
-    { ...ALL_TRUCK_MODELS[0], duration: 11, delay: 0 },   // truck1 upper RTL
-    { ...ALL_TRUCK_MODELS[1], duration: 12, delay: -6 },  // truck2 lower LTR
-    { ...ALL_TRUCK_MODELS[3], duration: 10, delay: -3 },  // truck4 lower LTR
-    { ...ALL_TRUCK_MODELS[4], duration: 12, delay: -8 },  // truck5 upper RTL
-    { ...ALL_TRUCK_MODELS[6], duration: 11, delay: -5 },  // truck7 upper RTL
+    // Level 5: 5 trucks (speed 4.0s, high fleet throughput, perfectly spaced with equal speed)
+    { ...ALL_TRUCK_MODELS[0], duration: 4.0, delay: 0 },
+    { ...ALL_TRUCK_MODELS[2], duration: 4.0, delay: -1.33 },
+    { ...ALL_TRUCK_MODELS[6], duration: 4.0, delay: -2.66 },
+    { ...ALL_TRUCK_MODELS[1], duration: 4.0, delay: -0.66 },
+    { ...ALL_TRUCK_MODELS[3], duration: 4.0, delay: -2.66 },
   ],
 };
 
@@ -717,7 +721,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Roadway with Animated Delivery Trucks */}
-                <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-600 dark:bg-slate-700 overflow-hidden shadow-inner">
+                <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-600 dark:bg-slate-700 shadow-inner">
                   {/* Road Center Divider Dashed Line */}
                   <div
                     className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 opacity-80 pointer-events-none z-0"
@@ -730,14 +734,15 @@ export default function DashboardPage() {
                   {/* Delivery Trucks active for this Factory Level */}
                   {LEVEL_TRUCKS[currentFactoryLevel].map((truck) => {
                     const isUpper = truck.lane === "upper";
+                    const isLTR = truck.direction === "ltr";
                     return (
                       <div
                         key={truck.id}
-                        className={`absolute z-10 pointer-events-none transition-opacity duration-500 ${
-                          truck.direction === "rtl" ? "animate-truck-rtl" : "animate-truck-ltr"
+                        className={`absolute pointer-events-none transition-opacity duration-500 ${
+                          isLTR ? "z-20 animate-truck-ltr" : "z-10 animate-truck-rtl"
                         } ${truck.widthClass}`}
                         style={{
-                          top: isUpper ? "0px" : "calc(50% - 2px)",
+                          top: isUpper ? "-14px" : "calc(50% - 10px)",
                           animationDuration: `${truck.duration}s`,
                           animationDelay: `${truck.delay}s`,
                         }}
