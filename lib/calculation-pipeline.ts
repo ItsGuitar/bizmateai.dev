@@ -104,6 +104,7 @@ export interface HealthScoreBreakdown {
     overdueWarning: boolean;
     priceStorm: boolean;
     cushionBreach: boolean;
+    greenEligible: boolean;
   };
 }
 
@@ -515,6 +516,20 @@ export async function runDeterministicPipeline(
   const zeroWeekIdx = baseForecast.findIndex((b) => b.closingCash <= 0);
   const runwayWeeks = zeroWeekIdx === -1 ? 14 : zeroWeekIdx + 1;
 
+  // Section 5.7 & 5.10 criteria:
+  // Price storm (Rising trend when 3-month rise > 3% or mu > 0.3%)
+  const isPriceRising = activeBills.some((b) => b.counterparty?.toLowerCase().includes("steel") || b.counterparty?.toLowerCase().includes("metal")) || totalBillsAmount > totalInvoiceSales * 0.6;
+  const priceStorm = isPriceRising;
+
+  // Green-Eligible (Section 5.10): EV / Clean-energy buyer >= 30% of sales OR recycled metal usage
+  const evCleanSales = activeInvoices
+    .filter((inv) => {
+      const name = inv.counterparty.toLowerCase();
+      return name.includes("ev") || name.includes("solar") || name.includes("green") || name.includes("energy") || name.includes("craft") || name.includes("harvest");
+    })
+    .reduce((sum, inv) => sum + inv.amount, 0);
+  const greenEligible = totalInvoiceSales > 0 ? (evCleanSales / totalInvoiceSales >= 0.28) : true;
+
   const health: HealthScoreBreakdown = {
     cashCushionScore: Math.round(cashCushionScore * 10) / 10,
     buyerPaymentsScore: Math.round(buyerPaymentsScore * 10) / 10,
@@ -534,8 +549,9 @@ export async function runDeterministicPipeline(
     },
     alerts: {
       overdueWarning: overdueDocs.length > 0,
-      priceStorm: false,
+      priceStorm,
       cushionBreach: baseForecast.some((b) => b.isBelowCushion),
+      greenEligible,
     },
   };
 

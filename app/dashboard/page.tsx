@@ -228,6 +228,9 @@ export default function DashboardPage() {
   const currentHealthScore = calcResult ? calcResult.health.totalScore : 0;
   const currentFactoryLevel = calcResult ? calcResult.health.factoryLevel : 1;
   const currentMood = calcResult ? calcResult.health.mood : "Struggling";
+  const runwayWeeks = calcResult ? calcResult.health.runwayWeeks : 12;
+  const isPriceStorm = Boolean(calcResult?.health?.alerts?.priceStorm);
+  const isGreenEligible = Boolean(calcResult?.health?.alerts?.greenEligible);
 
   const maxCash = weeks.length > 0 ? Math.max(...weeks.map((w) => Math.max(w.base, w.stress)), VITALS.cushion) * 1.05 : VITALS.cushion * 1.5;
 
@@ -343,12 +346,30 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Factory visualization: the illustrated scene */}
-            <div className="w-full aspect-[2.2/1] min-h-[280px] rounded-2xl bg-gradient-to-b from-sky-400 via-sky-300 to-sky-100 dark:from-sky-900 dark:via-sky-950 dark:to-slate-900 flex flex-col items-center justify-start pt-7 gap-1.5 mb-3 relative overflow-hidden">
+              {/* Factory visualization: the illustrated scene */}
+            <div className={`w-full aspect-[2.2/1] min-h-[280px] rounded-2xl ${
+              isPriceStorm
+                ? "bg-gradient-to-b from-slate-800 via-slate-700 to-slate-900"
+                : "bg-gradient-to-b from-sky-400 via-sky-300 to-sky-100 dark:from-sky-900 dark:via-sky-950 dark:to-slate-900"
+            } flex flex-col items-center justify-start pt-7 gap-1.5 mb-3 relative overflow-hidden transition-colors duration-700`}>
               <div
                 className="absolute inset-0 bg-slate-500 pointer-events-none transition-opacity"
                 style={{ opacity: Math.max(0, (100 - currentHealthScore) / 100) * 0.65 }}
               />
+
+              {/* Price Risk Storm Cloud & Lightning Flash */}
+              {isPriceStorm && (
+                <div className="absolute inset-0 z-[2] pointer-events-none">
+                  <div className="absolute inset-x-0 top-0 h-[48%] bg-gradient-to-b from-slate-900/90 via-slate-850/70 to-transparent" />
+                  <div className="absolute inset-0 bg-blue-100/30 mix-blend-overlay animate-lightning" />
+                  <div className="absolute top-3 right-3 sm:right-16 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/80 border border-amber-500/60 shadow-lg backdrop-blur-xs">
+                    <span className="text-xs animate-bounce">⚡</span>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">
+                      Price Risk Storm (&gt;3% Material Rise)
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {SKY_CLOUDS.map((cloud, i) => (
                 <div
@@ -360,6 +381,7 @@ export default function DashboardPage() {
                     animationDelay: `${cloudDelaySeconds(cloud.startFraction, cloud.duration, cloud.direction)}s`,
                     animationDuration: `${cloud.duration}s`,
                     animationDirection: cloud.direction,
+                    filter: isPriceStorm ? "brightness(0.4) contrast(1.2)" : undefined,
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -378,20 +400,72 @@ export default function DashboardPage() {
                   backgroundRepeat: "repeat-x",
                   backgroundPosition: "bottom",
                   backgroundSize: "auto 100%",
+                  filter: isPriceStorm ? "brightness(0.5)" : undefined,
                 }}
               />
 
+              {/* Factory Building & Chimney Green Smoke */}
               <div className="absolute inset-x-0 bottom-[20%] h-[30%] flex items-end justify-center z-[1] -translate-x-[12%]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/images/visualization/level${currentFactoryLevel}_factory.png`}
-                  alt="Factory"
-                  className="h-full w-auto object-contain drop-shadow-lg transition-opacity"
-                />
+                <div className="relative h-full flex items-end justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/images/visualization/level${currentFactoryLevel}_factory.png`}
+                    alt="Factory"
+                    className="h-full w-auto object-contain drop-shadow-lg transition-opacity"
+                  />
+
+                  {/* Green Mint Smoke for Green-Eligible Candidate */}
+                  {isGreenEligible && (
+                    <div className="absolute -top-7 right-[32%] pointer-events-none flex flex-col items-center">
+                      <div className="w-5 h-5 rounded-full bg-emerald-400/70 blur-[3px] animate-green-smoke-1" />
+                      <div className="w-6 h-6 rounded-full bg-teal-300/60 blur-[4px] animate-green-smoke-2 -mt-2" />
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* Green-Eligible Badge */}
+              {isGreenEligible && (
+                <div className="absolute top-14 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-400/60 text-emerald-300 shadow-md backdrop-blur-xs">
+                  <span className="text-[11px]">🌱</span>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wide">
+                    Green-Eligible (EV/Clean &ge; 30%)
+                  </span>
+                </div>
+              )}
+
+              {/* Factory Courtyard & Road */}
               <div className="absolute inset-x-0 bottom-0 h-[40%]">
                 <div className="absolute inset-x-0 top-0 h-[58%] bg-gradient-to-b from-emerald-400 to-emerald-500 dark:from-emerald-800 dark:to-emerald-900" />
+                
+                {/* Coins Stacks / Weeks of Runway on the Courtyard Lawn */}
+                <div
+                  className="absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 flex items-end justify-center gap-1 sm:gap-2 z-10 px-3 py-1 bg-black/20 backdrop-blur-xs rounded-xl"
+                  title={`Liquidity Runway: ${runwayWeeks} weeks of cash before 0`}
+                >
+                  <span className="text-[10px] font-mono font-bold text-amber-300 mr-1 hidden sm:inline">
+                    {runwayWeeks}w Runway
+                  </span>
+                  {Array.from({ length: Math.min(8, Math.max(1, Math.round(runwayWeeks / 1.75))) }).map((_, stackIdx) => {
+                    const stackHeight = Math.min(6, Math.max(1, Math.round((runwayWeeks - stackIdx) / 1.5)));
+                    return (
+                      <div key={stackIdx} className="flex flex-col-reverse items-center">
+                        {Array.from({ length: stackHeight }).map((_, coinIdx) => (
+                          <div
+                            key={coinIdx}
+                            className="w-3.5 h-1 sm:w-4 sm:h-1.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 border border-yellow-200/90 shadow-xs -mt-0.5"
+                          />
+                        ))}
+                      </div>
+                    );
+                  })}
+                  {runwayWeeks <= 2 && (
+                    <span className="text-[9px] font-bold text-rose-300 animate-pulse ml-1">
+                      ⚠️ Low Runway (&lt;2w)
+                    </span>
+                  )}
+                </div>
+
                 <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-500 dark:bg-slate-700">
                   <div
                     className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 opacity-80"

@@ -222,3 +222,42 @@ body {
   pointer-events: none;
   background: linear-gradient(105deg, transparent 48%, rgba(0, 0, 0, 0.06) 49%, transparent 50%);
 }
+
+/* Green Mint Smoke Floating from Chimney */
+@keyframes greenSmokeRise {
+  0% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateY(-24px) scale(1.15) translateX(4px);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-48px) scale(1.4) translateX(-2px);
+    opacity: 0;
+  }
+}
+
+.animate-green-smoke-1 {
+  animation: greenSmokeRise 2.8s ease-out infinite;
+}
+
+.animate-green-smoke-2 {
+  animation: greenSmokeRise 3.2s ease-out infinite 1.2s;
+}
+
+/* Lightning flash in Price Risk Storm */
+@keyframes lightningFlash {
+  0%, 92%, 100% {
+    opacity: 0;
+  }
+  94%, 97% {
+    opacity: 0.85;
+  }
+}
+
+.animate-lightning {
+  animation: lightningFlash 4.5s infinite;
+}
+
