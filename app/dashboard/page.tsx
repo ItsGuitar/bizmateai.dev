@@ -573,17 +573,17 @@ export default function DashboardPage() {
 
               {/* Price Risk Storm Cloud, Realistic Rain Streaks & Lightning Flash */}
               {isPriceStorm && (
-                <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-slate-900/95 via-slate-850/80 to-transparent" />
-                  <div className="absolute inset-0 bg-blue-100/30 mix-blend-overlay animate-lightning" />
+                <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-[60%] bg-gradient-to-b from-slate-950/95 via-slate-900/85 to-transparent" />
+                  <div className="absolute inset-0 bg-blue-100/35 mix-blend-overlay animate-lightning" />
                   
-                  {/* Dense Realistic Slanted Rain Streaks */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {Array.from({ length: 28 }).map((_, idx) => {
-                      const leftPos = (idx * 3.65 + (idx % 3) * 1.5) % 100;
-                      const duration = 0.55 + ((idx * 7) % 5) * 0.08; // 0.55s - 0.95s
-                      const delay = -(((idx * 13) % 20) / 10);        // staggered negative delay
-                      const streakHeight = 28 + ((idx * 9) % 24);     // 28px - 52px
+                  {/* Heavy Realistic Slanted Rain Streaks */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {Array.from({ length: 42 }).map((_, idx) => {
+                      const leftPos = (idx * 2.45 + (idx % 4) * 1.8) % 102;
+                      const duration = 0.45 + ((idx * 7) % 6) * 0.07; // 0.45s - 0.85s (fast rain)
+                      const delay = -(((idx * 11) % 15) / 10);        // staggered timing
+                      const streakHeight = 35 + ((idx * 8) % 30);     // 35px - 65px
                       return (
                         <div
                           key={idx}
@@ -593,22 +593,34 @@ export default function DashboardPage() {
                             height: `${streakHeight}px`,
                             animationDuration: `${duration}s`,
                             animationDelay: `${delay}s`,
-                            opacity: 0.6 + ((idx % 4) * 0.1),
+                            opacity: 0.75 + ((idx % 3) * 0.12),
                           }}
                         />
                       );
                     })}
                   </div>
+                </div>
+              )}
 
-                  {/* Price Risk Storm Badge positioned at top right */}
-                  <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/85 border border-amber-500/70 shadow-lg backdrop-blur-xs">
+              {/* Status Badges Stack (Top-Right): Price Risk Storm & Green-Eligible */}
+              <div className="absolute top-3 right-3 z-30 flex flex-col items-end gap-1.5 pointer-events-none">
+                {isPriceStorm && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/90 border border-amber-500/80 shadow-lg backdrop-blur-xs animate-in fade-in slide-in-from-top-1 duration-300">
                     <span className="text-xs animate-bounce">⚡</span>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 drop-shadow-sm">
                       Price Risk Storm (&gt;3% Material Rise)
                     </span>
                   </div>
-                </div>
-              )}
+                )}
+                {isGreenEligible && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-400/80 text-emerald-300 shadow-lg backdrop-blur-xs animate-in fade-in slide-in-from-top-1 duration-300">
+                    <span className="text-[11px]">🌱</span>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wide drop-shadow-sm">
+                      Green-Eligible (EV/Clean &ge; 30%)
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {SKY_CLOUDS.map((cloud, i) => (
                 <div
@@ -662,16 +674,6 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-
-              {/* Green-Eligible Badge */}
-              {isGreenEligible && (
-                <div className="absolute top-14 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-400/60 text-emerald-300 shadow-md backdrop-blur-xs">
-                  <span className="text-[11px]">🌱</span>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wide">
-                    Green-Eligible (EV/Clean &ge; 30%)
-                  </span>
-                </div>
-              )}
 
               {/* Factory Courtyard & Road */}
               <div className="absolute inset-x-0 bottom-0 h-[40%]">
