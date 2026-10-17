@@ -177,17 +177,14 @@ export default function TrustPage() {
         </div>
 
         {/* Agent bar: Policy Guard is plain code, not a model, and says so */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1.5 shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-              <Image
-                src={guard.botAvatar}
-                alt={guard.name}
-                width={44}
-                height={44}
-                className="w-full h-full object-contain select-none pointer-events-none"
-              />
-            </div>
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0 z-10">
+            <span
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              style={{ backgroundColor: `${guard.color}18`, color: guard.color }}
+            >
+              {guard.emoji}
+            </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{guard.name}</span>
@@ -200,9 +197,18 @@ export default function TrustPage() {
               </p>
             </div>
           </div>
-          <span className="text-xs font-semibold px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 shrink-0">
-            {pendingCount} pending approval{pendingCount === 1 ? "" : "s"}
-          </span>
+          <div className="flex items-center gap-3 shrink-0 z-10">
+            <Image
+              src="/images/bot06_stand_neutral.png"
+              alt=""
+              width={46}
+              height={46}
+              className="w-11 h-11 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+            />
+            <span className="text-xs font-semibold px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 shrink-0">
+              {pendingCount} pending approval{pendingCount === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
 
         {/* Permission tiers */}

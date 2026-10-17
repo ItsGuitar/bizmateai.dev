@@ -204,17 +204,14 @@ export default function ProcurementPage() {
         </div>
 
         {/* Agent bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1.5 shrink-0 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50">
-              <Image
-                src={procurement.botAvatar}
-                alt={procurement.name}
-                width={44}
-                height={44}
-                className="w-full h-full object-contain select-none pointer-events-none"
-              />
-            </div>
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0 z-10">
+            <span
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              style={{ backgroundColor: `${procurement.color}18`, color: procurement.color }}
+            >
+              {procurement.emoji}
+            </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{procurement.name}</span>
@@ -227,6 +224,13 @@ export default function ProcurementPage() {
               </p>
             </div>
           </div>
+          <Image
+            src="/images/bot05_box_side.png"
+            alt=""
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+          />
         </div>
 
         {/* Material Selector & Price Forecast Band */}

@@ -294,17 +294,14 @@ export default function FinancingPage() {
         </div>
 
         {/* Agent bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center p-1.5 shrink-0 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50">
-              <Image
-                src={financing.botAvatar}
-                alt={financing.name}
-                width={44}
-                height={44}
-                className="w-full h-full object-contain select-none pointer-events-none"
-              />
-            </div>
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0 z-10">
+            <span
+              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              style={{ backgroundColor: `${financing.color}18`, color: financing.color }}
+            >
+              {financing.emoji}
+            </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{financing.name}</span>
@@ -320,7 +317,14 @@ export default function FinancingPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <div className="flex items-center gap-3 shrink-0 flex-wrap z-10">
+            <Image
+              src="/images/bot09_run.png"
+              alt=""
+              width={46}
+              height={46}
+              className="w-11 h-11 object-contain select-none pointer-events-none opacity-85 shrink-0 hidden sm:block drop-shadow-xs"
+            />
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
               {([
                 { key: "base" as const, label: "Base case" },
