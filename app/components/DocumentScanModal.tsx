@@ -171,12 +171,20 @@ export function DocumentScanModal({
 
         // Subcase B: Scanned image PDF -> REQUIRES OCR FALLBACK
         setIngestMethod("ocr_vision");
+        setPdfPreviewText(data.previewText || "PDF document content");
+        setStep("redact");
+        // For PDF in redaction viewer, set a placeholder preview or direct proceed
+        setImageSrc("/images/bot08_tablet.png");
+        return;
       } catch (err) {
         console.warn("Smart PDF check failed, proceeding to image OCR:", err);
+        setErrorMsg("Failed to process PDF text. Please ensure file is not password protected.");
+        setStep("upload");
+        return;
       }
     }
 
-    // 3. IMAGE FILES OR SCANNED PDF -> PROCEED TO REDACTION & VISION OCR
+    // 3. IMAGE FILES (PNG, JPG, WEBP) -> PROCEED TO REDACTION & VISION OCR
     setIngestMethod("ocr_vision");
     const reader = new FileReader();
     reader.onload = (event) => {

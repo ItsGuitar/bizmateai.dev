@@ -16,28 +16,53 @@ export interface SmartIngestResponse {
   message: string;
 }
 
-// Helper to extract text from PDF buffer using pdf2json
+// Helper to extract text from PDF buffer using pdf2json with timeout guard
 function extractTextFromPdf(buffer: Buffer): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
+    let settled = false;
+
+    // 3.5-second safety timeout so PDF never hangs indefinitely
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        console.warn("PDF parse timed out after 3.5s, proceeding with empty text fallback");
+        resolve("");
+      }
+    }, 3500);
+
     try {
       const pdfParser = new (PDFParser as any)(null, 1);
 
       pdfParser.on("pdfParser_dataError", (errData: any) => {
-        reject(new Error(errData?.parserError || "Failed to parse PDF"));
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          console.warn("PDF parser dataError:", errData);
+          resolve("");
+        }
       });
 
       pdfParser.on("pdfParser_dataReady", () => {
-        try {
-          const rawText = pdfParser.getRawTextContent() || "";
-          resolve(rawText.trim());
-        } catch (e) {
-          resolve("");
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          try {
+            const rawText = pdfParser.getRawTextContent() || "";
+            resolve(rawText.trim());
+          } catch (e) {
+            resolve("");
+          }
         }
       });
 
       pdfParser.parseBuffer(buffer);
     } catch (err) {
-      reject(err);
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        console.warn("PDF parser exception:", err);
+        resolve("");
+      }
     }
   });
 }
@@ -177,8 +202,8 @@ export async function POST(req: Request) {
       // Clean non-printable characters and whitespace
       const cleanText = extractedText.replace(/\s+/g, " ").trim();
 
-      // THRESHOLD CHECK: If extracted text has meaningful content (> 60 characters), it's a Digital Text PDF
-      if (cleanText.length >= 60) {
+      // THRESHOLD CHECK: If extracted text has meaningful content (> 15 characters), it's a Digital Text PDF
+      if (cleanText.length >= 15) {
         // Fast LLM-assisted text structuring (text-only is ~20x cheaper and 5x faster than vision OCR)
         const masking = createMaskingAdapter();
         const maskedPrompt = masking.mask("company", "BizMateAI SME", "Company");
