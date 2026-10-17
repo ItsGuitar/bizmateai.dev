@@ -89,7 +89,7 @@ export default function WelcomePage() {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal max-w-lg mt-2 leading-relaxed animate-fade-in-up delay-200">
-            Your unified financial copilot. Radar liquidity projections, lowest-cost capital, and zero surprise payments.
+            Your unified financial copilot. See cash shortfalls before they happen, get the cheapest capital, and never get surprised by a payment.
           </p>
         </div>
 
@@ -175,7 +175,7 @@ export default function WelcomePage() {
             How BizMateAI Powers Your Business
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            Automating cash radar, working capital, and AR follow-ups under deterministic trust.
+            Automating cash radar, working capital, and AR follow-ups, always with your final OK.
           </p>
         </div>
 

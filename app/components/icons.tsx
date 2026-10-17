@@ -87,3 +87,34 @@ export function BankIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function ReceiptIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 3h12v18l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.5V3z" />
+      <path d="M8.5 8h7M8.5 11.5h7M8.5 15h4" />
+    </svg>
+  );
+}
+
+export function ScanIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8" />
+      <path d="M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8" />
+      <path d="M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16" />
+      <path d="M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16" />
+      <path d="M4 12h16" />
+    </svg>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3v12" />
+      <path d="M7.5 10.5 12 15l4.5-4.5" />
+      <path d="M4 19.5h16" />
+    </svg>
+  );
+}

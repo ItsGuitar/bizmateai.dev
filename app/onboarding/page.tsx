@@ -195,7 +195,7 @@ export default function OnboardingPage() {
         <div className="w-full max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-8 relative z-10">
           <div className="mb-6 animate-fade-in-up flex items-center gap-3 sm:gap-4">
             <Image
-              src="/images/bot1.png"
+              src="/images/bot01.png"
               alt=""
               width={64}
               height={64}

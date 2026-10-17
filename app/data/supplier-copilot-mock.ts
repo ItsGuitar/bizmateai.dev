@@ -33,6 +33,117 @@ export const FACTORY = {
   greenEligible: true,
 };
 
+// --- Financing page: platform, WeBank ecosystem, supplier pool, green check, credit package ---
+// NEW_DESIGN.md Section 9 (Integrations and country packs, China pack + WeBank ecosystem links)
+// and Section 5.10 (green check). Platform and ecosystem facts are cited, illustrative figures;
+// nothing here is a live connection.
+
+export const PLATFORM = {
+  name: "National Financing Credit Service Platform",
+  nameLocal: "全国融资信用服务平台",
+  shortName: "信易贷",
+  description:
+    "Post one request and the platform shows it to connected banks, who offer matching loans. Banks still make the final call.",
+  source: "People's Daily / gov.cn, 11 Apr 2024 (NDRC officials on the 2024 implementation plan)",
+  benchmarkLabel: "1-year LPR",
+  benchmarkPct: 3.0,
+  benchmarkSource: "1-year Loan Prime Rate held at 3.0% through 2026 (PBoC; TrendForce data, 2026)",
+  facts: [
+    { value: "¥25.1 trillion", label: "lent by banks through the platform network by end-Feb 2024" },
+    { value: "¥5.9 trillion", label: "of that was credit (no-collateral) loans" },
+    { value: "21 national banks", label: "connected to the national platform" },
+    { value: "17 categories, 37 items", label: "of credit data shared with lenders under the 2024 plan" },
+  ],
+};
+
+export interface WeBankLink {
+  id: string;
+  title: string;
+  titleLocal: string;
+  badge: string;
+  description: string;
+  source: string;
+}
+
+export const WEBANK_ECOSYSTEM_LINKS: WeBankLink[] = [
+  {
+    id: "weiyedai",
+    title: "WeBank Weiyedai loans",
+    titleLocal: "微业贷",
+    badge: "Matched product, placeholder rate",
+    description:
+      "A popular small-business loan from WeBank. With your OK, BizMate could send your documents straight to them so you don't retype everything.",
+    source: "WeBank release, Feb 2025",
+  },
+  {
+    id: "fate",
+    title: "Shared credit scoring without sharing your data",
+    titleLocal: "联邦学习",
+    badge: "Future idea",
+    description:
+      "A technique (FATE) that lets a bank and BizMate train one credit model together, each keeping their own data private.",
+    source: "FATE repository",
+  },
+  {
+    id: "fisco-bcos",
+    title: "Tamper-proof record of your documents",
+    titleLocal: "金链盟开源工作组",
+    badge: "Future idea",
+    description:
+      "A shared ledger (FISCO BCOS) banks already use, so BizMate could prove your audit log and receivables were never altered.",
+    source: "FISCO BCOS documentation",
+  },
+  {
+    id: "wechat",
+    title: "Reminders and alerts on WeChat",
+    titleLocal: "微信",
+    badge: "Sandbox in this demo",
+    description: "Alerts and approved reminders go out on WeChat, where buyers and owners already are.",
+    source: "",
+  },
+];
+
+export const SUPPLIER_POOL = {
+  suppliersInPool: 14,
+  sharedAnchorBuyers: 3,
+  pooledDemand: 38000000,
+  rateCutPct: 0.6,
+  description:
+    "Each small loan is risky alone, but together as one bigger portfolio, with a government guarantee covering part of the loss, a bank can offer a better rate. Each supplier still borrows and repays on their own; you're not responsible for anyone else's loan.",
+};
+
+export const GREEN_CHECK = {
+  eligibleCandidate: true,
+  footprintTonnesCO2e: 3220,
+  evCleanEnergySalesPct: 38,
+  recycledMetalPct: 0,
+  recommendation:
+    "Switch 20% of cold-rolled steel to recycled (EAF) steel to cut about 1,290 t CO2e a year.",
+};
+
+export interface CreditPackageDoc {
+  id: string;
+  name: string;
+  nameLocal: string;
+  preparedBy: "you" | "bizmate";
+  note?: string;
+}
+
+export const CREDIT_PACKAGE_DOCS: CreditPackageDoc[] = [
+  { id: "license", name: "Business license", nameLocal: "营业执照", preparedBy: "you" },
+  { id: "legal-rep-id", name: "Legal representative ID", nameLocal: "法定代表人身份证明", preparedBy: "you" },
+  { id: "articles", name: "Articles of association", nameLocal: "公司章程", preparedBy: "you" },
+  { id: "financials", name: "Financial statements, 2 years + latest", nameLocal: "近两年及最近一期财务报表", preparedBy: "bizmate" },
+  { id: "bank-statements", name: "Bank statements, 12 months", nameLocal: "近12个月银行流水", preparedBy: "bizmate" },
+  { id: "tax", name: "Tax returns and tax credit rating", nameLocal: "纳税申报表 / 纳税信用等级", preparedBy: "you", note: "Download from the e-tax bureau" },
+  { id: "contracts", name: "Sales contracts and purchase orders", nameLocal: "购销合同 / 订单", preparedBy: "bizmate" },
+  { id: "receivables", name: "Verified receivables schedule", nameLocal: "应收账款明细及确权", preparedBy: "bizmate" },
+  { id: "forecast", name: "Cash-flow forecast", nameLocal: "现金流预测表", preparedBy: "bizmate" },
+  { id: "use-of-funds", name: "Use of funds statement", nameLocal: "借款用途说明", preparedBy: "bizmate" },
+  { id: "delivery", name: "Delivery performance history", nameLocal: "历史交货履约记录", preparedBy: "bizmate" },
+  { id: "auth", name: "Credit check authorisation (signed)", nameLocal: "征信查询授权书", preparedBy: "you", note: "Owner signs. BizMate never signs." },
+];
+
 export interface RankedIssue {
   id: string;
   title: string;
@@ -302,6 +413,162 @@ export const ORDER_PLAN_RUN = {
       title: "Request 60-day terms from the steel supplier",
       detail: "Covers the remaining gap · no financing fee",
       impact: "Closes the stress-case gap without a bank line",
+    },
+  ] satisfies ApprovalCard[],
+};
+
+// --- Receivables page: open invoices + the `collect` workflow run ---
+
+export interface Invoice {
+  id: string;
+  no: string;
+  buyerName: string;
+  amount: number;
+  issueDate: string; // ISO yyyy-mm-dd
+  dueDate: string; // ISO yyyy-mm-dd
+  method: "bank" | "e-IOU";
+  product: string;
+}
+
+// Shenzhen ElectroParts' invoice matches the ¥86,000 / 21-days-overdue callout already shown
+// in the Home dashboard's Lead's brief and the order_plan agent-room run above.
+export const OPEN_INVOICES: Invoice[] = [
+  {
+    id: "inv-1",
+    no: "INV-2026-0914",
+    buyerName: "Shenzhen ElectroParts",
+    amount: 86000,
+    issueDate: "2026-08-27",
+    dueDate: "2026-09-26",
+    method: "bank",
+    product: "Connector housings",
+  },
+  {
+    id: "inv-2",
+    no: "INV-2026-0922",
+    buyerName: "Chiang Mai Furniture",
+    amount: 58000,
+    issueDate: "2026-09-01",
+    dueDate: "2026-10-01",
+    method: "bank",
+    product: "Drawer slides",
+  },
+  {
+    id: "inv-3",
+    no: "INV-2026-0931",
+    buyerName: "Hanoi Textiles Co.",
+    amount: 310000,
+    issueDate: "2026-09-22",
+    dueDate: "2026-10-22",
+    method: "e-IOU",
+    product: "Woven fabric rolls",
+  },
+  {
+    id: "inv-4",
+    no: "INV-2026-0940",
+    buyerName: "Boutique Siam",
+    amount: 142500,
+    issueDate: "2026-10-06",
+    dueDate: "2026-11-05",
+    method: "bank",
+    product: "Packaging cartons",
+  },
+  {
+    id: "inv-5",
+    no: "INV-2026-0945",
+    buyerName: "Boutique Siam",
+    amount: 64000,
+    issueDate: "2026-10-20",
+    dueDate: "2026-12-20",
+    method: "e-IOU",
+    product: "Packaging cartons",
+  },
+];
+
+export const COLLECT_RUN = {
+  runId: "run_c41",
+  workflow: "collect" as const,
+  title: "Collect: 2 overdue invoices",
+  steps: [
+    { id: "list_overdue", label: "List overdue invoices" },
+    { id: "draft_shenzhen", label: "Draft reminder: Shenzhen ElectroParts" },
+    { id: "draft_chiangmai", label: "Draft reminder: Chiang Mai Furniture" },
+    { id: "cash_effect", label: "Work out the cash effect" },
+    { id: "guard_check", label: "Policy Guard: wording check" },
+  ] satisfies AgentRoomStep[],
+  events: [
+    {
+      id: "cev-1",
+      stageIndex: 0,
+      from: "receivables",
+      to: "lead",
+      statusText: "Checking every open invoice against its buyer's usual payment window",
+      text: "2 invoices are overdue: Shenzhen ElectroParts (¥86,000, 21 days) and Chiang Mai Furniture (¥58,000, 16 days). Both are past their expected payment date.",
+      tool: "list_overdue()",
+      reasoning: ["Shenzhen ElectroParts: due 26 Sep, 21 days overdue, past their p90 window → high risk", "Chiang Mai Furniture: due 1 Oct, 16 days overdue, inside their wider p90 window → late, not yet high risk"],
+      tier: 0,
+    },
+    {
+      id: "cev-2",
+      stageIndex: 1,
+      from: "receivables",
+      to: "lead",
+      statusText: "Drafting a reminder for Shenzhen ElectroParts",
+      text: "21 days overdue is step 3 of 5: a firm reminder, in English, over LINE and email. No threats, no legal language, just a clear restatement of the amount and due date.",
+      tool: "draft_reminder('shenzhen_electroparts')",
+      reasoning: ["Chase step from days overdue: 21 days → step 3 (Firm reminder)", "Channel and language from the buyer's contact record"],
+      tier: 0,
+    },
+    {
+      id: "cev-3",
+      stageIndex: 2,
+      from: "receivables",
+      to: "lead",
+      statusText: "Drafting a reminder for Chiang Mai Furniture",
+      text: "16 days overdue is step 3 as well. Drafting in Thai, over email; this buyer has no LINE contact on file.",
+      tool: "draft_reminder('chiang_mai_furniture')",
+      reasoning: ["Chase step from days overdue: 16 days → step 3 (Firm reminder)"],
+      tier: 0,
+    },
+    {
+      id: "cev-4",
+      stageIndex: 3,
+      from: "lead",
+      to: "financing",
+      statusText: "Working out what collecting both invoices does to the cash plan",
+      text: "Together, these two invoices are worth ¥144,000. Collecting them first covers part of the Guangzhou Motors financing gap for free, before any financing cost.",
+      tool: "forecast(weeks=26, plan='collect_first')",
+      reasoning: ["¥86,000 + ¥58,000 = ¥144,000", "Cheapest money first: own cash and collections before supplier terms or financing"],
+      tier: 0,
+    },
+    {
+      id: "cev-5",
+      stageIndex: 4,
+      from: "guard",
+      to: "lead",
+      statusText: "Checking both drafts for prohibited language",
+      text: "Both drafts pass: no threats, no legal claims, no contacts outside the buyer's listed record. Ready for your approval.",
+      tool: "guard_check(action='send_reminder')",
+      reasoning: ["Prohibited list: threats, legal claims, unlisted contacts (none present in either draft)"],
+      tier: 0,
+    },
+  ] satisfies AgentRoomEvent[],
+  approvals: [
+    {
+      id: "cappr-1",
+      agent: "receivables",
+      tier: 2,
+      title: "Send a reminder to Shenzhen ElectroParts",
+      detail: "Firm tone · LINE + email · invoice 21 days overdue",
+      impact: "+¥86,000 expected within 5 days of sending",
+    },
+    {
+      id: "cappr-2",
+      agent: "receivables",
+      tier: 2,
+      title: "Send a reminder to Chiang Mai Furniture",
+      detail: "Firm tone · email · invoice 16 days overdue",
+      impact: "+¥58,000 expected within 7 days of sending",
     },
   ] satisfies ApprovalCard[],
 };

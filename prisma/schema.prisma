@@ -23,6 +23,8 @@ model User {
   bankConnections UserBankConnection[]
   whatIfScenarios WhatIfScenario[]
   businessProfile BusinessProfile?
+  ingestedDocuments IngestedDocument[]
+  calculationSnapshot CalculationSnapshot?
 }
 
 model BusinessProfile {
@@ -114,4 +116,37 @@ model AuditLog {
   status      String   // DONE | SENT | FLAGGED | BLOCKED
   timestamp   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IngestedDocument {
+  id             String   @id @default(cuid())
+  userId         String
+  fileName       String
+  docType        String   // invoice | purchase_order | receipt | other
+  counterparty   String
+  docNumber      String
+  amount         Float
+  currency       String   @default("¥")
+  issueDate      String   // YYYY-MM-DD
+  dueDate        String?  // YYYY-MM-DD
+  termsDays      Int?     @default(30)
+  itemsJson      String?  // JSON stringified line items
+  isEnabled      Boolean  @default(true)
+  verifiedStatus String   @default("unverified") // verified | unverified
+  auditHash      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isEnabled])
+}
+
+model CalculationSnapshot {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  resultJson   String   // JSON string of PipelineOutput
+  activeCount  Int      @default(0)
+  calculatedAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

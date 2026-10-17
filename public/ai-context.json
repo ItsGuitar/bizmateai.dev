@@ -1,0 +1,1403 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-17T08:55:06.293Z",
+    "generatedBy": "dev-processing-button",
+    "asOf": "17 Oct 2026",
+    "version": 1
+  },
+  "company": {
+    "name": "Shenzhen Dragon Precision Manufacturing Co., Ltd.",
+    "pack": "China",
+    "currency": "¥",
+    "asOf": "17 Oct 2026",
+    "health": {
+      "score": 78,
+      "level": 4,
+      "mood": "Thriving"
+    },
+    "vitals": {
+      "cashNow": 1260000,
+      "cushion": 980000,
+      "runwayWeeks": 14,
+      "financingNeedLow": 650000,
+      "financingNeedHigh": 1400000
+    },
+    "factory": {
+      "level": 4,
+      "coins": 14,
+      "overdueWarning": true,
+      "priceStorm": true,
+      "greenEligible": true
+    },
+    "pastTwelveMonths": {
+      "ordersFulfilled": 142,
+      "revenueInvoiced": 9840000,
+      "avgBuyerGrade": "B+"
+    }
+  },
+  "issues": [
+    {
+      "id": "iss-1",
+      "title": "Shenzhen ElectroParts is 21 days overdue",
+      "detail": "¥86,000 outstanding · payment grade dropped B → C",
+      "severity": "high",
+      "amount": 86000,
+      "agent": "receivables",
+      "explain": "Shenzhen ElectroParts usually pays 12 days late. This invoice is already 21 days late, past their p90 window, so Receivables marked it high risk and is ready to draft a reminder once you approve."
+    },
+    {
+      "id": "iss-2",
+      "title": "Guangzhou Motors order needs financing",
+      "detail": "¥720,000 order · cash gap opens 15 Nov",
+      "severity": "high",
+      "amount": 720000,
+      "agent": "lead",
+      "explain": "The new order is profitable, but materials must be paid before Guangzhou Motors pays you. Financing is comparing supplier terms, a bank line and e-IOU discounting to cover the gap at the lowest cost."
+    },
+    {
+      "id": "iss-3",
+      "title": "Cold-rolled steel is up 4.2% this month",
+      "detail": "Lock-price window closes in 9 days",
+      "severity": "medium",
+      "amount": 0,
+      "agent": "procurement",
+      "explain": "Steel has risen for three months in a row. If the trend continues, the November lot gets more expensive the longer you wait. Procurement recommends locking the price now."
+    },
+    {
+      "id": "iss-4",
+      "title": "Stress case dips below cushion in week 7",
+      "detail": "Lowest point ¥820,000 vs ¥980,000 cushion",
+      "severity": "medium",
+      "amount": 160000,
+      "agent": "lead",
+      "explain": "If other buyers pay at the slow end of their usual range and steel stays at the high end, cash dips ¥160,000 below your safety cushion in week 7. This is covered by the financing plan in issue 2."
+    }
+  ],
+  "biggestMoves": [
+    {
+      "id": "mv-1",
+      "text": "Cold-rolled steel +4.2% this month",
+      "direction": "up"
+    },
+    {
+      "id": "mv-2",
+      "text": "Shenzhen ElectroParts grade B → C",
+      "direction": "down"
+    },
+    {
+      "id": "mv-3",
+      "text": "Safety margin 2 weeks tighter after the new order",
+      "direction": "down"
+    },
+    {
+      "id": "mv-4",
+      "text": "Guangzhou Motors order adds ¥720,000 revenue",
+      "direction": "up"
+    }
+  ],
+  "cashForecast": [
+    {
+      "week": 1,
+      "label": "W1",
+      "base": 1260000,
+      "stress": 1260000
+    },
+    {
+      "week": 2,
+      "label": "W2",
+      "base": 1205000,
+      "stress": 1180000
+    },
+    {
+      "week": 3,
+      "label": "W3",
+      "base": 1150000,
+      "stress": 1090000
+    },
+    {
+      "week": 4,
+      "label": "W4",
+      "base": 1300000,
+      "stress": 1210000
+    },
+    {
+      "week": 5,
+      "label": "W5",
+      "base": 1265000,
+      "stress": 1140000
+    },
+    {
+      "week": 6,
+      "label": "W6",
+      "base": 1120000,
+      "stress": 960000
+    },
+    {
+      "week": 7,
+      "label": "W7",
+      "base": 1080000,
+      "stress": 890000
+    },
+    {
+      "week": 8,
+      "label": "W8",
+      "base": 1040000,
+      "stress": 840000
+    },
+    {
+      "week": 9,
+      "label": "W9",
+      "base": 1010000,
+      "stress": 820000
+    },
+    {
+      "week": 10,
+      "label": "W10",
+      "base": 1150000,
+      "stress": 960000
+    },
+    {
+      "week": 11,
+      "label": "W11",
+      "base": 1320000,
+      "stress": 1140000
+    },
+    {
+      "week": 12,
+      "label": "W12",
+      "base": 1480000,
+      "stress": 1300000
+    },
+    {
+      "week": 13,
+      "label": "W13",
+      "base": 1550000,
+      "stress": 1380000
+    },
+    {
+      "week": 14,
+      "label": "W14",
+      "base": 1600000,
+      "stress": 1420000
+    },
+    {
+      "week": 15,
+      "label": "W15",
+      "base": 1550000,
+      "stress": 1370000
+    },
+    {
+      "week": 16,
+      "label": "W16",
+      "base": 1620000,
+      "stress": 1430000
+    },
+    {
+      "week": 17,
+      "label": "W17",
+      "base": 1700000,
+      "stress": 1500000
+    },
+    {
+      "week": 18,
+      "label": "W18",
+      "base": 1680000,
+      "stress": 1480000
+    },
+    {
+      "week": 19,
+      "label": "W19",
+      "base": 1750000,
+      "stress": 1540000
+    },
+    {
+      "week": 20,
+      "label": "W20",
+      "base": 1820000,
+      "stress": 1600000
+    },
+    {
+      "week": 21,
+      "label": "W21",
+      "base": 1800000,
+      "stress": 1580000
+    },
+    {
+      "week": 22,
+      "label": "W22",
+      "base": 1860000,
+      "stress": 1630000
+    },
+    {
+      "week": 23,
+      "label": "W23",
+      "base": 1900000,
+      "stress": 1670000
+    },
+    {
+      "week": 24,
+      "label": "W24",
+      "base": 1950000,
+      "stress": 1710000
+    },
+    {
+      "week": 25,
+      "label": "W25",
+      "base": 2000000,
+      "stress": 1750000
+    },
+    {
+      "week": 26,
+      "label": "W26",
+      "base": 2050000,
+      "stress": 1790000
+    }
+  ],
+  "order": {
+    "input": {
+      "buyerName": "Guangzhou Motors",
+      "material": "Cold-rolled steel",
+      "qty": 260000,
+      "pricePerUnit": 11.5,
+      "deliveryDate": "2026-11-15",
+      "termsDays": 45,
+      "kgPerUnit": 1.15,
+      "conversionCostPerUnit": 4.35,
+      "supplierTermsDays": 30
+    },
+    "check": {
+      "input": {
+        "buyerName": "Guangzhou Motors",
+        "material": "Cold-rolled steel",
+        "qty": 260000,
+        "pricePerUnit": 11.5,
+        "deliveryDate": "2026-11-15",
+        "termsDays": 45,
+        "kgPerUnit": 1.15,
+        "conversionCostPerUnit": 4.35,
+        "supplierTermsDays": 30
+      },
+      "buyer": {
+        "name": "Guangzhou Motors",
+        "mu": 12,
+        "sigma": 11,
+        "grade": "B",
+        "n": 1
+      },
+      "tonnes": 299,
+      "procureDate": "2026-10-21T00:00:00.000Z",
+      "supplierPayDate": "2026-11-20T00:00:00.000Z",
+      "dueDate": "2026-12-30T00:00:00.000Z",
+      "buyerPay": {
+        "expected": "2027-01-11T00:00:00.000Z",
+        "p10": "2026-12-28T00:00:00.000Z",
+        "p90": "2027-01-25T00:00:00.000Z"
+      },
+      "revenue": 2990000,
+      "materialCostMid": 1340118,
+      "materialCostLow": 1309919,
+      "materialCostHigh": 1370018,
+      "productionCost": 1131000,
+      "profitMid": 518882,
+      "profitP10": 488982,
+      "profitP90": 549081,
+      "cashGapDays": 52,
+      "financingNeedLow": 1350000,
+      "financingNeedHigh": 1750000,
+      "termMonths": 3,
+      "rateCeilingPct": 29.650399999999998,
+      "comfortableRatePct": 13.970914285714287,
+      "verdict": "take_it_with_financing",
+      "journey": [
+        {
+          "id": "take_order",
+          "label": "Take order",
+          "date": "2026-10-17T00:00:00.000Z",
+          "emoji": "📝"
+        },
+        {
+          "id": "buy_materials",
+          "label": "Buy materials",
+          "date": "2026-10-21T00:00:00.000Z",
+          "emoji": "📦"
+        },
+        {
+          "id": "make",
+          "label": "Make",
+          "date": "2026-11-03T00:00:00.000Z",
+          "emoji": "🏭"
+        },
+        {
+          "id": "deliver_invoice",
+          "label": "Deliver & invoice",
+          "date": "2026-11-15T00:00:00.000Z",
+          "emoji": "🚚"
+        },
+        {
+          "id": "pay_supplier",
+          "label": "Pay supplier",
+          "date": "2026-11-20T00:00:00.000Z",
+          "emoji": "💸"
+        },
+        {
+          "id": "buyer_pays",
+          "label": "Buyer pays",
+          "date": "2027-01-11T00:00:00.000Z",
+          "emoji": "🏦"
+        }
+      ]
+    },
+    "sensitivities": [
+      {
+        "label": "Material price +5%",
+        "profitDelta": -67005.90000000001,
+        "secondary": "need +¥100,000"
+      },
+      {
+        "label": "Selling price +5%",
+        "profitDelta": 149500
+      },
+      {
+        "label": "Order qty +10%",
+        "profitDelta": 51888.200000000186,
+        "secondary": "need +¥200,000"
+      },
+      {
+        "label": "Buyer pays 15 days later",
+        "profitDelta": 0,
+        "secondary": "cash gap +15 days"
+      }
+    ]
+  },
+  "buyers": [
+    {
+      "name": "Guangzhou Motors",
+      "mu": 12,
+      "sigma": 11,
+      "grade": "B",
+      "n": 1,
+      "currentGrade": "New",
+      "currentScore": 76.9,
+      "hasOverdue": false
+    },
+    {
+      "name": "Shenzhen ElectroParts",
+      "mu": 9,
+      "sigma": 8,
+      "grade": "A",
+      "n": 14,
+      "currentGrade": "B",
+      "currentScore": 74.9,
+      "hasOverdue": true
+    },
+    {
+      "name": "Boutique Siam",
+      "mu": 18,
+      "sigma": 15,
+      "grade": "B",
+      "n": 6,
+      "currentGrade": "B",
+      "currentScore": 66.7,
+      "hasOverdue": false
+    },
+    {
+      "name": "Hanoi Textiles Co.",
+      "mu": 4,
+      "sigma": 5,
+      "grade": "A",
+      "n": 22,
+      "currentGrade": "A",
+      "currentScore": 91.1,
+      "hasOverdue": false
+    },
+    {
+      "name": "Chiang Mai Furniture",
+      "mu": 28,
+      "sigma": 22,
+      "grade": "C",
+      "n": 3,
+      "currentGrade": "D",
+      "currentScore": 41.4,
+      "hasOverdue": true
+    }
+  ],
+  "materials": [
+    {
+      "name": "Cold-rolled steel",
+      "kgPerUnitDefault": 1.15,
+      "lowPerTonne": 4381,
+      "midPerTonne": 4482,
+      "highPerTonne": 4582
+    },
+    {
+      "name": "Aluminium coil",
+      "kgPerUnitDefault": 0.6,
+      "lowPerTonne": 18200,
+      "midPerTonne": 18950,
+      "highPerTonne": 19700
+    },
+    {
+      "name": "ABS resin",
+      "kgPerUnitDefault": 0.18,
+      "lowPerTonne": 9100,
+      "midPerTonne": 9400,
+      "highPerTonne": 9700
+    }
+  ],
+  "receivables": {
+    "openInvoices": [
+      {
+        "id": "inv-1",
+        "no": "INV-2026-0914",
+        "buyerName": "Shenzhen ElectroParts",
+        "amount": 86000,
+        "issueDate": "2026-08-27",
+        "dueDate": "2026-09-26",
+        "method": "bank",
+        "product": "Connector housings",
+        "payment": {
+          "expected": "2026-10-31T00:00:00.000Z",
+          "windowLo": "2026-10-22T00:00:00.000Z",
+          "windowHi": "2026-12-02T00:00:00.000Z",
+          "risk": "high",
+          "overdueDays": 21
+        },
+        "chase": {
+          "step": 3,
+          "label": "Firm reminder",
+          "tone": "Firm",
+          "maxOverdueDays": 21
+        }
+      },
+      {
+        "id": "inv-2",
+        "no": "INV-2026-0922",
+        "buyerName": "Chiang Mai Furniture",
+        "amount": 58000,
+        "issueDate": "2026-09-01",
+        "dueDate": "2026-10-01",
+        "method": "bank",
+        "product": "Drawer slides",
+        "payment": {
+          "expected": "2026-11-02T00:00:00.000Z",
+          "windowLo": "2026-10-20T00:00:00.000Z",
+          "windowHi": "2026-12-06T00:00:00.000Z",
+          "risk": "late",
+          "overdueDays": 16
+        },
+        "chase": {
+          "step": 3,
+          "label": "Firm reminder",
+          "tone": "Firm",
+          "maxOverdueDays": 21
+        }
+      },
+      {
+        "id": "inv-3",
+        "no": "INV-2026-0931",
+        "buyerName": "Hanoi Textiles Co.",
+        "amount": 310000,
+        "issueDate": "2026-09-22",
+        "dueDate": "2026-10-22",
+        "method": "e-IOU",
+        "product": "Woven fabric rolls",
+        "payment": {
+          "expected": "2026-10-26T00:00:00.000Z",
+          "windowLo": "2026-10-20T00:00:00.000Z",
+          "windowHi": "2026-11-01T00:00:00.000Z",
+          "risk": "none",
+          "overdueDays": 0
+        },
+        "chase": {
+          "step": 1,
+          "label": "Friendly reminder",
+          "tone": "Friendly",
+          "maxOverdueDays": 7
+        }
+      },
+      {
+        "id": "inv-4",
+        "no": "INV-2026-0940",
+        "buyerName": "Boutique Siam",
+        "amount": 142500,
+        "issueDate": "2026-10-06",
+        "dueDate": "2026-11-05",
+        "method": "bank",
+        "product": "Packaging cartons",
+        "payment": {
+          "expected": "2026-11-23T00:00:00.000Z",
+          "windowLo": "2026-11-04T00:00:00.000Z",
+          "windowHi": "2026-12-12T00:00:00.000Z",
+          "risk": "none",
+          "overdueDays": 0
+        },
+        "chase": {
+          "step": 1,
+          "label": "Friendly reminder",
+          "tone": "Friendly",
+          "maxOverdueDays": 7
+        }
+      },
+      {
+        "id": "inv-5",
+        "no": "INV-2026-0945",
+        "buyerName": "Boutique Siam",
+        "amount": 64000,
+        "issueDate": "2026-10-20",
+        "dueDate": "2026-12-20",
+        "method": "e-IOU",
+        "product": "Packaging cartons",
+        "payment": {
+          "expected": "2027-01-07T00:00:00.000Z",
+          "windowLo": "2026-12-19T00:00:00.000Z",
+          "windowHi": "2027-01-26T00:00:00.000Z",
+          "risk": "none",
+          "overdueDays": 0
+        },
+        "chase": {
+          "step": 1,
+          "label": "Friendly reminder",
+          "tone": "Friendly",
+          "maxOverdueDays": 7
+        }
+      }
+    ]
+  },
+  "financing": {
+    "companyProfile": {
+      "yearsOperating": 6,
+      "taxRating": "B",
+      "healthScore": 78,
+      "hasConfirmedPOFromABBuyer": false,
+      "goodReceivablesAmount": 516500,
+      "eIOUsHeldAmount": 374000,
+      "hasProperty": true,
+      "isGreenEligible": true
+    },
+    "catalog": [
+      {
+        "id": "inclusive-credit",
+        "name": "Inclusive credit loan",
+        "nameLocal": "普惠信用贷",
+        "rateLow": 4.5,
+        "rateHigh": 12,
+        "feePct": 0.2,
+        "greenDiscountPct": 0.2,
+        "capType": "fixed",
+        "capValue": 500000,
+        "termMonths": 12,
+        "repaymentType": "annuity",
+        "security": "Unsecured",
+        "speedDays": 3,
+        "documents": [
+          "Business license",
+          "Tax filing (last 12 months)"
+        ],
+        "connected": true,
+        "source": "National Financing Credit Service Platform (信易贷)"
+      },
+      {
+        "id": "order-financing",
+        "name": "Order financing",
+        "nameLocal": "订单融资",
+        "rateLow": 5,
+        "rateHigh": 11,
+        "feePct": 0.3,
+        "greenDiscountPct": 0,
+        "capType": "po_value_pct",
+        "capValue": 0.7,
+        "termMonths": 6,
+        "repaymentType": "interest_monthly_principal_at_end",
+        "security": "Confirmed purchase order",
+        "speedDays": 5,
+        "documents": [
+          "Confirmed PO",
+          "Delivery contract"
+        ],
+        "connected": true,
+        "source": "National Financing Credit Service Platform (信易贷)"
+      },
+      {
+        "id": "receivables-pledge",
+        "name": "Receivables pledge",
+        "nameLocal": "应收账款质押",
+        "rateLow": 4.8,
+        "rateHigh": 10.5,
+        "feePct": 0.25,
+        "greenDiscountPct": 0,
+        "capType": "good_receivables_pct",
+        "capValue": 0.8,
+        "termMonths": 6,
+        "repaymentType": "one_payment_at_end",
+        "security": "Receivables from Grade A/B buyers",
+        "speedDays": 4,
+        "documents": [
+          "Receivables list",
+          "Buyer payment confirmation"
+        ],
+        "connected": true,
+        "source": "National Financing Credit Service Platform (信易贷)"
+      },
+      {
+        "id": "government-guaranteed",
+        "name": "Government-guaranteed loan",
+        "nameLocal": "政府担保贷款",
+        "rateLow": 3.8,
+        "rateHigh": 9,
+        "feePct": 0,
+        "greenDiscountPct": 0.2,
+        "capType": "fixed",
+        "capValue": 800000,
+        "termMonths": 12,
+        "repaymentType": "annuity",
+        "security": "Government guarantee",
+        "speedDays": 10,
+        "documents": [
+          "Guarantee application",
+          "Tax rating certificate"
+        ],
+        "connected": true,
+        "source": "National Financing Credit Service Platform (信易贷)"
+      },
+      {
+        "id": "e-iou-discount",
+        "name": "e-IOU discounting",
+        "nameLocal": "电子欠条贴现",
+        "rateLow": 4.5,
+        "rateHigh": 4.5,
+        "feePct": 0,
+        "greenDiscountPct": 0,
+        "capType": "eious_pct",
+        "capValue": 0.95,
+        "termMonths": 1,
+        "repaymentType": "e_iou_discount",
+        "security": "Verified e-IOU",
+        "speedDays": 1,
+        "documents": [
+          "e-IOU record"
+        ],
+        "connected": true,
+        "source": "National Financing Credit Service Platform (信易贷)"
+      },
+      {
+        "id": "webank-weiyedai",
+        "name": "WeBank Weiyedai",
+        "nameLocal": "微业贷",
+        "rateLow": 10.8,
+        "rateHigh": 10.8,
+        "feePct": 0,
+        "greenDiscountPct": 0,
+        "capType": "fixed",
+        "capValue": 300000,
+        "termMonths": 12,
+        "repaymentType": "annuity",
+        "security": "Unsecured",
+        "speedDays": 7,
+        "documents": [
+          "WeBank application",
+          "Consent to share the credit package"
+        ],
+        "connected": false,
+        "source": "WeBank, over 5 million SMEs applied by June 2024 (WeBank release). Placeholder rate: not connected in this build."
+      },
+      {
+        "id": "online-bank-line",
+        "name": "Online working-capital line",
+        "nameLocal": "线上流动资金贷款",
+        "rateLow": 5.5,
+        "rateHigh": 13,
+        "feePct": 0.4,
+        "greenDiscountPct": 0,
+        "capType": "fixed",
+        "capValue": 1000000,
+        "termMonths": 6,
+        "repaymentType": "annuity",
+        "security": "Unsecured",
+        "speedDays": 2,
+        "documents": [
+          "Bank statements (last 6 months)"
+        ],
+        "connected": true,
+        "source": "National Financing Credit Service Platform (信易贷)"
+      }
+    ],
+    "need": 650000,
+    "needStress": 1400000,
+    "rateCeilingPct": 29.650399999999998,
+    "matches": [
+      {
+        "product": {
+          "id": "government-guaranteed",
+          "name": "Government-guaranteed loan",
+          "nameLocal": "政府担保贷款",
+          "rateLow": 3.8,
+          "rateHigh": 9,
+          "feePct": 0,
+          "greenDiscountPct": 0.2,
+          "capType": "fixed",
+          "capValue": 800000,
+          "termMonths": 12,
+          "repaymentType": "annuity",
+          "security": "Government guarantee",
+          "speedDays": 10,
+          "documents": [
+            "Guarantee application",
+            "Tax rating certificate"
+          ],
+          "connected": true,
+          "source": "National Financing Credit Service Platform (信易贷)"
+        },
+        "rate": 5.1156,
+        "allIn": 4.9155999999999995,
+        "cap": 800000,
+        "eligible": true,
+        "missing": [],
+        "covers": true,
+        "fitsCeiling": true
+      },
+      {
+        "product": {
+          "id": "online-bank-line",
+          "name": "Online working-capital line",
+          "nameLocal": "线上流动资金贷款",
+          "rateLow": 5.5,
+          "rateHigh": 13,
+          "feePct": 0.4,
+          "greenDiscountPct": 0,
+          "capType": "fixed",
+          "capValue": 1000000,
+          "termMonths": 6,
+          "repaymentType": "annuity",
+          "security": "Unsecured",
+          "speedDays": 2,
+          "documents": [
+            "Bank statements (last 6 months)"
+          ],
+          "connected": true,
+          "source": "National Financing Credit Service Platform (信易贷)"
+        },
+        "rate": 7.3975,
+        "allIn": 7.7975,
+        "cap": 1000000,
+        "eligible": true,
+        "missing": [],
+        "covers": true,
+        "fitsCeiling": true
+      },
+      {
+        "product": {
+          "id": "e-iou-discount",
+          "name": "e-IOU discounting",
+          "nameLocal": "电子欠条贴现",
+          "rateLow": 4.5,
+          "rateHigh": 4.5,
+          "feePct": 0,
+          "greenDiscountPct": 0,
+          "capType": "eious_pct",
+          "capValue": 0.95,
+          "termMonths": 1,
+          "repaymentType": "e_iou_discount",
+          "security": "Verified e-IOU",
+          "speedDays": 1,
+          "documents": [
+            "e-IOU record"
+          ],
+          "connected": true,
+          "source": "National Financing Credit Service Platform (信易贷)"
+        },
+        "rate": 4.5,
+        "allIn": 4.5,
+        "cap": 355300,
+        "eligible": true,
+        "missing": [],
+        "covers": false,
+        "fitsCeiling": true
+      },
+      {
+        "product": {
+          "id": "inclusive-credit",
+          "name": "Inclusive credit loan",
+          "nameLocal": "普惠信用贷",
+          "rateLow": 4.5,
+          "rateHigh": 12,
+          "feePct": 0.2,
+          "greenDiscountPct": 0.2,
+          "capType": "fixed",
+          "capValue": 500000,
+          "termMonths": 12,
+          "repaymentType": "annuity",
+          "security": "Unsecured",
+          "speedDays": 3,
+          "documents": [
+            "Business license",
+            "Tax filing (last 12 months)"
+          ],
+          "connected": true,
+          "source": "National Financing Credit Service Platform (信易贷)"
+        },
+        "rate": 6.3975,
+        "allIn": 6.3975,
+        "cap": 500000,
+        "eligible": true,
+        "missing": [],
+        "covers": false,
+        "fitsCeiling": true
+      },
+      {
+        "product": {
+          "id": "receivables-pledge",
+          "name": "Receivables pledge",
+          "nameLocal": "应收账款质押",
+          "rateLow": 4.8,
+          "rateHigh": 10.5,
+          "feePct": 0.25,
+          "greenDiscountPct": 0,
+          "capType": "good_receivables_pct",
+          "capValue": 0.8,
+          "termMonths": 6,
+          "repaymentType": "one_payment_at_end",
+          "security": "Receivables from Grade A/B buyers",
+          "speedDays": 4,
+          "documents": [
+            "Receivables list",
+            "Buyer payment confirmation"
+          ],
+          "connected": true,
+          "source": "National Financing Credit Service Platform (信易贷)"
+        },
+        "rate": 6.2421,
+        "allIn": 6.4921,
+        "cap": 413200,
+        "eligible": true,
+        "missing": [],
+        "covers": false,
+        "fitsCeiling": true
+      },
+      {
+        "product": {
+          "id": "webank-weiyedai",
+          "name": "WeBank Weiyedai",
+          "nameLocal": "微业贷",
+          "rateLow": 10.8,
+          "rateHigh": 10.8,
+          "feePct": 0,
+          "greenDiscountPct": 0,
+          "capType": "fixed",
+          "capValue": 300000,
+          "termMonths": 12,
+          "repaymentType": "annuity",
+          "security": "Unsecured",
+          "speedDays": 7,
+          "documents": [
+            "WeBank application",
+            "Consent to share the credit package"
+          ],
+          "connected": false,
+          "source": "WeBank, over 5 million SMEs applied by June 2024 (WeBank release). Placeholder rate: not connected in this build."
+        },
+        "rate": 10.8,
+        "allIn": 10.8,
+        "cap": 300000,
+        "eligible": true,
+        "missing": [],
+        "covers": false,
+        "fitsCeiling": true
+      },
+      {
+        "product": {
+          "id": "order-financing",
+          "name": "Order financing",
+          "nameLocal": "订单融资",
+          "rateLow": 5,
+          "rateHigh": 11,
+          "feePct": 0.3,
+          "greenDiscountPct": 0,
+          "capType": "po_value_pct",
+          "capValue": 0.7,
+          "termMonths": 6,
+          "repaymentType": "interest_monthly_principal_at_end",
+          "security": "Confirmed purchase order",
+          "speedDays": 5,
+          "documents": [
+            "Confirmed PO",
+            "Delivery contract"
+          ],
+          "connected": true,
+          "source": "National Financing Credit Service Platform (信易贷)"
+        },
+        "rate": 6.518,
+        "allIn": 6.818,
+        "cap": 2092999.9999999998,
+        "eligible": false,
+        "missing": [
+          "A confirmed PO from a Grade A or B buyer"
+        ],
+        "covers": true,
+        "fitsCeiling": true
+      }
+    ],
+    "topMatch": {
+      "product": "government-guaranteed",
+      "principal": 650000,
+      "repayment": [
+        {
+          "label": "First payment",
+          "monthsFromNow": 1,
+          "amount": 55619.72602343845,
+          "cashAfter": 1244380.2739765616,
+          "status": "OK"
+        },
+        {
+          "label": "Final payment",
+          "monthsFromNow": 12,
+          "amount": 55619.72602343845,
+          "cashAfter": 1938760.547953123,
+          "status": "OK"
+        }
+      ],
+      "negotiation": {
+        "floor": 4.4292,
+        "bankAsk": 5.5156,
+        "counter": 4.9156,
+        "final": 5.115600000000001,
+        "acceptableByAgent": true
+      }
+    },
+    "platform": {
+      "name": "National Financing Credit Service Platform",
+      "nameLocal": "全国融资信用服务平台",
+      "shortName": "信易贷",
+      "description": "Post one request and the platform shows it to connected banks, who offer matching loans. Banks still make the final call.",
+      "source": "People's Daily / gov.cn, 11 Apr 2024 (NDRC officials on the 2024 implementation plan)",
+      "benchmarkLabel": "1-year LPR",
+      "benchmarkPct": 3,
+      "benchmarkSource": "1-year Loan Prime Rate held at 3.0% through 2026 (PBoC; TrendForce data, 2026)",
+      "facts": [
+        {
+          "value": "¥25.1 trillion",
+          "label": "lent by banks through the platform network by end-Feb 2024"
+        },
+        {
+          "value": "¥5.9 trillion",
+          "label": "of that was credit (no-collateral) loans"
+        },
+        {
+          "value": "21 national banks",
+          "label": "connected to the national platform"
+        },
+        {
+          "value": "17 categories, 37 items",
+          "label": "of credit data shared with lenders under the 2024 plan"
+        }
+      ]
+    },
+    "webankEcosystem": [
+      {
+        "id": "weiyedai",
+        "title": "WeBank Weiyedai loans",
+        "titleLocal": "微业贷",
+        "badge": "Matched product, placeholder rate",
+        "description": "A popular small-business loan from WeBank. With your OK, BizMate could send your documents straight to them so you don't retype everything.",
+        "source": "WeBank release, Feb 2025"
+      },
+      {
+        "id": "fate",
+        "title": "Shared credit scoring without sharing your data",
+        "titleLocal": "联邦学习",
+        "badge": "Future idea",
+        "description": "A technique (FATE) that lets a bank and BizMate train one credit model together, each keeping their own data private.",
+        "source": "FATE repository"
+      },
+      {
+        "id": "fisco-bcos",
+        "title": "Tamper-proof record of your documents",
+        "titleLocal": "金链盟开源工作组",
+        "badge": "Future idea",
+        "description": "A shared ledger (FISCO BCOS) banks already use, so BizMate could prove your audit log and receivables were never altered.",
+        "source": "FISCO BCOS documentation"
+      },
+      {
+        "id": "wechat",
+        "title": "Reminders and alerts on WeChat",
+        "titleLocal": "微信",
+        "badge": "Sandbox in this demo",
+        "description": "Alerts and approved reminders go out on WeChat, where buyers and owners already are.",
+        "source": ""
+      }
+    ],
+    "supplierPool": {
+      "suppliersInPool": 14,
+      "sharedAnchorBuyers": 3,
+      "pooledDemand": 38000000,
+      "rateCutPct": 0.6,
+      "description": "Each small loan is risky alone, but together as one bigger portfolio, with a government guarantee covering part of the loss, a bank can offer a better rate. Each supplier still borrows and repays on their own; you're not responsible for anyone else's loan."
+    },
+    "greenCheck": {
+      "eligibleCandidate": true,
+      "footprintTonnesCO2e": 3220,
+      "evCleanEnergySalesPct": 38,
+      "recycledMetalPct": 0,
+      "recommendation": "Switch 20% of cold-rolled steel to recycled (EAF) steel to cut about 1,290 t CO2e a year."
+    },
+    "creditPackageDocs": [
+      {
+        "id": "license",
+        "name": "Business license",
+        "nameLocal": "营业执照",
+        "preparedBy": "you"
+      },
+      {
+        "id": "legal-rep-id",
+        "name": "Legal representative ID",
+        "nameLocal": "法定代表人身份证明",
+        "preparedBy": "you"
+      },
+      {
+        "id": "articles",
+        "name": "Articles of association",
+        "nameLocal": "公司章程",
+        "preparedBy": "you"
+      },
+      {
+        "id": "financials",
+        "name": "Financial statements, 2 years + latest",
+        "nameLocal": "近两年及最近一期财务报表",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "bank-statements",
+        "name": "Bank statements, 12 months",
+        "nameLocal": "近12个月银行流水",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "tax",
+        "name": "Tax returns and tax credit rating",
+        "nameLocal": "纳税申报表 / 纳税信用等级",
+        "preparedBy": "you",
+        "note": "Download from the e-tax bureau"
+      },
+      {
+        "id": "contracts",
+        "name": "Sales contracts and purchase orders",
+        "nameLocal": "购销合同 / 订单",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "receivables",
+        "name": "Verified receivables schedule",
+        "nameLocal": "应收账款明细及确权",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "forecast",
+        "name": "Cash-flow forecast",
+        "nameLocal": "现金流预测表",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "use-of-funds",
+        "name": "Use of funds statement",
+        "nameLocal": "借款用途说明",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "delivery",
+        "name": "Delivery performance history",
+        "nameLocal": "历史交货履约记录",
+        "preparedBy": "bizmate"
+      },
+      {
+        "id": "auth",
+        "name": "Credit check authorisation (signed)",
+        "nameLocal": "征信查询授权书",
+        "preparedBy": "you",
+        "note": "Owner signs. BizMate never signs."
+      }
+    ]
+  },
+  "trust": {
+    "tiers": [
+      {
+        "tier": 0,
+        "action": "Read and analyse",
+        "rule": "Agents act alone",
+        "examples": [
+          "Forecast",
+          "Score buyers",
+          "Match lenders",
+          "Run scenarios"
+        ]
+      },
+      {
+        "tier": 1,
+        "action": "Draft",
+        "rule": "Agents act alone; nothing leaves the system",
+        "examples": [
+          "Draft reminders",
+          "Fill forms",
+          "Build the credit package",
+          "Sandbox negotiation"
+        ]
+      },
+      {
+        "tier": 2,
+        "action": "Send or commit",
+        "rule": "You approve each one",
+        "examples": [
+          "Send a reminder",
+          "Post a financing demand",
+          "Share documents",
+          "Accept an offer or order"
+        ]
+      },
+      {
+        "tier": 3,
+        "action": "Move money or sign",
+        "rule": "Blocked in code, no tool exists",
+        "examples": [
+          "Pay",
+          "Transfer",
+          "Sign a contract",
+          "Sign credit-check consent",
+          "Change bank details"
+        ]
+      }
+    ],
+    "selfAssessment": [
+      {
+        "risk": "AI moves money or signs",
+        "control": "Tier 3 blocked in code; no payment or signing tool",
+        "leftToDo": "Bank-side limits on live APIs"
+      },
+      {
+        "risk": "AI acts without the owner",
+        "control": "Approval cards; mandate checked in code",
+        "leftToDo": "Two-person approval above a threshold"
+      },
+      {
+        "risk": "Sensitive data sent to the model",
+        "control": "Masking adapter; numbers computed in code",
+        "leftToDo": "Image redaction is manual"
+      },
+      {
+        "risk": "Wrong numbers from the model",
+        "control": "All money math is deterministic and tested",
+        "leftToDo": "Back-test forecasts on real data"
+      },
+      {
+        "risk": "Prompt injection from files",
+        "control": "Data-only handling; read-only tools",
+        "leftToDo": "Scanner for hidden instructions"
+      },
+      {
+        "risk": "Bad or partial data",
+        "control": "Owner-confirmed mapping; row notes; confidence drops",
+        "leftToDo": "Cross-source duplicate detection"
+      },
+      {
+        "risk": "Log tampering",
+        "control": "Hash chain + Merkle root; export",
+        "leftToDo": "Daily third-party anchoring"
+      },
+      {
+        "risk": "Wrong lender terms",
+        "control": "Rates labelled illustrative",
+        "leftToDo": "Live product feed"
+      }
+    ],
+    "masking": {
+      "callLabel": "Draft a reminder for Shenzhen ElectroParts",
+      "sentAt": "17 Oct 2026, 08:03",
+      "mapping": [
+        {
+          "field": "Company",
+          "real": "Shenzhen Dragon Precision Manufacturing Co., Ltd.",
+          "token": "Company_X"
+        },
+        {
+          "field": "Buyer",
+          "real": "Shenzhen ElectroParts",
+          "token": "Buyer_A"
+        },
+        {
+          "field": "Contact",
+          "real": "Li Wei",
+          "token": "Person_A1"
+        },
+        {
+          "field": "Tax ID",
+          "real": "91440300MA5XXXXX1Q",
+          "token": "TAXID_001"
+        },
+        {
+          "field": "Bank account",
+          "real": "6222 0212 3456 7890",
+          "token": "ACCOUNT_001"
+        },
+        {
+          "field": "Phone",
+          "real": "+86 138 0013 8000",
+          "token": "PHONE_001"
+        },
+        {
+          "field": "Email",
+          "real": "li.wei@shenzhenelectroparts.cn",
+          "token": "EMAIL_001"
+        }
+      ],
+      "lastPayload": {
+        "task": "draft_reminder",
+        "buyer": "Buyer_A",
+        "contact": "Person_A1",
+        "invoice_no": "INV-2026-0914",
+        "amount": 86000,
+        "overdue_days": 21,
+        "tone": "firm",
+        "language": "English"
+      }
+    },
+    "auditLog": {
+      "entries": [
+        {
+          "seq": 1,
+          "ts": "2026-10-17T06:00:00Z",
+          "actor": "lead",
+          "action": "forecast_run",
+          "detail": "Recomputed the 26-week cash forecast and health score",
+          "tier": 0,
+          "approval": null,
+          "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "hash": "cfdc6bdd5fdab9cb7d2b775e3e31ae479596c492ea6b286afb5947ae9e2c51ec"
+        },
+        {
+          "seq": 2,
+          "ts": "2026-10-17T08:02:00Z",
+          "actor": "receivables",
+          "action": "list_overdue",
+          "detail": "Scanned open invoices; flagged Shenzhen ElectroParts and Chiang Mai Furniture overdue",
+          "tier": 0,
+          "approval": null,
+          "prevHash": "cfdc6bdd5fdab9cb7d2b775e3e31ae479596c492ea6b286afb5947ae9e2c51ec",
+          "hash": "34d651c94eb8c5903c1d73b68c79cf994ea33d670646094af0c59ee4c9074abf"
+        },
+        {
+          "seq": 3,
+          "ts": "2026-10-17T08:03:00Z",
+          "actor": "receivables",
+          "action": "draft_reminder",
+          "detail": "Drafted a firm reminder for Shenzhen ElectroParts, step 3 of 5",
+          "tier": 1,
+          "approval": null,
+          "prevHash": "34d651c94eb8c5903c1d73b68c79cf994ea33d670646094af0c59ee4c9074abf",
+          "hash": "0fcff296ca181a23aa52f229dd4e3f5d0bc7e7c9fdc76e69d295c3a94c14fe7b"
+        },
+        {
+          "seq": 4,
+          "ts": "2026-10-17T08:05:00Z",
+          "actor": "guard",
+          "action": "guard_check",
+          "detail": "Checked the draft for prohibited language: passed",
+          "tier": 1,
+          "approval": null,
+          "prevHash": "0fcff296ca181a23aa52f229dd4e3f5d0bc7e7c9fdc76e69d295c3a94c14fe7b",
+          "hash": "e3bc28e6d821b8cf079bbc8f596ffb3e05d5005ddca98b9c5776a236fed142eb"
+        },
+        {
+          "seq": 5,
+          "ts": "2026-10-17T08:10:00Z",
+          "actor": "owner",
+          "action": "approve",
+          "detail": "Approved: send reminder to Shenzhen ElectroParts",
+          "tier": 2,
+          "approval": "appr-chase-1",
+          "prevHash": "e3bc28e6d821b8cf079bbc8f596ffb3e05d5005ddca98b9c5776a236fed142eb",
+          "hash": "063929f931cb02360a17d520bc5020c6231bd9364b36e5b1792dfcb72542611a"
+        },
+        {
+          "seq": 6,
+          "ts": "2026-10-17T08:10:05Z",
+          "actor": "receivables",
+          "action": "send_reminder",
+          "detail": "Sent the reminder to Shenzhen ElectroParts via LINE and email",
+          "tier": 2,
+          "approval": "appr-chase-1",
+          "prevHash": "063929f931cb02360a17d520bc5020c6231bd9364b36e5b1792dfcb72542611a",
+          "hash": "49920535406abceefff4db4449f74444744ccec94f38eaae4a99c7d2bed2eeea"
+        },
+        {
+          "seq": 7,
+          "ts": "2026-10-17T09:40:00Z",
+          "actor": "financing",
+          "action": "match_lenders",
+          "detail": "Matched 7 lender products against the Guangzhou Motors cash gap",
+          "tier": 0,
+          "approval": null,
+          "prevHash": "49920535406abceefff4db4449f74444744ccec94f38eaae4a99c7d2bed2eeea",
+          "hash": "b50ccc5fc08319c81405e878febe7171a9483be5e727d94eeeeec8d9cb4f3e65"
+        },
+        {
+          "seq": 8,
+          "ts": "2026-10-17T09:45:00Z",
+          "actor": "financing",
+          "action": "negotiate",
+          "detail": "Ran a sandbox negotiation for the government-guaranteed loan",
+          "tier": 1,
+          "approval": null,
+          "prevHash": "b50ccc5fc08319c81405e878febe7171a9483be5e727d94eeeeec8d9cb4f3e65",
+          "hash": "b0668bc3e4741b62eef97e85d5adc9e04431d159fbbffc11d84e36774af77b49"
+        },
+        {
+          "seq": 9,
+          "ts": "2026-10-17T09:50:00Z",
+          "actor": "owner",
+          "action": "decline",
+          "detail": "Declined: negotiated offer from WeBank Weiyedai",
+          "tier": 2,
+          "approval": "appr-nego-1",
+          "prevHash": "b0668bc3e4741b62eef97e85d5adc9e04431d159fbbffc11d84e36774af77b49",
+          "hash": "aa455fcdee0906ddc18d1f8838077cf059bc9bcae2da0416b169f08defb72524"
+        },
+        {
+          "seq": 10,
+          "ts": "2026-10-17T14:02:00Z",
+          "actor": "procurement",
+          "action": "lock_price",
+          "detail": "Locked November cold-rolled steel at ¥4,482 a tonne",
+          "tier": 0,
+          "approval": null,
+          "prevHash": "aa455fcdee0906ddc18d1f8838077cf059bc9bcae2da0416b169f08defb72524",
+          "hash": "ab17de90f6b1b627fd3c753a32fab4455ad87c21e46ecd44ef24d7dd31925c0e"
+        }
+      ],
+      "merkleRoot": "02fd68d15b5217ece052c3e367073f8a62873daf42c5cf281ebc5f329a4b1896"
+    }
+  },
+  "agents": {
+    "lead": {
+      "name": "Lead",
+      "emoji": "🧭",
+      "color": "#6366F1"
+    },
+    "receivables": {
+      "name": "Receivables",
+      "emoji": "📥",
+      "color": "#F97316"
+    },
+    "procurement": {
+      "name": "Procurement",
+      "emoji": "📦",
+      "color": "#EAB308"
+    },
+    "financing": {
+      "name": "Financing",
+      "emoji": "🏦",
+      "color": "#2563EB"
+    },
+    "guard": {
+      "name": "Policy Guard",
+      "emoji": "🛡️",
+      "color": "#64748B"
+    }
+  }
+}

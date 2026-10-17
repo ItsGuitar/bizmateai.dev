@@ -144,6 +144,24 @@ body {
   animation: floatGentle 3s ease-in-out infinite;
 }
 
+/* Clouds crossing the dashboard factory scene edge to edge: animates `left` (not transform)
+   so the travel distance is relative to the sky frame, not the cloud's own small width. Starts
+   and ends past the visible bounds so the loop reset is hidden by the frame's overflow-hidden. */
+@keyframes cloudDrift {
+  0% {
+    left: -25%;
+  }
+  100% {
+    left: 115%;
+  }
+}
+
+.animate-cloud-drift {
+  animation-name: cloudDrift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 /* Checkmark pop for successful authorization */
 @keyframes checkPop {
   0% {
@@ -173,4 +191,34 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmerPulse 2s infinite ease-in-out;
+}
+
+/* Simulated scanner/camera effects for the Mock Document Generator's physical paper view. Paper
+   grain, a soft indoor-lighting glare, and a faint crease line; rotation is applied inline per
+   generation (it varies per document), not as a class. */
+.scan-noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+}
+
+.scan-lighting-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.22), transparent 60%);
+}
+
+.dark .scan-lighting-overlay {
+  background: radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.08), transparent 60%);
+}
+
+.scan-crease {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 48%, rgba(0, 0, 0, 0.06) 49%, transparent 50%);
 }
