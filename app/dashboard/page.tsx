@@ -97,6 +97,100 @@ function cloudDelaySeconds(startFraction: number, duration: number, direction: "
   return -elapsed;
 }
 
+interface DeliveryTruckConfig {
+  id: string;
+  src: string;
+  name: string;
+  direction: "rtl" | "ltr"; // rtl = default image (faces left), ltr = scale-x-[-1]
+  lane: "upper" | "lower";  // upper = top half of road, lower = bottom half
+  duration: number;         // seconds across screen
+  delay: number;            // animation delay in seconds
+  widthClass: string;
+  minLevel: 1 | 2 | 3 | 4 | 5; // Level at which this truck starts appearing
+}
+
+const FACTORY_TRUCKS: DeliveryTruckConfig[] = [
+  // Upper lane: drives Right to Left (natural truck direction facing left)
+  // Lower lane: drives Left to Right (flipped truck direction)
+  {
+    id: "truck-1",
+    src: "truck1.png",
+    name: "Standard Hauler",
+    direction: "rtl",
+    lane: "upper",
+    duration: 12,
+    delay: 0,
+    widthClass: "w-11 sm:w-14",
+    minLevel: 1,
+  },
+  {
+    id: "truck-2",
+    src: "truck2.png",
+    name: "Heavy Cargo",
+    direction: "ltr",
+    lane: "lower",
+    duration: 14,
+    delay: -5,
+    widthClass: "w-12 sm:w-16",
+    minLevel: 1,
+  },
+  {
+    id: "truck-3",
+    src: "truck3.png",
+    name: "Logistics Carrier",
+    direction: "rtl",
+    lane: "upper",
+    duration: 11,
+    delay: -6,
+    widthClass: "w-11 sm:w-15",
+    minLevel: 2,
+  },
+  {
+    id: "truck-4",
+    src: "truck4.png",
+    name: "Express Delivery",
+    direction: "ltr",
+    lane: "lower",
+    duration: 9.5,
+    delay: -2,
+    widthClass: "w-10 sm:w-13",
+    minLevel: 3,
+  },
+  {
+    id: "truck-5",
+    src: "truck5.png",
+    name: "Industrial Transporter",
+    direction: "rtl",
+    lane: "upper",
+    duration: 13,
+    delay: -9,
+    widthClass: "w-12 sm:w-16",
+    minLevel: 4,
+  },
+  {
+    id: "truck-6",
+    src: "truck6.png",
+    name: "Material Hauler",
+    direction: "ltr",
+    lane: "lower",
+    duration: 11.5,
+    delay: -8,
+    widthClass: "w-11 sm:w-14",
+    minLevel: 4,
+  },
+  {
+    id: "truck-7",
+    src: "truck7.png",
+    name: "Container Fleet",
+    direction: "rtl",
+    lane: "upper",
+    duration: 10,
+    delay: -3.5,
+    widthClass: "w-13 sm:w-16",
+    minLevel: 5,
+  },
+];
+
 const SEVERITY_STYLE: Record<string, string> = {
   high: "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300",
   medium: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-300",
@@ -597,14 +691,43 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-500 dark:bg-slate-700">
+                {/* Roadway with Animated Delivery Trucks */}
+                <div className="absolute inset-x-0 bottom-0 h-[42%] bg-slate-600 dark:bg-slate-700 overflow-hidden">
+                  {/* Road Center Divider Dashed Line */}
                   <div
-                    className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 opacity-80"
+                    className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 opacity-80 pointer-events-none z-0"
                     style={{
                       backgroundImage:
                         "repeating-linear-gradient(90deg, #fde68a 0 20px, transparent 20px 40px)",
                     }}
                   />
+
+                  {/* Delivery Trucks active for this Factory Level */}
+                  {FACTORY_TRUCKS.filter((t) => currentFactoryLevel >= t.minLevel).map((truck) => {
+                    const isUpper = truck.lane === "upper";
+                    return (
+                      <div
+                        key={truck.id}
+                        className={`absolute z-10 pointer-events-none transition-opacity duration-500 ${
+                          truck.direction === "rtl" ? "animate-truck-rtl" : "animate-truck-ltr"
+                        } ${truck.widthClass}`}
+                        style={{
+                          top: isUpper ? "2px" : "calc(50% + 2px)",
+                          animationDuration: `${truck.duration}s`,
+                          animationDelay: `${truck.delay}s`,
+                        }}
+                      >
+                        <Image
+                          src={`/images/visualization/${truck.src}`}
+                          alt={truck.name}
+                          width={80}
+                          height={40}
+                          className="w-full h-auto object-contain drop-shadow-md select-none"
+                          priority
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

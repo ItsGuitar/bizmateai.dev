@@ -261,3 +261,38 @@ body {
   animation: lightningFlash 4.5s infinite;
 }
 
+/* Delivery Trucks on Factory Road */
+@keyframes truckDriveRTL {
+  0% {
+    transform: translateX(0);
+    left: 105%;
+  }
+  100% {
+    transform: translateX(0);
+    left: -25%;
+  }
+}
+
+@keyframes truckDriveLTR {
+  0% {
+    transform: scaleX(-1);
+    left: -25%;
+  }
+  100% {
+    transform: scaleX(-1);
+    left: 105%;
+  }
+}
+
+.animate-truck-rtl {
+  animation-name: truckDriveRTL;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.animate-truck-ltr {
+  animation-name: truckDriveLTR;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
