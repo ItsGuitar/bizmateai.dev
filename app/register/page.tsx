@@ -72,21 +72,17 @@ export default function RegisterPage() {
     <div className="h-dvh h-screen w-full flex overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 relative">
       {/* LEFT HALF: Branding Showcase Section */}
       <div className="hidden md:flex md:w-1/2 h-full relative overflow-hidden bg-slate-900 dark:bg-slate-950 flex-col justify-between p-12 text-white">
-        {/* Ambient background glows */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-
         {/* Top Floating Branding */}
         <div className="relative z-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 shadow-sm group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 shadow-sm group"
           >
             <span
               style={{ fontFamily: "var(--font-logo)" }}
-              className="text-2xl font-black tracking-normal select-none bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
+              className="text-2xl font-black tracking-normal select-none text-blue-400 group-hover:opacity-80 transition-opacity"
             >
-              Biz<span className="text-sky-400">Mate</span><span className="text-blue-400 text-lg font-mono align-top ml-0.5">AI</span>
+              Biz<span className="text-sky-300">Mate</span><span className="text-blue-400 text-lg font-mono align-top ml-0.5">AI</span>
             </span>
           </Link>
         </div>
@@ -112,17 +108,13 @@ export default function RegisterPage() {
 
       {/* RIGHT HALF: Registration Form Section */}
       <div className="w-full md:w-1/2 h-full flex flex-col justify-between p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
-        {/* Ambient background glow */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-600/15 rounded-full blur-3xl pointer-events-none animate-pulse-glow delay-300" />
-
         {/* Top Header Row */}
         <div className="flex items-center justify-between w-full max-w-sm mx-auto shrink-0 relative z-10 animate-fade-in-up delay-100">
           {/* Logo on mobile view */}
           <Link href="/" className="md:hidden inline-flex items-center gap-1.5 group">
             <span
               style={{ fontFamily: "var(--font-logo)" }}
-              className="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity"
+              className="text-xl font-black text-blue-600 dark:text-blue-400 group-hover:opacity-80 transition-opacity"
             >
               Biz<span className="text-indigo-600 dark:text-indigo-400">Mate</span><span className="text-blue-500 text-sm font-mono align-top ml-0.5">AI</span>
             </span>
@@ -238,7 +230,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -278,7 +270,7 @@ export default function RegisterPage() {
 
       {/* POPUP MODAL: Real PDPA Policy Modal */}
       {showPdpaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 animate-fade-in-up">
           <div className="w-full max-w-xl max-h-[88vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-scale">
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">

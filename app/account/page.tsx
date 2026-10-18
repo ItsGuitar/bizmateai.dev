@@ -285,7 +285,7 @@ export default function AccountPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
           {/* LEFT: Sidebar summary + section nav */}
           <aside className="lg:sticky lg:top-24 lg:self-start space-y-4 animate-fade-in-up">
-            <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3">
               <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 text-white font-bold text-base flex items-center justify-center shadow-sm shrink-0">
                 {displayName.trim().charAt(0).toUpperCase() || "U"}
               </div>
@@ -295,7 +295,7 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <nav className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 flex lg:flex-col gap-1 overflow-x-auto">
+            <nav className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 flex lg:flex-col gap-1 overflow-x-auto">
               <a
                 href="#business-profile"
                 className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
@@ -323,7 +323,7 @@ export default function AccountPage() {
             <form
               id="business-profile"
               onSubmit={handleProfileSubmit}
-              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 sm:p-8 space-y-5 animate-fade-in-up delay-100 scroll-mt-24"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 sm:p-8 space-y-5 animate-fade-in-up delay-100 scroll-mt-24"
             >
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">Business Profile</h2>
@@ -506,7 +506,7 @@ export default function AccountPage() {
               <button
                 type="submit"
                 disabled={isProfileLoading}
-                className="w-full sm:w-auto py-3 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
               >
                 {isProfileLoading ? (
                   <>
@@ -523,7 +523,7 @@ export default function AccountPage() {
             <form
               id="security"
               onSubmit={handlePasswordSubmit}
-              className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 sm:p-8 space-y-5 animate-fade-in-up delay-200 scroll-mt-24"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 sm:p-8 space-y-5 animate-fade-in-up delay-200 scroll-mt-24"
             >
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">Change Password</h2>

@@ -5,10 +5,8 @@ export interface ModuleCapability {
   tagline: string;
   badge: string;
   color: string;
-  lightBg: string;
   ringColor: string;
-  glowGradient: string;
-  emoji: string;
+  iconId: "lead" | "receivables" | "procurement" | "financing" | "guard";
   botImage?: string;
   avatarSeed: string;
   highlightStat: string;
@@ -28,10 +26,8 @@ export const MODULE_CAPABILITIES: ModuleCapability[] = [
     tagline: "Ranks issues, tracks factory health, runs the cash forecast",
     badge: "Daily Brief",
     color: "#6366F1",
-    lightBg: "from-indigo-500/10 to-slate-500/5",
-    ringColor: "border-indigo-500/30 group-hover:border-indigo-500",
-    glowGradient: "from-indigo-600/20 to-slate-600/10",
-    emoji: "🧭",
+    ringColor: "border-indigo-200 dark:border-indigo-800 group-hover:border-indigo-500",
+    iconId: "lead",
     avatarSeed: "lead",
     highlightStat: "13 Weeks",
     statLabel: "Rolling Horizon",
@@ -45,10 +41,8 @@ export const MODULE_CAPABILITIES: ModuleCapability[] = [
     tagline: "Buyer payment habits & tone-adjusted chase schedules",
     badge: "Zero-Surprise OK",
     color: "#F97316",
-    lightBg: "from-orange-500/10 to-amber-500/5",
-    ringColor: "border-orange-500/30 group-hover:border-orange-500",
-    glowGradient: "from-orange-600/20 to-amber-600/10",
-    emoji: "📥",
+    ringColor: "border-orange-200 dark:border-orange-800 group-hover:border-orange-500",
+    iconId: "receivables",
     avatarSeed: "receivables",
     highlightStat: "5 Steps",
     statLabel: "Chase Schedule",
@@ -62,10 +56,8 @@ export const MODULE_CAPABILITIES: ModuleCapability[] = [
     tagline: "Buy-lot timing and price calls before you commit cash",
     badge: "Cost Optimization",
     color: "#EAB308",
-    lightBg: "from-amber-500/10 to-yellow-500/5",
-    ringColor: "border-amber-500/30 group-hover:border-amber-500",
-    glowGradient: "from-amber-600/20 to-yellow-600/10",
-    emoji: "📦",
+    ringColor: "border-amber-200 dark:border-amber-800 group-hover:border-amber-500",
+    iconId: "procurement",
     avatarSeed: "procurement",
     highlightStat: "Lock / Split / Finance",
     statLabel: "Buy Decision",
@@ -79,10 +71,8 @@ export const MODULE_CAPABILITIES: ModuleCapability[] = [
     tagline: "Cheapest capital matching with a true APR shield",
     badge: "Zero Predatory Traps",
     color: "#2563EB",
-    lightBg: "from-blue-500/10 to-indigo-500/5",
-    ringColor: "border-blue-500/30 group-hover:border-blue-500",
-    glowGradient: "from-blue-600/20 to-indigo-600/10",
-    emoji: "🏦",
+    ringColor: "border-blue-200 dark:border-blue-800 group-hover:border-blue-500",
+    iconId: "financing",
     avatarSeed: "financing",
     highlightStat: "True APR",
     statLabel: "Rate Shield",

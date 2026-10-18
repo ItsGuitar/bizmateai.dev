@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import type {
   AgentRoomEvent,
   AgentRoomStep,
@@ -136,7 +137,7 @@ export function AgentRoomView({
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: `${fromAgent.color}18`, color: fromAgent.color }}
                     >
-                      <span>{fromAgent.emoji}</span>
+                      <AgentIcon id={fromAgent.iconId} className="w-3 h-3" />
                       <span>{fromAgent.name}</span>
                     </span>
                     <span className="text-slate-300 dark:text-slate-600">→</span>
@@ -144,7 +145,7 @@ export function AgentRoomView({
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: `${toAgent.color}18`, color: toAgent.color }}
                     >
-                      <span>{toAgent.emoji}</span>
+                      <AgentIcon id={toAgent.iconId} className="w-3 h-3" />
                       <span>{toAgent.name}</span>
                     </span>
                     {event.isChallenge && (
@@ -245,7 +246,7 @@ export function AgentRoomView({
                         className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: `${agent.color}18`, color: agent.color }}
                       >
-                        <span>{agent.emoji}</span>
+                        <AgentIcon id={agent.iconId} className="w-3 h-3" />
                         <span>{agent.name}</span>
                       </span>
                       <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">

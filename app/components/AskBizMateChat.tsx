@@ -227,7 +227,7 @@ export function AskBizMateChat() {
           <div className="absolute inset-0 rounded-full bg-blue-500/30 blur-md group-hover:bg-blue-400/50 transition-all duration-300" />
 
           {/* Bot Image */}
-          <div className="relative w-full h-full rounded-full bg-white/90 dark:bg-slate-900/90 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
             <Image
               src="/images/bot10_wave.png"
               alt="BizMateAI Bot"
@@ -244,11 +244,11 @@ export function AskBizMateChat() {
 
       {/* Chat Popover Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[92vw] sm:w-[420px] max-h-[85vh] h-[600px] flex flex-col rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[92vw] sm:w-[420px] max-h-[85vh] h-[600px] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
-          <div className="px-5 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white flex items-center justify-between shrink-0 shadow-sm">
+          <div className="px-5 py-3.5 bg-blue-600 text-white flex items-center justify-between shrink-0 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/15 p-1 backdrop-blur-xs border border-white/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-blue-700 p-1 border border-blue-500 flex items-center justify-center">
                 <Image
                   src={currentPersona.botIcon}
                   alt={currentPersona.title}
@@ -260,7 +260,7 @@ export function AskBizMateChat() {
               <div>
                 <h3 className="text-sm font-bold tracking-tight flex items-center gap-1.5 leading-tight">
                   {currentPersona.title}
-                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full font-mono uppercase font-semibold">
+                  <span className="text-[10px] bg-blue-700 px-1.5 py-0.5 rounded-full font-mono uppercase font-semibold">
                     Live Tooling
                   </span>
                 </h3>
@@ -273,7 +273,7 @@ export function AskBizMateChat() {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer text-lg"
+              className="w-8 h-8 rounded-full hover:bg-blue-700 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer text-lg"
               aria-label="Close Chat"
             >
               ✕

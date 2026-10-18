@@ -8,6 +8,7 @@ import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
 import { COMPANY, OPEN_INVOICES, type Invoice } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import {
   BUYERS,
   AS_OF,
@@ -355,13 +356,13 @@ export default function ReceivablesPage() {
         )}
 
         {/* Agent bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
           <div className="flex items-center gap-3 min-w-0 z-10">
             <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${receivables.color}18`, color: receivables.color }}
             >
-              {receivables.emoji}
+              <AgentIcon id={receivables.iconId} className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -402,7 +403,7 @@ export default function ReceivablesPage() {
             { label: "Due within 14 days", value: formatMoney(dueWithin14), color: "#EAB308" },
             { label: "High-risk invoices", value: String(highRiskCount), color: "#6366F1" },
           ].map((kpi) => (
-            <div key={kpi.label} className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5">
+            <div key={kpi.label} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5">
               <p className="text-[10px] font-mono uppercase text-slate-400 font-bold tracking-wide">{kpi.label}</p>
               <p className="text-base font-black mt-1" style={{ color: kpi.color }}>
                 {displayedInvoices.length === 0 ? "—" : kpi.value}
@@ -412,7 +413,7 @@ export default function ReceivablesPage() {
         </div>
 
         {/* When each buyer really pays */}
-        <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">When each buyer really pays</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
             Days late, counting from the due date. Evaluated with confidence windows (p10 to p90).
@@ -463,7 +464,7 @@ export default function ReceivablesPage() {
         </div>
 
         {/* Buyer scorecards */}
-        <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">Buyer Scorecard & Cutoff Grades</h3>
 
           <div className="overflow-x-auto">
@@ -524,7 +525,7 @@ export default function ReceivablesPage() {
         </div>
 
         {/* Open invoices */}
-        <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Active Open Invoices</h3>
             <span className="text-xs font-mono text-slate-400">{invoiceRows.length} Documents from CDM</span>
@@ -589,7 +590,7 @@ export default function ReceivablesPage() {
       {/* Remind drawer with Multimodal/Text AI Rewording & Approval Card Creation */}
       {remindInvoice && (
         <div
-          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60"
           onClick={() => setRemindInvoice(null)}
         >
           <div
@@ -678,7 +679,7 @@ export default function ReceivablesPage() {
                 type="button"
                 disabled={isRewording}
                 onClick={handleRewordWithAi}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isRewording ? (
                   <>

@@ -162,7 +162,7 @@ export default function AdminTelemetryPage() {
 
             {/* Health / Status Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">
                   AI Connectivity
                 </span>
@@ -181,7 +181,7 @@ export default function AdminTelemetryPage() {
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">
                   Configured Model
                 </span>
@@ -193,7 +193,7 @@ export default function AdminTelemetryPage() {
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
                 <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block">
                   Recorded Call History
                 </span>
@@ -207,7 +207,7 @@ export default function AdminTelemetryPage() {
             </div>
 
             {/* Logs List */}
-            <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                   Model Request Stream

@@ -8,6 +8,7 @@ import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
 import { COMPANY } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import { MATERIALS, MaterialPrice, getMaterialPrice } from "@/lib/order-engine";
 import type { PipelineOutput } from "@/lib/calculation-pipeline";
 
@@ -226,13 +227,13 @@ export default function ProcurementPage() {
         </div>
 
         {/* Agent bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
           <div className="flex items-center gap-3 min-w-0 z-10">
             <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${procurement.color}18`, color: procurement.color }}
             >
-              {procurement.emoji}
+              <AgentIcon id={procurement.iconId} className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -256,7 +257,7 @@ export default function ProcurementPage() {
         </div>
 
         {/* Material Selector & Price Forecast Band */}
-        <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 space-y-4">
+        <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -298,7 +299,7 @@ export default function ProcurementPage() {
         </div>
 
         {/* Procurement Decision Tree & Next Buy Lots */}
-        <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 space-y-4">
+        <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-2">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">

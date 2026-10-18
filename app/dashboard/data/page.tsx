@@ -8,6 +8,7 @@ import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
 import { COMPANY } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import { DocumentScanModal } from "@/app/components/DocumentScanModal";
 import type { InvoiceOcrFields } from "@/app/api/ai/ocr-invoice/route";
 import type { PipelineOutput } from "@/lib/calculation-pipeline";
@@ -242,13 +243,13 @@ export default function DataIngestPage() {
         </div>
 
         {/* Lead Agent Ingest Bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
           <div className="flex items-center gap-3 min-w-0 z-10">
             <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${lead.color}18`, color: lead.color }}
             >
-              {lead.emoji}
+              <AgentIcon id={lead.iconId} className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -278,7 +279,7 @@ export default function DataIngestPage() {
 
         {/* Action Banner: Run Calculation */}
         {docs.length > 0 && (
-          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 rounded-3xl bg-blue-600 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="text-sm font-bold flex items-center gap-2">
                 <span>⚡ Deterministic Calculation Chain</span>
@@ -415,7 +416,7 @@ export default function DataIngestPage() {
         {/* Scan & Ingest Entry Point Card */}
         <div
           onClick={() => setIsScanModalOpen(true)}
-          className="p-6 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition-all group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition-all group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform shrink-0">
@@ -436,7 +437,7 @@ export default function DataIngestPage() {
         </div>
 
         {/* Ingested Documents Table */}
-        <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -579,7 +580,7 @@ export default function DataIngestPage() {
 
       {/* Edit Document Modal */}
       {editingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 w-full max-w-lg shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">

@@ -252,7 +252,7 @@ export default function GeneratorPage() {
         </div>
 
         {/* Controls */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
             <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300">
               <ReceiptIcon className="w-5 h-5" />
@@ -299,7 +299,7 @@ export default function GeneratorPage() {
             <button
               type="button"
               onClick={handleCreateMock}
-              className="text-sm font-bold px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+              className="text-sm font-bold px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               {doc ? "Re-roll" : "Create Mock"}
             </button>
@@ -307,7 +307,7 @@ export default function GeneratorPage() {
         </div>
 
         {!doc ? (
-          <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900/90 border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-8 text-center text-sm text-slate-400 dark:text-slate-500">
+          <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-8 text-center text-sm text-slate-400 dark:text-slate-500">
             No document yet. Click <span className="font-semibold text-slate-600 dark:text-slate-300">Create Mock</span> to
             generate a random invoice, purchase order, receipt, or messy ledger with made-up
             companies and numbers, then preview it, export it, or send it to the AI agent.
@@ -315,7 +315,7 @@ export default function GeneratorPage() {
         ) : (
           <>
             {/* Preview */}
-            <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+            <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
               <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className={ARCHETYPE_BADGE_STYLE}>{doc.archetypeLabel}</span>
@@ -410,7 +410,7 @@ export default function GeneratorPage() {
             </div>
 
             {/* Extraction result */}
-            <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+            <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
               <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">What the AI agent read</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                 Extracted fields next to this document's own known values.
@@ -419,7 +419,7 @@ export default function GeneratorPage() {
             </div>
 
             {/* Developer log */}
-            <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+            <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
               <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">Developer log</h3>
                 {logs.length > 0 && (

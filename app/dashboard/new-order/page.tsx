@@ -9,6 +9,7 @@ import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
 import { COMPANY } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import {
   BUYERS,
   MATERIALS,
@@ -190,13 +191,13 @@ export default function NewOrderPage() {
         </div>
 
         {/* Agent bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
           <div className="flex items-center gap-3 min-w-0 z-10">
             <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${lead.color}18`, color: lead.color }}
             >
-              {lead.emoji}
+              <AgentIcon id={lead.iconId} className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -230,7 +231,7 @@ export default function NewOrderPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-4 items-start">
           {/* Order form */}
-          <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 space-y-3.5">
+          <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 space-y-3.5">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">Order details</h2>
               <button
@@ -351,7 +352,7 @@ export default function NewOrderPage() {
           {/* Results */}
           <div className="space-y-4">
             {!hasChecked ? (
-              <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900/90 border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-8 text-center text-sm text-slate-400 dark:text-slate-500">
+              <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl p-8 text-center text-sm text-slate-400 dark:text-slate-500">
                 Fill in the order and press <span className="font-semibold text-slate-600 dark:text-slate-300">Check order</span> to see the verdict, cash gap and financing need.
               </div>
             ) : (
@@ -368,18 +369,18 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Journey timeline */}
-                <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+                <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Order journey</h3>
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                     {result.journey.map((step, idx) => (
                       <div key={step.id} className="flex flex-col items-center text-center gap-1">
                         <div className="flex items-center w-full">
                           <span
-                            className={`mx-auto w-9 h-9 rounded-2xl flex items-center justify-center text-base ${
-                              idx === 0 ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800"
+                            className={`mx-auto w-9 h-9 rounded-2xl flex items-center justify-center text-sm font-bold font-mono ${
+                              idx === 0 ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                             }`}
                           >
-                            {step.emoji}
+                            {idx + 1}
                           </span>
                         </div>
                         <p className="text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-tight">
@@ -394,7 +395,7 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Cash-gap bar */}
-                <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+                <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Cash gap</h3>
                     <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
@@ -417,7 +418,7 @@ export default function NewOrderPage() {
 
                 {/* Profit + financing need */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+                  <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
                     <p className="text-[11px] font-mono uppercase text-slate-400 font-bold tracking-wide">Profit</p>
                     <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                       {formatMoney(result.profitMid)}
@@ -426,7 +427,7 @@ export default function NewOrderPage() {
                       Range {formatMoney(result.profitP10)} to {formatMoney(result.profitP90)}
                     </p>
                   </div>
-                  <div className="animate-fade-in-up delay-400 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+                  <div className="animate-fade-in-up delay-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
                     <p className="text-[11px] font-mono uppercase text-slate-400 font-bold tracking-wide">Money needed</p>
                     <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                       {formatMoney(result.financingNeedLow)}
@@ -439,7 +440,7 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Scenario card */}
-                <div className="animate-fade-in-up delay-450 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+                <div className="animate-fade-in-up delay-450 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
                   <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Scenarios</h3>
                     <select
@@ -501,7 +502,7 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Sensitivities */}
-                <div className="animate-fade-in-up delay-500 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+                <div className="animate-fade-in-up delay-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Sensitivities</h3>
                   <div className="space-y-1.5">
                     {sensitivities.map((row) => (
@@ -523,7 +524,7 @@ export default function NewOrderPage() {
                 <button
                   type="button"
                   onClick={handleAcceptOrder}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  className="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                 >
                   Accept order →
                 </button>

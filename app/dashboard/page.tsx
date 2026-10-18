@@ -18,6 +18,7 @@ import {
   CASH_WEEKS,
 } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import {
   CoinIcon,
   LeafIcon,
@@ -434,7 +435,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push("/dashboard/new-order")}
-              className="text-sm font-bold px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
+              className="text-sm font-bold px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
             >
               <span>+ New order</span>
             </button>
@@ -484,7 +485,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-5 items-start animate-fade-in-up delay-100">
           {/* Factory visual */}
-          <div className="w-full bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 flex flex-col items-center text-center relative overflow-hidden">
+          <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 flex flex-col items-center text-center relative overflow-hidden">
             {/* Dev Debug Toggle Button */}
             <div className="w-full flex items-center justify-between pb-2 mb-1 border-b border-slate-100 dark:border-slate-800">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -663,7 +664,7 @@ export default function DashboardPage() {
               {/* Status Badges Stack (Top-Right): Price Risk Storm & Green-Eligible */}
               <div className="absolute top-3 right-3 z-30 flex flex-col items-end gap-1.5 pointer-events-none">
                 {isPriceStorm && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/90 border border-amber-500/80 shadow-lg backdrop-blur-xs animate-in fade-in slide-in-from-top-1 duration-300">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/90 border border-amber-500/80 shadow-lg animate-in fade-in slide-in-from-top-1 duration-300">
                     <span className="text-xs animate-bounce">⚡</span>
                     <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400 drop-shadow-sm">
                       Price Risk Storm (&gt;3% Material Rise)
@@ -671,7 +672,7 @@ export default function DashboardPage() {
                   </div>
                 )}
                 {isGreenEligible && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-400/80 text-emerald-300 shadow-lg backdrop-blur-xs animate-in fade-in slide-in-from-top-1 duration-300">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-400/80 text-emerald-300 shadow-lg animate-in fade-in slide-in-from-top-1 duration-300">
                     <span className="text-[11px]">🌱</span>
                     <span className="text-[10px] font-mono font-bold uppercase tracking-wide drop-shadow-sm">
                       Green-Eligible (EV/Clean &ge; 30%)
@@ -809,7 +810,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Health score overlay */}
-              <div className="absolute top-3 left-3 min-w-[140px] bg-white/90 dark:bg-slate-900/85 backdrop-blur-sm rounded-xl p-2.5 shadow-sm text-left">
+              <div className="absolute top-3 left-3 min-w-[140px] bg-white/90 dark:bg-slate-900 rounded-xl p-2.5 shadow-sm text-left">
                 <div className="flex items-center justify-between gap-1">
                   <p className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold tracking-wide">
                     Health score
@@ -887,9 +888,9 @@ export default function DashboardPage() {
 
           {/* Lead brief */}
           <div className="space-y-3.5">
-            <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
               <div className="flex items-center gap-2 mb-2.5">
-                <span className="text-lg">{SUPPLIER_AGENTS.lead.emoji}</span>
+                <AgentIcon id={SUPPLIER_AGENTS.lead.iconId} className="w-5 h-5" style={{ color: SUPPLIER_AGENTS.lead.color }} />
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">Lead's brief</h2>
                 <span className="text-xs font-mono uppercase text-slate-400 ml-auto">
                   By urgency
@@ -919,7 +920,7 @@ export default function DashboardPage() {
                             className="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
                             style={{ backgroundColor: `${agent.color}18`, color: agent.color }}
                           >
-                            <span>{agent.emoji}</span>
+                            <AgentIcon id={agent.iconId} className="w-3 h-3" />
                             <span>{agent.name}</span>
                           </span>
                         </div>
@@ -977,7 +978,7 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-slate-50/80 dark:from-slate-800/60 dark:via-slate-800/30 dark:to-slate-800/80 border border-blue-100/80 dark:border-slate-700/60 text-xs sm:text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+                <div className="p-3 rounded-2xl bg-blue-50 dark:bg-slate-800 border border-blue-100/80 dark:border-slate-700/60 text-xs sm:text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
                   {isBriefLoading ? (
                     <div className="flex items-center gap-2 py-1 text-slate-400 dark:text-slate-500 text-xs">
                       <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
@@ -1001,7 +1002,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Cash chart */}
-        <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 animate-fade-in-up delay-200">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5 animate-fade-in-up delay-200">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">Cash forecast (Radar)</h2>
@@ -1166,7 +1167,7 @@ export default function DashboardPage() {
       {/* Health Score 5-Part Popup Drawer (Right side) */}
       {isScoreModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60 animate-fade-in"
           onClick={() => setIsScoreModalOpen(false)}
         >
           <div

@@ -407,7 +407,7 @@ export function DocumentScanModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 animate-fade-in">
       <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full ${step === "review" ? "max-w-6xl" : "max-w-4xl"} rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition-all`}>
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -814,7 +814,7 @@ export function DocumentScanModal({
 
                     {/* Hint overlay */}
                     {finalImageSrc || imageSrc ? (
-                      <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-xs text-[10px] text-slate-400 font-mono pointer-events-none">
+                      <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 text-[10px] text-slate-400 font-mono pointer-events-none">
                         Drag to pan · Scroll wheel to zoom
                       </div>
                     ) : null}

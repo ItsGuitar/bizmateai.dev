@@ -18,6 +18,7 @@ import {
   CREDIT_PACKAGE_DOCS,
 } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import { DEFAULT_ORDER_INPUT, checkOrder, formatDate } from "@/lib/order-engine";
 import {
   COMPANY_PROFILE,
@@ -342,13 +343,13 @@ export default function FinancingPage() {
         </div>
 
         {/* Agent bar */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
           <div className="flex items-center gap-3 min-w-0 z-10">
             <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${financing.color}18`, color: financing.color }}
             >
-              {financing.emoji}
+              <AgentIcon id={financing.iconId} className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -411,7 +412,7 @@ export default function FinancingPage() {
 
         {/* What you need + Platform */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+          <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-0.5">What you need</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
               From the order check and the cash forecast
@@ -467,7 +468,7 @@ export default function FinancingPage() {
             )}
           </div>
 
-          <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+          <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
             <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">{PLATFORM.name}</h3>
             </div>
@@ -500,7 +501,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Matched lenders */}
-        <div ref={matchedLendersRef} className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div ref={matchedLendersRef} className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Matched lenders</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Sorted from best to worst: who qualifies, who covers the full amount, who's cheapest.
@@ -613,7 +614,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Repayment check */}
-        <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               Repayment check: {selected.product.name}
@@ -782,7 +783,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Mandate */}
-        <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">Your mandate</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             The limits the agent can negotiate within
@@ -867,7 +868,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Supplier financing pool */}
-        <div className="animate-fade-in-up delay-400 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Supplier financing pool</h3>
             <span className="text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
@@ -901,7 +902,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Credit package */}
-        <div className="animate-fade-in-up delay-450 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-450 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">Credit package</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             One click builds the standard file set for {PLATFORM.nameLocal} · {PLATFORM.shortName}
@@ -977,7 +978,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Green loan check */}
-        <div className="animate-fade-in-up delay-500 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Green loan check</h3>
             {GREEN_CHECK.eligibleCandidate && (
@@ -1030,7 +1031,7 @@ export default function FinancingPage() {
         </div>
 
         {/* WeBank ecosystem */}
-        <div className="animate-fade-in-up delay-500 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-500 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-0.5">
             Linking into the WeBank ecosystem
           </h3>
@@ -1061,7 +1062,7 @@ export default function FinancingPage() {
       {/* Negotiate drawer */}
       {negotiateProduct && (
         <div
-          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 dark:bg-black/60"
           onClick={() => setNegotiateProduct(null)}
         >
           <div

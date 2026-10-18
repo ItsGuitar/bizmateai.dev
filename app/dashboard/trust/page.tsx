@@ -7,6 +7,7 @@ import { AppHeader } from "@/app/components/AppHeader";
 import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
 import { SUPPLIER_AGENTS, type SupplierAgentId } from "@/app/data/supplier-agents";
+import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import { TIER_RULES, SELF_ASSESSMENT, MASKING_DEMO, type AuditEntrySeed } from "@/app/data/trust-mock";
 import { GENESIS_HASH, computeChain, merkleRootOf } from "@/lib/audit-chain";
 
@@ -237,13 +238,13 @@ export default function TrustPage() {
         </div>
 
         {/* Agent bar: Policy Guard is plain code, not a model, and says so */}
-        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
+        <div className="animate-fade-in-up delay-100 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-4 flex items-center justify-between gap-3 flex-wrap relative overflow-hidden">
           <div className="flex items-center gap-3 min-w-0 z-10">
             <span
-              className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${guard.color}18`, color: guard.color }}
             >
-              {guard.emoji}
+              <AgentIcon id={guard.iconId} className="w-5 h-5" />
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -272,7 +273,7 @@ export default function TrustPage() {
         </div>
 
         {/* Permission tiers */}
-        <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-150 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Permission tiers</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Every action falls into one of four levels.</p>
 
@@ -301,7 +302,7 @@ export default function TrustPage() {
         </div>
 
         {/* Approvals */}
-        <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Approvals</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Tier-2 actions wait here until you say yes or no.
@@ -325,7 +326,7 @@ export default function TrustPage() {
                       className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
                       style={{ backgroundColor: agent ? `${agent.color}18` : "#64748b18", color: agent?.color ?? "#64748b" }}
                     >
-                      <span>{agent?.emoji ?? "🤖"}</span>
+                      {agent ? <AgentIcon id={agent.iconId} className="w-3 h-3" /> : null}
                       <span>{agent?.name ?? approval.agentId}</span>
                     </span>
                     <span className="text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
@@ -375,7 +376,7 @@ export default function TrustPage() {
         </div>
 
         {/* Masking demo */}
-        <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">What the AI sees</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Names and IDs are swapped for tokens before any call. Amounts stay real, the AI needs those to reason.
@@ -418,7 +419,7 @@ export default function TrustPage() {
         </div>
 
         {/* Audit log */}
-        <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Audit log</h3>
             <div className="flex items-center gap-2">
@@ -481,7 +482,7 @@ export default function TrustPage() {
                         <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">#{entry.seq}</span>
                         {agent ? (
                           <span className="inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${agent.color}18`, color: agent.color }}>
-                            <span>{agent.emoji}</span>
+                            <AgentIcon id={agent.iconId} className="w-3 h-3" />
                             <span>{agent.name}</span>
                           </span>
                         ) : (
@@ -534,7 +535,7 @@ export default function TrustPage() {
         </div>
 
         {/* Self-assessment */}
-        <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div className="animate-fade-in-up delay-350 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Security self-assessment</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Where we stand today, and what's left.</p>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { AGENTS, AgentDefinition } from "./data/agents";
+import { AgentIcon } from "./components/icons/AgentIcons";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { UserProfileMenu } from "./components/UserProfileMenu";
 import { getSession, AuthUser } from "@/lib/auth-client";
@@ -29,10 +30,6 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-blue-500 selection:text-white relative overflow-x-hidden transition-colors duration-300">
-      {/* Background Decorative Ambient Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[750px] h-[450px] bg-gradient-to-b from-blue-500/10 dark:from-blue-600/15 via-indigo-500/5 dark:via-indigo-600/10 to-transparent blur-3xl pointer-events-none -z-10 animate-pulse-glow" />
-      <div className="absolute top-1/3 -right-20 w-96 h-96 bg-sky-400/10 dark:bg-sky-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
-
       {/* Top Navigation with fade-in */}
       <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-end z-10 animate-fade-in-up">
         <div className="flex items-center gap-2.5">
@@ -42,7 +39,7 @@ export default function WelcomePage() {
             <div className="flex items-center gap-2.5">
               <Link
                 href="/dashboard"
-                className="text-xs font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                className="text-xs font-bold px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <span>Dashboard</span>
                 <span>→</span>
@@ -70,20 +67,17 @@ export default function WelcomePage() {
         {/* Prominent Centered Brand Logo with smooth scale entrance */}
         <div className="flex flex-col items-center mb-3 cursor-default">
           <div className="relative mb-4 flex items-center justify-center animate-fade-in-scale">
-            {/* Ambient Background Glow */}
-            <div className="absolute -inset-6 bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-400 rounded-full blur-3xl opacity-35 dark:opacity-50 pointer-events-none" />
-
             <span
               style={{ fontFamily: "var(--font-logo)" }}
-              className="relative inline-block px-4 py-1 text-6xl sm:text-8xl md:text-9xl font-black tracking-normal select-none bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-400 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent drop-shadow-sm transition-transform duration-500 hover:scale-[1.02] cursor-default"
+              className="relative inline-block px-4 py-1 text-6xl sm:text-8xl md:text-9xl font-black tracking-normal select-none text-blue-600 dark:text-blue-400 transition-transform duration-500 hover:scale-[1.02] cursor-default"
             >
-              Biz<span className="bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-sky-300 dark:to-cyan-300 bg-clip-text text-transparent">Mate</span><span className="text-blue-500 dark:text-cyan-400 text-4xl sm:text-6xl md:text-7xl font-mono align-top ml-1">AI</span>
+              Biz<span className="text-indigo-600 dark:text-sky-300">Mate</span><span className="text-blue-500 dark:text-cyan-400 text-4xl sm:text-6xl md:text-7xl font-mono align-top ml-1">AI</span>
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mt-1 text-slate-900 dark:text-white leading-tight max-w-2xl animate-fade-in-up delay-100">
             Never run out of cash. <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 dark:from-blue-400 dark:via-indigo-300 dark:to-sky-300 bg-clip-text text-transparent">
+            <span className="text-blue-600 dark:text-blue-400">
               Built for factories waiting on buyer payments.
             </span>
           </h1>
@@ -120,7 +114,7 @@ export default function WelcomePage() {
           {isMounted && user ? (
             <Link
               href="/dashboard"
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
             >
               <span>Go to Dashboard</span>
               <span className="text-lg">→</span>
@@ -129,7 +123,7 @@ export default function WelcomePage() {
             <>
               <Link
                 href="/register"
-                className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>Get started</span>
                 <span className="text-lg">→</span>
@@ -196,21 +190,15 @@ export default function WelcomePage() {
               <div
                 key={agent.id}
                 onClick={() => setActiveAgent(agent)}
-                className={`group relative rounded-3xl p-6 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-slate-700 transition-all duration-300 hover:-translate-y-1 shadow-xs hover:shadow-xl dark:shadow-none cursor-pointer overflow-hidden flex flex-col items-center text-center justify-between animate-fade-in-up backdrop-blur-sm ${delayClass}`}
+                className={`group relative rounded-3xl p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-slate-700 transition-all duration-300 hover:-translate-y-1 shadow-xs hover:shadow-md dark:shadow-none cursor-pointer overflow-hidden flex flex-col items-center text-center justify-between animate-fade-in-up ${delayClass}`}
               >
-                {/* Subtle Card Glow Effect */}
-                <div
-                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{ backgroundColor: `${agent.color}15` }}
-                />
-
                 <div className="flex flex-col items-center w-full">
-                  {/* Centered Emoji Icon with Badge */}
+                  {/* Centered Icon with Badge */}
                   <div className="relative mb-4 flex flex-col items-center">
                     <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-xs border border-slate-200/80 dark:border-slate-700/60 transition-transform duration-300 group-hover:scale-110 bg-slate-50 dark:bg-slate-800"
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-xs border border-slate-200/80 dark:border-slate-700/60 transition-transform duration-300 group-hover:scale-110 bg-slate-50 dark:bg-slate-800"
                     >
-                      <span>{agent.emoji}</span>
+                      <AgentIcon id={agent.iconId} className="w-7 h-7" style={{ color: agent.color }} />
                     </div>
 
                     <span className="mt-2.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300">
@@ -258,18 +246,13 @@ export default function WelcomePage() {
       {/* Modal for In-Depth Agent Details */}
       {activeAgent && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/75 p-4 animate-in fade-in duration-200"
           onClick={() => setActiveAgent(null)}
         >
           <div
             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-6 sm:p-7 max-w-md w-full text-left shadow-2xl relative overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Background Glow */}
-            <div
-              className={`absolute -top-16 -right-16 w-48 h-48 bg-gradient-to-br ${activeAgent.glowGradient} rounded-full blur-3xl pointer-events-none`}
-            />
-
             <button
               onClick={() => setActiveAgent(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
@@ -279,9 +262,9 @@ export default function WelcomePage() {
 
             <div className="flex items-center gap-3.5 mb-4">
               <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-xs border border-slate-200/80 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xs border border-slate-200/80 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800"
               >
-                {activeAgent.emoji}
+                <AgentIcon id={activeAgent.iconId} className="w-6 h-6" style={{ color: activeAgent.color }} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
