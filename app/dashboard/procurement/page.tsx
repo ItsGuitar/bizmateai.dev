@@ -197,7 +197,7 @@ export default function ProcurementPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors pb-16">
       <AppHeader user={user} />
 
-      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <div data-tour="procurement-forecast" className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         <div className="animate-fade-in-up">
           <button
             type="button"

@@ -292,6 +292,7 @@ export default function DataIngestPage() {
             <button
               type="button"
               disabled={isCalculating || activeCount === 0}
+              data-tour="data-save-run"
               onClick={handleRunCalculation}
               className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer flex items-center gap-2 ${
                 isCalculating || activeCount === 0
@@ -415,6 +416,7 @@ export default function DataIngestPage() {
         {/* Scan Entry Point Card */}
         {/* Scan & Ingest Entry Point Card */}
         <div
+          data-tour="data-upload-zone"
           onClick={() => setIsScanModalOpen(true)}
           className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition-all group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >

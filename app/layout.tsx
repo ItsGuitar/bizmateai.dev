@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { AskBizMateChat } from "./components/AskBizMateChat";
+import { TourProvider } from "./components/tour/TourProvider";
+import { TourOverlay } from "./components/tour/TourOverlay";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,8 +44,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-full flex flex-col transition-colors" suppressHydrationWarning>
         <ThemeProvider>
-          {children}
-          <AskBizMateChat />
+          <TourProvider>
+            {children}
+            <AskBizMateChat />
+            <TourOverlay />
+          </TourProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -144,7 +144,7 @@ function AgentRoomPageInner() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <AppHeader user={user} />
 
-      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4">
+      <div data-tour="agent-room-view" className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4">
         <div className="animate-fade-in-up flex items-center justify-between gap-3">
           <div>
             <button

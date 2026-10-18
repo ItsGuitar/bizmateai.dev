@@ -427,6 +427,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
+              data-tour="ingest-data-cta"
               onClick={() => router.push("/dashboard/data")}
               className="text-sm font-bold px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all cursor-pointer flex items-center gap-1.5"
             >
@@ -810,7 +811,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Health score overlay */}
-              <div className="absolute top-3 left-3 min-w-[140px] bg-white/90 dark:bg-slate-900 rounded-xl p-2.5 shadow-sm text-left">
+              <div data-tour="health-score-card" className="absolute top-3 left-3 min-w-[140px] bg-white/90 dark:bg-slate-900 rounded-xl p-2.5 shadow-sm text-left">
                 <div className="flex items-center justify-between gap-1">
                   <p className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold tracking-wide">
                     Health score
