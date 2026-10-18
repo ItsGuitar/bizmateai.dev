@@ -20,6 +20,14 @@ export function verifyToken(token: string): TokenPayload | null {
   }
 }
 
+// Resolves the signed-in user's id from a request, or null if there isn't a valid one.
+// Callers must return 401 on null — never fall back to "the first user in the database" or
+// auto-create a demo account, that would let an unauthenticated request read/write someone
+// else's real financial data.
+export function requireUserId(request: Request): string | null {
+  return getUserFromRequest(request)?.userId ?? null;
+}
+
 export function getUserFromRequest(request: Request): TokenPayload | null {
   const authHeader = request.headers.get("authorization");
   if (authHeader?.startsWith("Bearer ")) {

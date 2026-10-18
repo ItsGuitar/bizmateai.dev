@@ -1,4 +1,7 @@
 import type { SupplierAgentId } from "./supplier-agents";
+import type { AgentRoomStep, AgentRoomEvent, ApprovalCard } from "@/lib/workflow-types";
+
+export type { AgentRoomStep, AgentRoomEvent, ApprovalCard } from "@/lib/workflow-types";
 
 // Mock dataset for the Home and Agent room screens.
 // Numbers follow the China golden-test sample in NEW_DESIGN.md Section 12:
@@ -255,33 +258,6 @@ export const CASH_WEEKS: CashWeek[] = [
 ];
 
 // --- Agent room: the order_plan workflow run referenced in NEW_DESIGN.md Section 4 ---
-
-export interface AgentRoomEvent {
-  id: string;
-  stageIndex: number;
-  from: SupplierAgentId;
-  to: SupplierAgentId;
-  statusText: string;
-  text: string;
-  tool?: string;
-  reasoning?: string[];
-  isChallenge?: boolean;
-  tier: 0 | 1 | 2 | 3;
-}
-
-export interface AgentRoomStep {
-  id: string;
-  label: string;
-}
-
-export interface ApprovalCard {
-  id: string;
-  agent: SupplierAgentId;
-  tier: 2;
-  title: string;
-  detail: string;
-  impact: string;
-}
 
 export const ORDER_PLAN_RUN = {
   runId: "run_8f2",

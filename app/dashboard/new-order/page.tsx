@@ -157,9 +157,14 @@ export default function NewOrderPage() {
 
   const handleCheckOrder = () => setHasChecked(true);
 
+  const handOffToAgents = () => {
+    sessionStorage.setItem("bizmate_order_input", JSON.stringify(form));
+    router.push("/dashboard/agent-room");
+  };
+
   const handleAcceptOrder = () => {
     setToastMessage("Order accepted. Handing off to the agents.");
-    router.push("/dashboard/agent-room");
+    handOffToAgents();
   };
 
   return (
@@ -215,7 +220,7 @@ export default function NewOrderPage() {
             />
             <button
               type="button"
-              onClick={() => router.push("/dashboard/agent-room")}
+              onClick={handOffToAgents}
               className="shrink-0 text-xs font-bold px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer"
             >
               Run with steps →

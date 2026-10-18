@@ -40,6 +40,7 @@ export default function ProcurementPage() {
   const [calcResult, setCalcResult] = useState<PipelineOutput | null>(null);
   const [activeDocs, setActiveDocs] = useState<any[]>([]);
   const [selectedMaterial, setSelectedMaterial] = useState<string>("Cold-rolled steel");
+  const [executedLots, setExecutedLots] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const session = getSession();
@@ -165,6 +166,27 @@ export default function ProcurementPage() {
       };
     });
   }, [activeDocs, calcResult, mat, selectedMaterial]);
+
+  const handleExecuteStrategy = async (lot: BuyLot) => {
+    try {
+      const res = await fetch("/api/inbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId: "procurement",
+          title: `${lot.actionLabel}: ${lot.material}`,
+          description: lot.actionExplanation,
+          impact: `${formatMoney(lot.expectedCost)} · supplier pay date ${lot.supplierPayDate}`,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to save");
+      setExecutedLots((prev) => new Set(prev).add(lot.id));
+      setToastMessage(`Sent for your approval: ${lot.actionLabel} for ${lot.material}.`);
+    } catch (err: any) {
+      setToastMessage(err.message || "Could not save that request.");
+    }
+  };
 
   if (isChecking) {
     return null;
@@ -317,12 +339,11 @@ export default function ProcurementPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => {
-                      setToastMessage(`Action triggered for ${lot.material}. Handed off to workflow.`);
-                    }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+                    onClick={() => handleExecuteStrategy(lot)}
+                    disabled={executedLots.has(lot.id)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Execute Strategy →
+                    {executedLots.has(lot.id) ? "Sent for approval ✓" : "Execute Strategy →"}
                   </button>
                 </div>
               </div>

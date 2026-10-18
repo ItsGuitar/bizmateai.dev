@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
@@ -98,6 +98,8 @@ export default function FinancingPage() {
 
   const [readyDocs, setReadyDocs] = useState<Set<string>>(new Set());
   const [packageBuilt, setPackageBuilt] = useState(false);
+  const [sharedWithLender, setSharedWithLender] = useState(false);
+  const matchedLendersRef = useRef<HTMLDivElement>(null);
 
   const [calcResult, setCalcResult] = useState<any>(null);
 
@@ -228,18 +230,55 @@ export default function FinancingPage() {
   const financing = SUPPLIER_AGENTS.financing;
   const footprintPerMillion = GREEN_CHECK.footprintTonnesCO2e / (PAST_12_MONTHS.revenueInvoiced / 1_000_000);
 
-  const handleAskForApproval = (match: MatchedProduct) => {
-    setRequestedProducts((prev) => new Set(prev).add(match.product.id));
-    setToastMessage(`Sent for your approval: ${match.product.name}. Nothing is signed yet.`);
+  // Shared by any button here that proposes a real action: writes a real InboxApproval +
+  // AuditLog row (same endpoint the Receivables page uses), so it actually shows up in the
+  // Central Inbox instead of vanishing on reload like a bare toast would.
+  const postApproval = async (payload: { agentId: string; title: string; description: string; impact: string }) => {
+    try {
+      const res = await fetch("/api/inbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to save");
+      return true;
+    } catch (err: any) {
+      setToastMessage(err.message || "Could not save that request.");
+      return false;
+    }
+  };
+
+  const handleAskForApproval = async (match: MatchedProduct) => {
     setNegotiateProduct(null);
+    const ok = await postApproval({
+      agentId: "financing",
+      title: `Request ${match.product.name}`,
+      description: `${match.product.security} · ${match.product.termMonths}-month term · all-in ${formatPct(match.allIn)} · covers up to ${formatMoney(match.cap)}`,
+      impact: `Covers ${formatMoney(Math.min(need, match.cap))} of the ${formatMoney(need)} need`,
+    });
+    if (ok) {
+      setRequestedProducts((prev) => new Set(prev).add(match.product.id));
+      setToastMessage(`Sent for your approval: ${match.product.name}. Nothing is signed yet.`);
+    }
   };
 
   const handleFindFinancing = () => {
-    setToastMessage(`Best fit: ${matches[0].product.name} at ${formatPct(matches[0].allIn)} all-in.`);
+    setSelectedProductId(matches[0].product.id);
+    matchedLendersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setToastMessage(`Best fit: ${matches[0].product.name} at ${formatPct(matches[0].allIn)} all-in. Selected below.`);
   };
 
   const handleAskFinancing = () => {
-    setToastMessage("Chat is coming soon.");
+    // Use the order's own computed need, not the blended `need` card above: that one mixes in
+    // the user's real cash forecast and can legitimately read ¥0 when their own documents show
+    // no gap, which would make this sentence nonsensical even though it's about this one order.
+    const orderNeed = needCase === "base" ? order.financingNeedLow : order.financingNeedHigh;
+    const prefill =
+      orderNeed > 0
+        ? `I need ${formatMoney(orderNeed)} for ${order.termMonths} months to cover the ${order.input.buyerName} order. What are my best financing options?`
+        : `What are my best financing options right now?`;
+    window.dispatchEvent(new CustomEvent("bizmate_open_chat", { detail: { prefill } }));
   };
 
   const handlePostDemand = () => {
@@ -266,8 +305,17 @@ export default function FinancingPage() {
     setToastMessage(`Package built: ${readyCount} of ${CREDIT_PACKAGE_DOCS.length} documents ready.`);
   };
 
-  const handleShareWithLender = () => {
-    setToastMessage(`Shared with ${selected.product.name}.`);
+  const handleShareWithLender = async () => {
+    const ok = await postApproval({
+      agentId: "financing",
+      title: `Share credit package with ${selected.product.name}`,
+      description: `${readyCount} of ${CREDIT_PACKAGE_DOCS.length} documents ready · ${selected.product.security}`,
+      impact: `Starts the application with ${selected.product.name}`,
+    });
+    if (ok) {
+      setSharedWithLender(true);
+      setToastMessage(`Shared with ${selected.product.name}. Waiting on your approval in the inbox.`);
+    }
   };
 
   return (
@@ -452,7 +500,7 @@ export default function FinancingPage() {
         </div>
 
         {/* Matched lenders */}
-        <div className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
+        <div ref={matchedLendersRef} className="animate-fade-in-up delay-250 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xs p-5">
           <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Matched lenders</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
             Sorted from best to worst: who qualifies, who covers the full amount, who's cheapest.
@@ -917,10 +965,10 @@ export default function FinancingPage() {
             <button
               type="button"
               onClick={handleShareWithLender}
-              disabled={!packageBuilt}
+              disabled={!packageBuilt || sharedWithLender}
               className="text-sm font-bold px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Share with lender
+              {sharedWithLender ? "Sent for approval ✓" : "Share with lender"}
             </button>
             <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">
               {readyCount} of {CREDIT_PACKAGE_DOCS.length} ready

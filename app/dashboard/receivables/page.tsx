@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
-import { AgentRoomView } from "@/app/components/AgentRoomView";
 import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
-import { COMPANY, OPEN_INVOICES, COLLECT_RUN, type Invoice } from "@/app/data/supplier-copilot-mock";
+import { COMPANY, OPEN_INVOICES, type Invoice } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS } from "@/app/data/supplier-agents";
 import {
   BUYERS,
@@ -71,12 +70,6 @@ export default function ReceivablesPage() {
   const [remindChannel, setRemindChannel] = useState(CHANNELS[0]);
   const [sentReminders, setSentReminders] = useState<Set<string>>(new Set());
   const [discountedInvoices, setDiscountedInvoices] = useState<Set<string>>(new Set());
-
-  const [showChaseRun, setShowChaseRun] = useState(false);
-  const [revealCount, setRevealCount] = useState(0);
-  const [isThinking, setIsThinking] = useState(true);
-  const [chaseApprovals, setChaseApprovals] = useState<Record<string, "approved" | "declined">>({});
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // AI Reword & Approval Card States
   const [reminderText, setReminderText] = useState("");
@@ -195,23 +188,6 @@ export default function ReceivablesPage() {
     [invoiceRows, dynamicBuyers]
   );
 
-  const totalChaseEvents = COLLECT_RUN.events.length;
-  const chaseDone = revealCount >= totalChaseEvents;
-
-  useEffect(() => {
-    if (!showChaseRun || chaseDone) {
-      setIsThinking(false);
-      return;
-    }
-    setIsThinking(true);
-    timerRef.current = setTimeout(() => {
-      setRevealCount((prev) => Math.min(prev + 1, totalChaseEvents));
-    }, 2000);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [showChaseRun, revealCount, chaseDone, totalChaseEvents]);
-
   if (isChecking) {
     return null;
   }
@@ -301,20 +277,31 @@ export default function ReceivablesPage() {
     }
   };
 
-  const handleDiscountEIou = (row: (typeof invoiceRows)[number]) => {
+  const handleDiscountEIou = async (row: (typeof invoiceRows)[number]) => {
     const maturityDays = Math.max(0, daysBetween(AS_OF, row.dueDate) - 2);
     const discounted = eIouDiscountedAmount(row.invoice.amount, maturityDays);
-    setDiscountedInvoices((prev) => new Set(prev).add(row.invoice.id));
-    setToastMessage(
-      `${row.invoice.buyerName}'s e-IOU discounted today: ${formatMoney(discounted)} now instead of ${formatMoney(row.invoice.amount)} on ${formatDate(row.dueDate)}.`
-    );
+    try {
+      const res = await fetch("/api/inbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId: "financing",
+          title: `Discount e-IOU today: ${row.invoice.buyerName}`,
+          description: `Invoice ${row.invoice.no} due ${formatDate(row.dueDate)}, discounted ${maturityDays} days early`,
+          impact: `+${formatMoney(discounted)} now instead of ${formatMoney(row.invoice.amount)} on ${formatDate(row.dueDate)}`,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to save");
+      setDiscountedInvoices((prev) => new Set(prev).add(row.invoice.id));
+      setToastMessage(`Sent for your approval: discount ${row.invoice.buyerName}'s e-IOU for ${formatMoney(discounted)} now.`);
+    } catch (err: any) {
+      setToastMessage(err.message || "Could not save that request.");
+    }
   };
 
   const handleStartChaseRun = () => {
-    setShowChaseRun(true);
-    setRevealCount(0);
-    setIsThinking(true);
-    setChaseApprovals({});
+    router.push("/dashboard/agent-room?workflow=collect");
   };
 
   return (
@@ -572,6 +559,16 @@ export default function ReceivablesPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      {row.invoice.method === "e-IOU" && (
+                        <button
+                          type="button"
+                          onClick={() => handleDiscountEIou(row)}
+                          disabled={alreadyDiscounted}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
+                        >
+                          {alreadyDiscounted ? "Discounted" : "💱 Discount today"}
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleOpenRemind(row.invoice)}

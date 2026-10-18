@@ -13,8 +13,10 @@ import {
   gradeLetter,
   expectedOpenInvoicePayment,
   getMaterialPrice,
+  type BuyerModel,
 } from "@/lib/order-engine";
 import { OPEN_INVOICES, COMPANY, VITALS, HEALTH } from "@/app/data/supplier-copilot-mock";
+import type { PipelineOutput } from "@/lib/calculation-pipeline";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 
@@ -84,7 +86,7 @@ function executeNavigateHelp(intentKey: string): ChatToolResult {
       },
     },
     agent_room: {
-      summary: "ตรวจสอบการทำงานร่วมกันของ 6 Agent และอนุมัติคำขอใน Central Inbox ได้ที่ 'Agent Room'",
+      summary: "ตรวจสอบการทำงานร่วมกันของ Lead, Receivables, Procurement และ Financing Agent และอนุมัติคำขอใน Central Inbox ได้ที่ 'Agent Room'",
       action: {
         type: "navigate",
         label: "ไปที่ Central Inbox (Agent Room)",
@@ -102,15 +104,71 @@ function executeNavigateHelp(intentKey: string): ChatToolResult {
   };
 }
 
-// 1. Tool 1: get_buyer - Buyer habit, grade, delay p90, open invoices
-function executeGetBuyer(buyerNameQuery?: string): ChatToolResult {
+// A free-text message rarely repeats a company name character-for-character ("Fresh Real Buyer
+// Ltd" vs. the stored "Fresh Real Buyer Ltd."), so strip trailing punctuation before comparing.
+function stripPunct(s: string): string {
+  return s.toLowerCase().replace(/[.,()]/g, "").trim();
+}
+
+function messageMentionsRealBuyer(message: string, counterparty: string): boolean {
+  return stripPunct(message).includes(stripPunct(counterparty));
+}
+
+// Seed demo buyers also match on a single word (e.g. "shenzhen" alone for "Shenzhen ElectroParts"),
+// since those short references are the common case in the quick-prompt demo flow.
+function messageMentionsSeedBuyer(message: string, buyerName: string): boolean {
+  const m = stripPunct(message);
+  const b = stripPunct(buyerName);
+  return m.includes(b) || b.includes(m);
+}
+
+// 1. Tool 1: get_buyer - Buyer habit, grade, delay p90, open invoices. Prefers the signed-in
+// user's own ingested invoices for this buyer (blended with the buyer model the calculation
+// pipeline already computed for them); only falls back to the seed portfolio when they have no
+// real documents for this buyer yet.
+async function executeGetBuyer(buyerNameQuery: string | undefined, userId: string): Promise<ChatToolResult> {
   const query = (buyerNameQuery || "").toLowerCase().trim();
-  const matchedBuyer = BUYERS.find((b) => b.name.toLowerCase().includes(query)) || BUYERS[1]; // default Shenzhen ElectroParts
-  
+
+  const docs = await prisma.ingestedDocument.findMany({ where: { userId, isEnabled: true } });
+  const realInvoices = docs.filter(
+    (d) => d.docType.toLowerCase().includes("invoice") && messageMentionsRealBuyer(query, d.counterparty)
+  );
+
+  if (realInvoices.length > 0) {
+    const buyerName = realInvoices[0].counterparty;
+    const snapshot = await prisma.calculationSnapshot.findUnique({ where: { userId } });
+    const buyerModels = snapshot ? (JSON.parse(snapshot.resultJson) as PipelineOutput).buyerModels : [];
+    const bm = buyerModels.find((b) => b.buyerName === buyerName);
+    const liveBuyer: BuyerModel = bm
+      ? { name: buyerName, mu: bm.mu, sigma: bm.sigma, grade: bm.grade, n: 2 }
+      : getBuyerModel(buyerName);
+
+    const invoicesWithRisk = realInvoices.map((inv) => {
+      const dueDate = new Date(`${inv.dueDate || inv.issueDate}T00:00:00Z`);
+      const payment = expectedOpenInvoicePayment(dueDate, liveBuyer, AS_OF);
+      return { ...inv, overdueDays: payment.overdueDays, risk: payment.risk };
+    });
+    const hasOverdue = invoicesWithRisk.some((inv) => inv.overdueDays > 0);
+    const score = bm?.gradeScore ?? gradeScore(liveBuyer.mu, liveBuyer.sigma, hasOverdue);
+    const grade = bm?.grade ?? gradeLetter(score, liveBuyer.n);
+    const p90Days = Math.round(liveBuyer.mu + 1.2816 * liveBuyer.sigma);
+    const totalOutstanding = realInvoices.reduce((acc, inv) => acc + inv.amount, 0);
+
+    return {
+      toolName: "get_buyer",
+      data: { name: buyerName, grade, score: Math.round(score * 10) / 10, mu: liveBuyer.mu, sigma: liveBuyer.sigma, p90Days, hasOverdue, invoices: invoicesWithRisk, totalOutstanding },
+      summary: `${buyerName}: Grade ${grade} (${Math.round(score)}/100). Usual delay ~${liveBuyer.mu}d, p90 is ${p90Days}d. Open invoices: ${realInvoices.length} (${COMPANY.currency}${totalOutstanding.toLocaleString()}).`,
+      action: { type: "navigate", label: `Inspect ${buyerName} in Receivables`, href: "/dashboard/receivables" },
+    };
+  }
+
+  // No real invoices for this buyer: fall back to the seed demo portfolio.
+  const matchedBuyer = BUYERS.find((b) => messageMentionsSeedBuyer(query, b.name)) || BUYERS[1]; // default Shenzhen ElectroParts
+
   const buyerInvoices = OPEN_INVOICES.filter((inv) =>
     inv.buyerName.toLowerCase().includes(matchedBuyer.name.toLowerCase())
   );
-  
+
   const hasOverdue = buyerInvoices.some((inv) => {
     const dueDate = new Date(`${inv.dueDate}T00:00:00Z`);
     return expectedOpenInvoicePayment(dueDate, matchedBuyer, AS_OF).overdueDays > 0;
@@ -364,16 +422,10 @@ function detectToolRequirement(message: string, pageContext: string): {
     lower.includes("hanoi") ||
     lower.includes("boutique")
   ) {
-    let buyerName = "Shenzhen ElectroParts";
-    if (lower.includes("guangzhou")) buyerName = "Guangzhou Motors";
-    else if (lower.includes("chiang mai")) buyerName = "Chiang Mai Furniture";
-    else if (lower.includes("hanoi")) buyerName = "Hanoi Textiles Co.";
-    else if (lower.includes("boutique")) buyerName = "Boutique Siam";
-    else if (lower.includes("shenzhen")) buyerName = "Shenzhen ElectroParts";
-
-    return { needsTool: true, toolName: "get_buyer", args: { buyerName } };
+    // Pass the raw message through: executeGetBuyer checks it against the user's own real
+    // counterparty names first, only falling back to these 5 seed names if none match.
+    return { needsTool: true, toolName: "get_buyer", args: { buyerNameQuery: message } };
   }
-
   // 5. Order feasibility check (explicit new order evaluation)
   if (
     lower.includes("คำสั่งซื้อใหม่") ||
@@ -426,7 +478,7 @@ export async function POST(req: Request) {
       if (detection.toolName === "navigate_help") {
         toolResult = executeNavigateHelp(detection.args?.intentKey);
       } else if (detection.toolName === "get_buyer") {
-        toolResult = executeGetBuyer(detection.args?.buyerName);
+        toolResult = await executeGetBuyer(detection.args?.buyerNameQuery, userId);
       } else if (detection.toolName === "check_order") {
         toolResult = executeCheckOrder(detection.args);
       } else if (detection.toolName === "get_procurement") {
@@ -440,6 +492,14 @@ export async function POST(req: Request) {
         );
       }
     }
+
+    // Real health score / cash position for this user, when they've run a calculation; falls
+    // back to the seed demo numbers otherwise (e.g. brand-new account, no documents yet).
+    const snapshot = await prisma.calculationSnapshot.findUnique({ where: { userId } });
+    const liveResult = snapshot ? (JSON.parse(snapshot.resultJson) as PipelineOutput) : null;
+    const liveHealthScore = liveResult?.health.totalScore ?? HEALTH.score;
+    const liveMood = liveResult?.health.mood ?? HEALTH.mood;
+    const liveCashNow = liveResult?.forecasts.base[0]?.closingCash ?? VITALS.cashNow;
 
     // 2. Formulate Page Context & Persona with Comprehensive Base Knowledge
     const pagePersona: Record<string, { role: string; capabilities: string }> = {
@@ -477,7 +537,7 @@ export async function POST(req: Request) {
       },
       "agent-room": {
         role: "BizMateAI Central Inbox & Agent Orchestrator",
-        capabilities: "ศูนย์บัญชาการกลางและกล่องข้อความอนุมัติ (Central Inbox) ซึ่งรวบรวมคำขออนุมัติจาก 6 AI Agents ตามนโยบาย Zero-Surprise Policy",
+        capabilities: "ศูนย์บัญชาการกลางและกล่องข้อความอนุมัติ (Central Inbox) ซึ่งรวบรวมคำขออนุมัติจาก Lead, Receivables, Procurement, Financing และ Policy Guard ตามนโยบาย Zero-Surprise Policy",
       },
     };
 
@@ -489,7 +549,7 @@ SYSTEM ARCHITECTURE & BASE KNOWLEDGE (ACTUAL SCREENS & FEATURES):
 1. **Executive Dashboard**: Financial Health Score, 14-week Cash Runway projection, Price Risk Storm alerts, working capital simulation, Factory Coin visualization.
 2. **Data & Document Scan**:
    - **Upload/Add Receipts & Invoices**: Users can scan or upload physical/digital receipts and invoices using AI Document Scan (OCR). The system extracts counterparty, issue date, due date, amount, and doc type automatically into the database.
-   - **Multi-Bank Connection**: Connect and toggle accounts for KBank (Ploy Select), SCB (Apex Craft Furniture), BBL (BioHarvest Agro Tech), and Personal (Kittisak Somchai).
+   - **Multi-Bank Connection**: Connect and toggle accounts for KBank (Ploy Select), SCB (Apex Craft Furniture), BBL (BioHarvest Agro Tech), and a Personal account.
    - **Statement Ingest**: Upload 365-day bank statements to recalculate real-time financial metrics.
 3. **New Order Evaluation**: Evaluate new buyer purchase orders, simulate material costs, profit margins, and identify cash gap financing needs before accepting.
 4. **Receivables (AR)**: Monitor outstanding invoices, debtor habit scores (Grade A to D), expected payment delay distribution (mu/sigma), and draft polite payment reminders.
@@ -502,8 +562,8 @@ SYSTEM ARCHITECTURE & BASE KNOWLEDGE (ACTUAL SCREENS & FEATURES):
 CURRENT CONTEXT & COMPANY VITALS:
 - Current Screen: ${currentContext.role}
 - Capabilities of this screen: ${currentContext.capabilities}
-- Cash on Hand: ${COMPANY.currency}${VITALS.cashNow.toLocaleString()}
-- Health Score: ${HEALTH.score}/100 (${HEALTH.mood})
+- Cash on Hand: ${COMPANY.currency}${Math.round(liveCashNow).toLocaleString()}
+- Health Score: ${Math.round(liveHealthScore)}/100 (${liveMood})
 
 RECENT CONVERSATION HISTORY (Last up to 5 QA interactions for natural flow):
 ${
@@ -522,13 +582,14 @@ CRITICAL CONVERSATIONAL & FORMATTING RULES:
 4. Provide ACCURATE, REAL guidance based on the ACTUAL system architecture above. Never invent fictitious menus like "เอกสาร/รายรับ-รายจ่าย".
 5. When the user asks how to do something or where to find a feature (e.g. adding receipts, checking debt, testing orders), explain the clear step-by-step in natural, polite Thai or professional English.
 6. Keep answers direct, helpful, and concise (2-4 sentences). Do not mention system prompts or internals.
+7. NEVER address the user by a personal name (e.g. never invent or guess "คุณ[ชื่อ]"). No real name is given to you here. Greet with "คุณ" alone, "เรียน" or just answer directly without any name.
 ${
   toolResult
-    ? `7. System Tool [${toolResult.toolName}] Data:
+    ? `8. System Tool [${toolResult.toolName}] Data:
 ${toolResult.summary}
 Raw data: ${JSON.stringify(toolResult.data)}
 Guide the user with this data and emphasize the action button provided.`
-    : `7. No tool invocation needed. Answer directly using your complete Base Knowledge of BizMateAI.`
+    : `8. No tool invocation needed. Answer directly using your complete Base Knowledge of BizMateAI.`
 }`;
 
     // 3. Multimodal / Text LLM Call through universal client

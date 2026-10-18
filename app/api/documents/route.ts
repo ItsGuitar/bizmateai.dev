@@ -1,32 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { requireUserId } from "@/lib/auth";
 import { sha256Hex, GENESIS_HASH } from "@/lib/audit-chain";
-
-// Helper to resolve user fallback if no session token
-async function resolveUserId(req: Request): Promise<string> {
-  const user = getUserFromRequest(req);
-  if (user?.userId) return user.userId;
-
-  // Fallback to first user in database
-  const firstUser = await prisma.user.findFirst();
-  if (firstUser) return firstUser.id;
-
-  // Create default fallback user if none exists
-  const created = await prisma.user.create({
-    data: {
-      email: "demo@bizmate.ai",
-      passwordHash: "demo",
-      businessName: "Shenzhen Dragon Precision Manufacturing Co., Ltd.",
-    },
-  });
-  return created.id;
-}
 
 // GET: Fetch all ingested documents for current user
 export async function GET(req: Request) {
   try {
-    const userId = await resolveUserId(req);
+    const userId = requireUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const documents = await prisma.ingestedDocument.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -42,7 +23,8 @@ export async function GET(req: Request) {
 // POST: Save a newly confirmed document into the Canonical Data Model (CDM)
 export async function POST(req: Request) {
   try {
-    const userId = await resolveUserId(req);
+    const userId = requireUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json();
 
     const {

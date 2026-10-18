@@ -6,16 +6,22 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
 import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
-import { ORDER_PLAN_RUN, COLLECT_RUN, type ApprovalCard } from "@/app/data/supplier-copilot-mock";
 import { SUPPLIER_AGENTS, type SupplierAgentId } from "@/app/data/supplier-agents";
-import {
-  TIER_RULES,
-  SELF_ASSESSMENT,
-  MASKING_DEMO,
-  AUDIT_ENTRIES_SEED,
-  type AuditEntrySeed,
-} from "@/app/data/trust-mock";
+import { TIER_RULES, SELF_ASSESSMENT, MASKING_DEMO, type AuditEntrySeed } from "@/app/data/trust-mock";
 import { GENESIS_HASH, computeChain, merkleRootOf } from "@/lib/audit-chain";
+
+interface LiveApproval {
+  id: string;
+  agentId: string;
+  title: string;
+  description: string;
+  impact: string;
+  status: "PENDING" | "APPROVED" | "DECLINED";
+}
+
+function agentFor(id: string) {
+  return (SUPPLIER_AGENTS as Record<string, (typeof SUPPLIER_AGENTS)[SupplierAgentId]>)[id] ?? null;
+}
 
 function shortHash(hash: string | undefined): string {
   if (!hash) return "computing…";
@@ -40,9 +46,12 @@ export default function TrustPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const [approvalDecisions, setApprovalDecisions] = useState<Record<string, "approved" | "declined">>({});
+  const [approvals, setApprovals] = useState<LiveApproval[]>([]);
+  const [isLoadingApprovals, setIsLoadingApprovals] = useState(true);
 
-  const [entries, setEntries] = useState<AuditEntrySeed[]>(() => AUDIT_ENTRIES_SEED.map((e) => ({ ...e })));
+  const [entries, setEntries] = useState<AuditEntrySeed[]>([]);
+  const [baselineEntries, setBaselineEntries] = useState<AuditEntrySeed[]>([]);
+  const [isLoadingAudit, setIsLoadingAudit] = useState(true);
   const [sealedHashes, setSealedHashes] = useState<string[] | null>(null);
   const [currentHashes, setCurrentHashes] = useState<string[] | null>(null);
   const [editingSeq, setEditingSeq] = useState<number | null>(null);
@@ -59,16 +68,55 @@ export default function TrustPage() {
     setIsChecking(false);
   }, [router]);
 
-  // Seal the original chain once, on mount, so tampering later has a clean baseline to verify against.
+  // Real approvals (the same InboxApproval rows the Receivables/Financing/Procurement pages
+  // write to via /api/inbox) and the real audit trail (/api/audit), not the old mock data.
   useEffect(() => {
-    computeChain(AUDIT_ENTRIES_SEED).then((hashes) => {
-      setSealedHashes(hashes);
-      setCurrentHashes(hashes);
-    });
-  }, []);
+    if (isChecking) return;
+    (async () => {
+      setIsLoadingApprovals(true);
+      try {
+        const res = await fetch("/api/inbox");
+        const data = await res.json();
+        if (data.success) setApprovals(data.approvals);
+      } catch (err) {
+        console.error("Trust approvals load error:", err);
+      } finally {
+        setIsLoadingApprovals(false);
+      }
+    })();
+
+    (async () => {
+      setIsLoadingAudit(true);
+      try {
+        const res = await fetch("/api/audit");
+        const data = await res.json();
+        if (data.success) {
+          setEntries(data.entries);
+          setBaselineEntries(data.entries);
+        }
+      } catch (err) {
+        console.error("Trust audit load error:", err);
+      } finally {
+        setIsLoadingAudit(false);
+      }
+    })();
+  }, [isChecking]);
+
+  // Seal the real chain once it loads, so tampering later has a clean baseline to verify against.
+  useEffect(() => {
+    if (baselineEntries.length === 0) {
+      setSealedHashes(null);
+      return;
+    }
+    computeChain(baselineEntries).then(setSealedHashes);
+  }, [baselineEntries]);
 
   // Recompute the live chain whenever an entry is edited, so a tamper test shows its effect immediately.
   useEffect(() => {
+    if (entries.length === 0) {
+      setCurrentHashes(null);
+      return;
+    }
     let cancelled = false;
     computeChain(entries).then((hashes) => {
       if (!cancelled) setCurrentHashes(hashes);
@@ -86,25 +134,37 @@ export default function TrustPage() {
     return null;
   }, [sealedHashes, currentHashes]);
 
-  const isTampered = entries.some((e, i) => e.detail !== AUDIT_ENTRIES_SEED[i].detail);
+  const isTampered = entries.some((e, i) => e.detail !== baselineEntries[i]?.detail);
 
   if (isChecking) {
     return null;
   }
 
   const guard = SUPPLIER_AGENTS.guard;
-  const approvals: ApprovalCard[] = [...ORDER_PLAN_RUN.approvals, ...COLLECT_RUN.approvals];
-  const pendingCount = approvals.filter((a) => !approvalDecisions[a.id]).length;
+  const pendingCount = approvals.filter((a) => a.status === "PENDING").length;
 
-  const handleApprove = (approval: ApprovalCard) => {
-    setApprovalDecisions((prev) => ({ ...prev, [approval.id]: "approved" }));
-    setToastMessage(`Approved: ${approval.title}. Logged to the audit trail.`);
+  const submitDecision = async (approval: LiveApproval, status: "APPROVED" | "DECLINED") => {
+    try {
+      const res = await fetch(`/api/inbox/${approval.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to save");
+      setApprovals((prev) => prev.map((a) => (a.id === approval.id ? { ...a, status } : a)));
+      setToastMessage(
+        status === "APPROVED"
+          ? `Approved: ${approval.title}. Logged to the audit trail.`
+          : `Declined: ${approval.title}. Nothing was sent.`
+      );
+    } catch (err: any) {
+      setToastMessage(err.message || "Could not save that decision.");
+    }
   };
 
-  const handleDecline = (approval: ApprovalCard) => {
-    setApprovalDecisions((prev) => ({ ...prev, [approval.id]: "declined" }));
-    setToastMessage(`Declined: ${approval.title}. Nothing was sent.`);
-  };
+  const handleApprove = (approval: LiveApproval) => submitDecision(approval, "APPROVED");
+  const handleDecline = (approval: LiveApproval) => submitDecision(approval, "DECLINED");
 
   const startTamper = (entry: AuditEntrySeed) => {
     setEditingSeq(entry.seq);
@@ -119,7 +179,7 @@ export default function TrustPage() {
   };
 
   const resetTamper = () => {
-    setEntries(AUDIT_ENTRIES_SEED.map((e) => ({ ...e })));
+    setEntries(baselineEntries.map((e) => ({ ...e })));
     setEditingSeq(null);
     setToastMessage("Chain restored.");
   };
@@ -247,19 +307,26 @@ export default function TrustPage() {
             Tier-2 actions wait here until you say yes or no.
           </p>
 
+          {isLoadingApprovals ? (
+            <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>
+          ) : approvals.length === 0 ? (
+            <p className="text-sm text-slate-400 dark:text-slate-500">
+              No approvals yet. Actions proposed by the agents (Receivables, Procurement, Financing) will show up here.
+            </p>
+          ) : (
           <div className="space-y-2.5">
             {approvals.map((approval) => {
-              const agent = SUPPLIER_AGENTS[approval.agent];
-              const decision = approvalDecisions[approval.id];
+              const agent = agentFor(approval.agentId);
+              const decision = approval.status === "PENDING" ? null : approval.status === "APPROVED" ? "approved" : "declined";
               return (
                 <div key={approval.id} className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span
                       className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: `${agent.color}18`, color: agent.color }}
+                      style={{ backgroundColor: agent ? `${agent.color}18` : "#64748b18", color: agent?.color ?? "#64748b" }}
                     >
-                      <span>{agent.emoji}</span>
-                      <span>{agent.name}</span>
+                      <span>{agent?.emoji ?? "🤖"}</span>
+                      <span>{agent?.name ?? approval.agentId}</span>
                     </span>
                     <span className="text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
                       Tier 2 · needs your OK
@@ -267,7 +334,7 @@ export default function TrustPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">{approval.title}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{approval.detail}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{approval.description}</p>
                   </div>
                   <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
                     <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400">{approval.impact}</span>
@@ -304,6 +371,7 @@ export default function TrustPage() {
               );
             })}
           </div>
+          )}
         </div>
 
         {/* Masking demo */}
@@ -384,16 +452,25 @@ export default function TrustPage() {
             Every action is hashed to the one before it. Edit an entry below to see the chain break.
           </p>
           <p className={`text-sm font-semibold mb-4 ${breakPoint === null ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-            {!currentHashes
+            {entries.length === 0
+              ? ""
+              : !currentHashes
               ? "Computing the chain…"
               : breakPoint === null
               ? "Chain intact, every hash checks out"
               : `Broken from entry #${entries[breakPoint].seq} onward`}
           </p>
 
+          {isLoadingAudit ? (
+            <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>
+          ) : entries.length === 0 ? (
+            <p className="text-sm text-slate-400 dark:text-slate-500">
+              No audit entries yet. Every calculation, reminder, and approval will show up here once you use the app.
+            </p>
+          ) : (
           <div className="space-y-1.5">
             {entries.map((entry, i) => {
-              const agent = entry.actor === "owner" ? null : SUPPLIER_AGENTS[entry.actor as SupplierAgentId];
+              const agent = entry.actor === "owner" ? null : agentFor(entry.actor);
               const hash = currentHashes?.[i];
               const broken = breakPoint !== null && i >= breakPoint;
               return (
@@ -409,7 +486,7 @@ export default function TrustPage() {
                           </span>
                         ) : (
                           <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                            👤 You
+                            {entry.actor === "owner" ? "👤 You" : entry.actor}
                           </span>
                         )}
                         <span className={`text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 rounded ${TIER_STYLE[entry.tier]}`}>
@@ -453,6 +530,7 @@ export default function TrustPage() {
               );
             })}
           </div>
+          )}
         </div>
 
         {/* Self-assessment */}

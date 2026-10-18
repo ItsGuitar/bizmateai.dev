@@ -64,6 +64,18 @@ export function AskBizMateChat() {
     }
   }, [isOpen, messages]);
 
+  // Lets other pages (e.g. the "Ask Financing" button) open this chat and optionally queue a
+  // question, instead of duplicating a second chat UI per page.
+  useEffect(() => {
+    const handleOpenChat = (e: Event) => {
+      const prefill = (e as CustomEvent<{ prefill?: string }>).detail?.prefill;
+      setIsOpen(true);
+      if (prefill) setInput(prefill);
+    };
+    window.addEventListener("bizmate_open_chat", handleOpenChat);
+    return () => window.removeEventListener("bizmate_open_chat", handleOpenChat);
+  }, []);
+
   // Only announce when user actually navigates to a DIFFERENT page route
   useEffect(() => {
     if (isExcludedPage) return;

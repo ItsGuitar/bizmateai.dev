@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { requireUserId } from "@/lib/auth";
 import { runDeterministicPipeline } from "@/lib/calculation-pipeline";
-
-async function resolveUserId(req: Request): Promise<string> {
-  const user = getUserFromRequest(req);
-  if (user?.userId) return user.userId;
-  const firstUser = await prisma.user.findFirst();
-  return firstUser?.id || "";
-}
 
 // POST: Trigger deterministic 7-stage calculation chain on user's documents
 export async function POST(req: Request) {
   try {
-    const userId = await resolveUserId(req);
+    const userId = requireUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const body = await req.json().catch(() => ({}));
 
     // Fetch all active or requested documents
@@ -88,7 +82,8 @@ export async function POST(req: Request) {
 // GET: Fetch latest calculation snapshot for user
 export async function GET(req: Request) {
   try {
-    const userId = await resolveUserId(req);
+    const userId = requireUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const snapshot = await prisma.calculationSnapshot.findUnique({
       where: { userId },

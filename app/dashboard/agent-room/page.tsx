@@ -1,20 +1,32 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppHeader } from "@/app/components/AppHeader";
 import { AgentRoomView } from "@/app/components/AgentRoomView";
 import { Toast } from "@/app/components/Toast";
 import { getSession, AuthUser } from "@/lib/auth-client";
 import { ORDER_PLAN_RUN } from "@/app/data/supplier-copilot-mock";
+import type { WorkflowRun } from "@/lib/workflow-types";
 
 const EVENT_DELAY_MS = 2200;
 
 export default function AgentRoomPage() {
+  return (
+    <Suspense fallback={null}>
+      <AgentRoomPageInner />
+    </Suspense>
+  );
+}
+
+function AgentRoomPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isChecking, setIsChecking] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
 
+  const [run, setRun] = useState<WorkflowRun>(ORDER_PLAN_RUN);
+  const [isLoadingRun, setIsLoadingRun] = useState(true);
   const [revealCount, setRevealCount] = useState(0);
   const [isThinking, setIsThinking] = useState(true);
   const [approvalDecisions, setApprovalDecisions] = useState<Record<string, "approved" | "declined">>({});
@@ -31,11 +43,52 @@ export default function AgentRoomPage() {
     setIsChecking(false);
   }, [router]);
 
-  const totalEvents = ORDER_PLAN_RUN.events.length;
+  useEffect(() => {
+    if (isChecking) return;
+    const workflow = searchParams.get("workflow") === "collect" ? "collect" : "order_plan";
+    let cancelled = false;
+
+    (async () => {
+      setIsLoadingRun(true);
+      try {
+        let body: Record<string, unknown> | undefined;
+        if (workflow === "order_plan") {
+          const stored = sessionStorage.getItem("bizmate_order_input");
+          if (stored) {
+            sessionStorage.removeItem("bizmate_order_input");
+            try {
+              body = { orderInput: JSON.parse(stored) };
+            } catch {
+              body = undefined;
+            }
+          }
+        }
+        const res = await fetch(`/api/workflow/${workflow === "collect" ? "collect" : "order-plan"}`, {
+          method: "POST",
+          headers: body ? { "Content-Type": "application/json" } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const data = await res.json();
+        if (!cancelled && data.success && data.run) {
+          setRun(data.run as WorkflowRun);
+        }
+      } catch (err) {
+        console.error("Agent room run error:", err);
+      } finally {
+        if (!cancelled) setIsLoadingRun(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isChecking, searchParams]);
+
+  const totalEvents = run.events.length;
   const isDone = revealCount >= totalEvents;
 
   useEffect(() => {
-    if (isChecking || isDone) {
+    if (isChecking || isLoadingRun || isDone) {
       setIsThinking(false);
       return;
     }
@@ -48,7 +101,7 @@ export default function AgentRoomPage() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [revealCount, isChecking, isDone, totalEvents]);
+  }, [revealCount, isChecking, isLoadingRun, isDone, totalEvents]);
 
   const handleSkipToResult = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -56,15 +109,32 @@ export default function AgentRoomPage() {
     setIsThinking(false);
   };
 
-  const handleApprove = (id: string) => {
-    setApprovalDecisions((prev) => ({ ...prev, [id]: "approved" }));
-    setToastMessage("Approved. Policy Guard logged it to the audit trail.");
+  const submitDecision = async (id: string, status: "APPROVED" | "DECLINED") => {
+    const decision = status === "APPROVED" ? "approved" : "declined";
+    setApprovalDecisions((prev) => ({ ...prev, [id]: decision }));
+    try {
+      const res = await fetch(`/api/inbox/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to update approval");
+      setToastMessage(
+        status === "APPROVED" ? "Approved. Policy Guard logged it to the audit trail." : "Declined. Nothing was sent."
+      );
+    } catch (err: any) {
+      setApprovalDecisions((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setToastMessage(err.message || "Could not save that decision.");
+    }
   };
 
-  const handleDecline = (id: string) => {
-    setApprovalDecisions((prev) => ({ ...prev, [id]: "declined" }));
-    setToastMessage("Declined. Nothing was sent.");
-  };
+  const handleApprove = (id: string) => submitDecision(id, "APPROVED");
+  const handleDecline = (id: string) => submitDecision(id, "DECLINED");
 
   if (isChecking) {
     return null;
@@ -104,10 +174,10 @@ export default function AgentRoomPage() {
         </div>
 
         <AgentRoomView
-          title={ORDER_PLAN_RUN.title}
-          steps={ORDER_PLAN_RUN.steps}
-          events={ORDER_PLAN_RUN.events}
-          approvals={ORDER_PLAN_RUN.approvals}
+          title={run.title}
+          steps={run.steps}
+          events={run.events}
+          approvals={run.approvals}
           revealCount={revealCount}
           isThinking={isThinking}
           isDone={isDone}
