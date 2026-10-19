@@ -1,8 +1,8 @@
-# BizMate (SME Finance Copilot)
+# BizMate AI (bizmateai.dev)
 
 AI-Powered Multi-Agent Financial Copilot and Working Capital Intelligence for SMEs and Suppliers.
 
-BizMate is an enterprise-grade financial management platform designed for SMEs and suppliers. It ingests financial documents (invoices, purchase orders, receipts, bank statements), runs a deterministic 7-stage calculation pipeline, tracks working capital, forecasts cash flow over 13-26 weeks, and coordinates specialized AI agents with strict security guardrails.
+BizMate AI (bizmateai.dev) is an enterprise-grade financial management platform designed for SMEs and suppliers. It ingests financial documents (invoices, purchase orders, receipts, bank statements), runs a deterministic 7-stage calculation pipeline, tracks working capital, forecasts cash flow over 13-26 weeks, and coordinates specialized AI agents with strict security guardrails.
 
 ---
 
@@ -44,7 +44,7 @@ Specialized agents collaborate to advise the business owner:
 
 ## Security and Compliance Controls
 
-BizMate implements a 4-tier autonomy governance model:
+BizMate AI implements a 4-tier autonomy governance model:
 - Tier 0 (Read and Analyze): Agents analyze data autonomously (forecasting, buyer scoring, scenario calculation).
 - Tier 1 (Draft): Agents prepare drafts internally; nothing leaves the system (drafting reminders, compiling credit applications).
 - Tier 2 (Send or Commit): Requires explicit business owner approval through the Inbox.
