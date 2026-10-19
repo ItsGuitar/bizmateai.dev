@@ -1,136 +1,163 @@
 # BizMate (SME Finance Copilot)
 
-> **AI-Powered Multi-Agent Financial Copilot & Working Capital Intelligence for SMEs**
+AI-Powered Multi-Agent Financial Copilot and Working Capital Intelligence for SMEs and Suppliers.
 
-BizMate is an enterprise-grade AI financial management and operational copilot designed specifically for SMEs and suppliers. It ingests financial documents (invoices, purchase orders, bank statements), runs audit-grade calculation pipelines, tracks working capital, forecasts cash flow, and orchestrates specialized AI agents to help business owners make confident decisions.
-
----
-
-## 🌟 Key Features
-
-### 1. 📊 Real-Time Financial Health & Cash Radar
-- **Live Health Score**: Multi-factor health scoring computed from uploaded verified documents.
-- **Factory Visualization**: Gamified visual indicator representing your company's operational and cash health status in real time.
-- **Cash Flow Radar & Gap Detection**: Forward-looking projection of working capital and cash deficits.
-
-### 2. 🤖 Multi-Agent Financial Team & Agent Room
-- **Agent Orchestration**: Specialized AI agents (Credit & Collections, Procurement Watch, Financing Matcher, Compliance Auditor) working in tandem.
-- **Agent Room**: Transparent replay view showing every agent's thought process, verified calculations, and proposed recommendations step-by-step.
-- **Human-in-the-Loop Inbox**: No automated action (re-negotiation, collection reminder, financing inquiry) is taken without human approval via an actionable Inbox, with Face ID / biometric confirmation for sensitive transactions.
-
-### 3. 📑 Smart Document Ingestion & Document Generator
-- **AI OCR & Ingestion**: Smart parser for tax invoices, purchase orders, receipts, and bank statements with privacy-first data masking.
-- **Formal Document Generator**: Instant generation of standardized financial statements, debtor notices, credit requests, and audit-ready reports (PDF & Excel).
-
-### 4. 💼 Working Capital & Order Intelligence
-- **New Order Feasibility**: Risk and margin evaluation before committing to new buyer orders against current liquidity.
-- **Receivables & Buyer Grading**: Creditworthiness grading of buyers, aging bucket analysis, and AI-worded payment reminder drafting.
-- **Procurement & Price Trends**: Raw material pricing forecasts and margin risk alerts.
-- **SME Financing Matching**: Non-predatory, automated lender matching based on actual reconciled cash flow.
+BizMate is an enterprise-grade financial management platform designed for SMEs and suppliers. It ingests financial documents (invoices, purchase orders, receipts, bank statements), runs a deterministic 7-stage calculation pipeline, tracks working capital, forecasts cash flow over 13-26 weeks, and coordinates specialized AI agents with strict security guardrails.
 
 ---
 
-## 🛠 Tech Stack
+## Core System Architecture
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router, Turbopack)
-- **Language**: TypeScript, React 19
-- **Styling**: Tailwind CSS v4
-- **Database & ORM**: PostgreSQL / SQLite via [Prisma ORM](https://www.prisma.io/)
-- **AI Integration**: Google Gemini API (`@google/generative-ai`)
-- **Document & PDF Processing**: `pdfjs-dist`, `pdf2json`, `jspdf`, `html2canvas`, `xlsx`
-- **Security & Privacy**: Client-side data masking, JWT authentication, bcrypt password hashing
+### 1. Deterministic Calculation Pipeline
+Financial math and ledger balances are strictly computed via deterministic code rather than AI generation:
+- Stage 1: Document Ingestion, deduplication, counterparty normalization, and SHA-256 verification.
+- Stage 2: Buyer Payment Modeling using credibility shrinkage, confidence intervals, and letter grades (A, B, C, D).
+- Stage 3: Weekly Cash Flow Forecast across 13 to 26 weeks with cushion breach warnings and scenario modeling.
+- Stage 4: Health Scoring (100-point composite score) with Factory Level visualization (Levels 1 to 5).
+- Stage 5: Issue Ranking based on financial impact and urgency.
+- Stage 6: Financing Need analysis matching non-predatory lender products.
+- Stage 7: Unified state sync across all dashboard views.
+
+### 2. Multi-Agent System
+Specialized agents collaborate to advise the business owner:
+- Lead Agent: High-level financial status orchestration and executive summaries.
+- Receivables Agent: Invoicing timelines, buyer payment reliability, and reminder drafting.
+- Procurement Agent: Material price volatility tracking (e.g. cold-rolled steel, copper, polypropylene) and procurement scheduling.
+- Financing Agent: Non-predatory loan matching and cash flow repayment simulations.
+- Policy Guard: Safety policy enforcement and compliance boundaries.
+
+### 3. Agent Room and Human-in-the-Loop Inbox
+- Agent Room: A glass-box execution replay showing each agent's reasoning, data checks, and proposed interventions step by step.
+- Inbox Approvals: Agents operate under strict delegation tiers. No external messages, loan requests, or commitments are executed automatically. Sensitive actions require owner approval in the Inbox, with biometric/Face ID confirmation for high-risk operations.
+
+### 4. Working Capital and Operational Modules
+- Home Dashboard: Live Health Score, Cash Radar, runway status, and ranked issues.
+- Data and Document Ingestion: OCR scanning for tax invoices, POs, and receipts with client-side data masking and audit hashing.
+- New Order Evaluator: Real-time risk analysis for incoming orders against current cash and material price sensitivity.
+- Receivables and Buyer Grading: Aging buckets, overdue tracking, and AI-worded payment reminder drafting in multiple languages (English, Thai, Chinese).
+- Procurement and Price Trends: Raw material cost forecasting and margin stress tests.
+- Financing: Pre-matched working capital loans and invoice factoring with repayment viability checks.
+- Trust and Compliance: Tamper-evident audit trail with SHA-256 hash chains, Merkle root verification, and four-tier autonomy controls.
+- Mock Document Generator: Testing tool for generating realistic multi-language commercial documents with configurable noise and layout variations to benchmark AI extraction accuracy.
 
 ---
 
-## 🚀 Getting Started
+## Security and Compliance Controls
+
+BizMate implements a 4-tier autonomy governance model:
+- Tier 0 (Read and Analyze): Agents analyze data autonomously (forecasting, buyer scoring, scenario calculation).
+- Tier 1 (Draft): Agents prepare drafts internally; nothing leaves the system (drafting reminders, compiling credit applications).
+- Tier 2 (Send or Commit): Requires explicit business owner approval through the Inbox.
+- Tier 3 (Move Money or Sign Contracts): Strictly blocked in code; no execution tools or API endpoints exist for autonomous fund transfers.
+
+Additional protections:
+- Data Masking: Personally Identifiable Information (PII) including names, tax IDs, bank accounts, and contact details are tokenized before communicating with external AI models.
+- Cryptographic Audit Trail: Every critical user action, document import, and agent proposal is sealed into a SHA-256 hash chain with Merkle root computation.
+
+---
+
+## Technology Stack
+
+- Framework: Next.js (App Router, Turbopack)
+- Language: TypeScript, React 19
+- Styling: Tailwind CSS v4
+- Database and ORM: PostgreSQL (Supabase) with Prisma ORM
+- AI Engine: Google Gemini API via @google/generative-ai (Gemini 2.5 Flash / Flash Lite)
+- Document Processing: pdfjs-dist, pdf2json, jspdf, html2canvas, xlsx
+- Authentication: JWT tokens and bcryptjs password hashing
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v20+ recommended)
-- [npm](https://www.npmjs.com/) / `pnpm` / `bun`
+- Node.js (v20 or higher)
+- npm or pnpm
+- PostgreSQL database (or Supabase instance)
 
-### Installation
+### Setup Instructions
 
-1. **Clone the repository**:
+1. Clone the repository:
    ```bash
-   git clone https://github.com/Its-Guitar/bizmate.git
+   git clone https://github.com/ItsGuitar/bizmateai.dev.git
    cd bizmate
    ```
 
-2. **Install dependencies**:
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-3. **Configure Environment Variables**:
-   Create a `.env` file in the root directory:
+3. Environment Variables:
+   Create a `.env` file in the project root:
    ```env
-   # Database Connection
-   DATABASE_URL="file:./dev.db" # or your PostgreSQL connection string
+   # PostgreSQL database connection
+   DATABASE_URL="postgresql://username:password@host:6543/postgres?pgbouncer=true"
+   DIRECT_URL="postgresql://username:password@host:5432/postgres"
 
-   # Authentication Secret
-   JWT_SECRET="your-secure-jwt-secret"
+   # Authentication
+   JWT_SECRET="your-secure-jwt-secret-key"
 
-   # Google AI (Gemini)
+   # Google Gemini API Key
    GEMINI_API_KEY="your-gemini-api-key"
    ```
 
-4. **Initialize Database**:
+4. Database Migration:
    ```bash
    npx prisma generate
    npx prisma db push
    ```
 
-5. **Run the Development Server**:
+5. Run Development Server:
    ```bash
    npm run dev
    ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Access the application at `http://localhost:3000`.
 
 ---
 
-## 📂 Project Architecture
+## Repository Structure
 
-```plaintext
+```
 bizmate/
 ├── app/
-│   ├── account/              # User profile & credentials management
-│   ├── admin/                # System administration & telemetry
-│   ├── api/                  # Next.js API Routes (AI, Auth, Documents, Workflow)
-│   ├── components/           # Reusable UI components, modals, and tour guides
-│   ├── dashboard/            # Core dashboard modules:
-│   │   ├── agent-room/       # Step-by-step agent workflow replay
-│   │   ├── data/             # Document ingestion & management
-│   │   ├── financing/        # Pre-matched lender matching
-│   │   ├── generator/        # Formal document generator (physical paper view)
-│   │   ├── new-order/        # Order cash feasibility checker
-│   │   ├── procurement/      # Raw material cost tracker
-│   │   ├── receivables/      # Buyer grading & aging analysis
-│   │   └── trust/            # Compliance & audit-trail status
-│   └── docs/                 # Built-in platform walkthrough & onboarding docs
+│   ├── account/              # User profile and account settings
+│   ├── admin/                # System telemetry and administration
+│   ├── api/                  # API routes (AI, Auth, Documents, Ingest, Workflow, Inbox)
+│   ├── components/           # Shared UI components, icons, navigation, and onboarding tour
+│   ├── dashboard/            # Platform modules
+│   │   ├── agent-room/       # Multi-agent glass-box deliberation replay
+│   │   ├── data/             # Document ingestion and verification
+│   │   ├── financing/        # Lender matching and repayment simulation
+│   │   ├── generator/        # Synthetic document generator and OCR benchmark
+│   │   ├── inbox/            # Human-in-the-loop approval cards
+│   │   ├── new-order/        # Order feasibility and margin sensitivity check
+│   │   ├── procurement/      # Material price tracking and procurement planning
+│   │   ├── receivables/      # Buyer payment grading and debt collection
+│   │   └── trust/            # Tamper-evident audit chain and governance checks
+│   ├── docs/                 # Built-in visual user guide
+│   ├── login/                # Authentication login
+│   ├── onboarding/           # Business profile onboarding
+│   └── register/             # User registration
 ├── lib/
-│   ├── ai/                   # Gemini client, guardrails, and data masking
-│   ├── audit-chain.ts        # Cryptographic verification & audit trail
-│   ├── calculation-pipeline.ts # Deterministic financial math calculations
-│   ├── financing-engine.ts   # Working capital & loan calculation engine
-│   └── workflow-engine.ts    # Multi-agent state orchestration & inbox actions
-├── prisma/                   # Prisma schema and database migrations
-└── public/                   # Static assets, branding, and documentation media
+│   ├── ai/                   # Gemini client, guardrails, token masking, and call logs
+│   ├── audit-chain.ts        # SHA-256 hash chaining and Merkle root verification
+│   ├── calculation-pipeline.ts # 7-stage deterministic financial engine
+│   ├── financing-engine.ts   # Working capital loan matching and repayment models
+│   ├── order-engine.ts       # Buyer behavior statistics and material pricing models
+│   ├── prisma.ts             # Prisma client singleton
+│   └── workflow-engine.ts    # Multi-agent workflow runner and state machines
+├── prisma/
+│   └── schema.prisma         # Database schema definition
+└── public/                   # Static assets, bank logos, visualization sprites
 ```
 
 ---
 
-## 🔒 Security & Guardrails
+## Author
 
-- **Data Masking**: Personally Identifiable Information (PII) and raw banking credentials are masked prior to ingestion and AI processing.
-- **Deterministic Calculation Pipeline**: Critical financial health metrics, interest calculations, and ledger balances are computed via isolated deterministic TypeScript logic—AI models are never relied upon for raw arithmetic.
-- **Audit Logging**: Every action, approval, and document ingestion is recorded in an immutable audit chain.
-
----
-
-## 👤 Author
-
-**Its-Guitar**  
-- GitHub: [@Its-Guitar](https://github.com/Its-Guitar)  
+Its-Guitar
+- GitHub: https://github.com/Its-Guitar
 - Email: guitar999mc@gmail.com
