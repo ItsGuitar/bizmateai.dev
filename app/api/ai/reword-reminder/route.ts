@@ -2,11 +2,39 @@ import { NextResponse } from "next/server";
 import { buildSystemPrompt } from "@/lib/ai/guardrails";
 import { callModel } from "@/lib/ai/client";
 import { createMaskingAdapter } from "@/lib/ai/masking";
+import { requireUserId } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 const TASK = "reword_reminder" as const;
 
 export async function POST(req: Request) {
   try {
+    const userId = requireUserId(req);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required to draft reminders." },
+        { status: 401 }
+      );
+    }
+
+    const rateCheck = checkRateLimit(userId, "ai_reword");
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: rateCheck.message,
+          code: "RATE_LIMIT_EXCEEDED",
+          resetInSeconds: rateCheck.resetInSeconds,
+          readableLimit: rateCheck.readableLimit,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateCheck.resetInSeconds),
+          },
+        }
+      );
+    }
+
     const body = await req.json();
     const {
       buyerName,

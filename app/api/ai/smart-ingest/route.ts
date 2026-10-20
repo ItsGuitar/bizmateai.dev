@@ -4,6 +4,8 @@ import PDFParser from "pdf2json";
 import { buildSystemPrompt } from "@/lib/ai/guardrails";
 import { callModel } from "@/lib/ai/client";
 import { createMaskingAdapter } from "@/lib/ai/masking";
+import { requireUserId } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limiter";
 import type { InvoiceOcrFields, InvoiceOcrConfidence } from "@/app/api/ai/ocr-invoice/route";
 
 export interface SmartIngestResponse {
@@ -165,12 +167,45 @@ Reply with ONLY a valid compact JSON object in this exact structure:
 }
 
 export async function POST(req: Request) {
+  const userId = requireUserId(req);
+  if (!userId) {
+    return NextResponse.json(
+      { ok: false, message: "Authentication required to ingest documents." },
+      { status: 401 }
+    );
+  }
+
+  const rateCheck = checkRateLimit(userId, "ai_ocr");
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: rateCheck.message,
+        code: "RATE_LIMIT_EXCEEDED",
+        resetInSeconds: rateCheck.resetInSeconds,
+        readableLimit: rateCheck.readableLimit,
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateCheck.resetInSeconds),
+        },
+      }
+    );
+  }
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
       return NextResponse.json({ ok: false, message: "No file provided" }, { status: 400 });
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { ok: false, message: "File exceeds 5MB size limit. Please upload a smaller document." },
+        { status: 413 }
+      );
     }
 
     const fileName = file.name.toLowerCase();

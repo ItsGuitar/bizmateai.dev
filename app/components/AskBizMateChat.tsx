@@ -149,15 +149,19 @@ export function AskBizMateChat() {
         throw new Error(data.error || "Failed to respond");
       }
     } catch (err: any) {
+      const isQuota = err?.message?.toLowerCase().includes("quota") || err?.message?.toLowerCase().includes("limit");
       setMessages((prev) => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           sender: "bot",
-          text: "I encountered a connection issue. Please try again or check your parameters.",
+          text: isQuota
+            ? `⚠️ ${err.message}`
+            : (err?.message || "I encountered a connection issue. Please try again."),
           timestamp: "Just now",
         },
       ]);
+
     } finally {
       setIsLoading(false);
     }

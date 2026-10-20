@@ -10,6 +10,8 @@ import { createMaskingAdapter } from "@/lib/ai/masking";
 import { buildSystemPrompt } from "@/lib/ai/guardrails";
 import { callModel } from "@/lib/ai/client";
 import { recordAiCall } from "@/lib/ai/call-log";
+import { requireUserId } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limiter";
 import type { Archetype, GroundTruthFields } from "@/lib/document-generator";
 
 const TASK = "document_reading" as const;
@@ -72,6 +74,33 @@ function groundTruthToExtractedFields(groundTruth: GroundTruthFields): Extracted
 }
 
 export async function POST(request: Request) {
+  const userId = requireUserId(request);
+  if (!userId) {
+    return NextResponse.json(
+      { ok: false, error: "Authentication required to extract documents." },
+      { status: 401 }
+    );
+  }
+
+  const rateCheck = checkRateLimit(userId, "ai_extract");
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: rateCheck.message,
+        code: "RATE_LIMIT_EXCEEDED",
+        resetInSeconds: rateCheck.resetInSeconds,
+        readableLimit: rateCheck.readableLimit,
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateCheck.resetInSeconds),
+        },
+      }
+    );
+  }
+
   const body = (await request.json()) as ExtractDocumentRequest;
   const { imageBase64, mimeType, homeCompanyName, groundTruth } = body;
 

@@ -19,6 +19,7 @@ import { OPEN_INVOICES, COMPANY, VITALS, HEALTH } from "@/app/data/supplier-copi
 import type { PipelineOutput } from "@/lib/calculation-pipeline";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 export interface ChatAction {
   type: "navigate" | "open_modal" | "propose_approval" | "view_buyer" | "view_order";
@@ -461,13 +462,44 @@ function detectToolRequirement(message: string, pageContext: string): {
 export async function POST(req: Request) {
   try {
     const user = getUserFromRequest(req);
-    const userId = user?.userId || "anon";
+    if (!user?.userId) {
+      return NextResponse.json(
+        { error: "Authentication required to interact with AI Copilot." },
+        { status: 401 }
+      );
+    }
+    const userId = user.userId;
+
+    const rateCheck = checkRateLimit(userId, "ai_chat");
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: rateCheck.message,
+          code: "RATE_LIMIT_EXCEEDED",
+          resetInSeconds: rateCheck.resetInSeconds,
+          readableLimit: rateCheck.readableLimit,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateCheck.resetInSeconds),
+          },
+        }
+      );
+    }
 
     const body = await req.json();
     const { message, pageContext = "home", history = [] } = body;
 
     if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+      return NextResponse.json({ error: "Message is required." }, { status: 400 });
+    }
+
+    if (message.length > 4000) {
+      return NextResponse.json(
+        { error: "Message exceeds maximum length of 4,000 characters." },
+        { status: 400 }
+      );
     }
 
     // 1. Detect if chat needs tool retrieval

@@ -3,6 +3,8 @@ import { buildSystemPrompt } from "@/lib/ai/guardrails";
 import { callModel } from "@/lib/ai/client";
 import { recordAiCall } from "@/lib/ai/call-log";
 import { createMaskingAdapter } from "@/lib/ai/masking";
+import { requireUserId } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 const TASK = "document_reading" as const;
 
@@ -58,20 +60,20 @@ You must automatically classify the documentType by carefully analyzing the docu
 - "receipt": Documents titled "Receipt", "Official Receipt", "ใบเสร็จรับเงิน", "收据".
 - "other": Contracts, quotes, or shipping lists.
 
-Your output must be strict, valid JSON matching this exact structure:
+Respond ONLY with a JSON object in this strict shape:
 {
   "fields": {
-    "documentType": "invoice" | "purchase_order" | "receipt" | "other",
-    "counterpartyName": "string or empty",
-    "documentNumber": "string or empty",
-    "issueDate": "YYYY-MM-DD or empty",
-    "dueDate": "YYYY-MM-DD or empty",
-    "termsDays": number or null,
-    "totalAmount": number or null,
-    "currency": "¥" | "฿" | "$" | "CNY" | "THB" | "USD" | "EUR" or empty,
+    "documentType": "purchase_order" | "invoice" | "receipt" | "other",
+    "counterpartyName": string (Buyer company name if invoice/receipt; Supplier/Vendor name if PO),
+    "documentNumber": string (Invoice No., PO No., or Receipt ID),
+    "issueDate": "YYYY-MM-DD",
+    "dueDate": "YYYY-MM-DD",
+    "termsDays": number (payment term days, e.g. 30, 45, 60),
+    "totalAmount": number (gross payable sum, numeric only without commas),
+    "currency": string (e.g. "¥", "฿", "$"),
     "items": [
       {
-        "description": "string",
+        "description": string,
         "quantity": number,
         "unitPrice": number,
         "totalPrice": number
@@ -133,23 +135,32 @@ function fallbackExtraction(fileName?: string): { fields: InvoiceOcrFields; conf
   };
 }
 
-let lastOcrCallTimestamp = 0;
-const OCR_COOLDOWN_MS = 60000; // 1 minute cooldown
-
 export async function POST(request: Request) {
   try {
-    const now = Date.now();
-    const timeSinceLastCall = now - lastOcrCallTimestamp;
+    const userId = requireUserId(request);
+    if (!userId) {
+      return NextResponse.json(
+        { ok: false, error: "Authentication required to scan documents." },
+        { status: 401 }
+      );
+    }
 
-    if (timeSinceLastCall < OCR_COOLDOWN_MS) {
-      const remainingSeconds = Math.ceil((OCR_COOLDOWN_MS - timeSinceLastCall) / 1000);
+    const rateCheck = checkRateLimit(userId, "ai_ocr");
+    if (!rateCheck.allowed) {
       return NextResponse.json(
         {
           ok: false,
-          error: `Rate limit: Please wait ${remainingSeconds} seconds before scanning another document.`,
-          remainingSeconds,
+          error: rateCheck.message,
+          code: "RATE_LIMIT_EXCEEDED",
+          remainingSeconds: rateCheck.resetInSeconds,
+          readableLimit: rateCheck.readableLimit,
         },
-        { status: 429 }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateCheck.resetInSeconds),
+          },
+        }
       );
     }
 
@@ -160,8 +171,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "Image data is required" }, { status: 400 });
     }
 
-    // Set timestamp after passing validation
-    lastOcrCallTimestamp = now;
+    // Limit maximum payload size to ~5MB (Base64 string length ~7,000,000)
+    if (typeof imageBase64 === "string" && imageBase64.length > 7_500_000) {
+      return NextResponse.json(
+        { ok: false, error: "Image exceeds 5MB size limit. Please upload a smaller file." },
+        { status: 413 }
+      );
+    }
 
     const adapter = createMaskingAdapter();
     const systemPrompt = buildSystemPrompt(OCR_SYSTEM_INSTRUCTION);

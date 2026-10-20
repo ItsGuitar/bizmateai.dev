@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
 export async function POST(request: Request) {
   try {
     const tokenPayload = getUserFromRequest(request);
@@ -14,14 +16,17 @@ export async function POST(request: Request) {
 
     if (!currentPassword || !newPassword) {
       return NextResponse.json(
-        { error: "Current and new password are required" },
+        { error: "Current and new password are required." },
         { status: 400 }
       );
     }
 
-    if (newPassword.length < 8) {
+    if (!PASSWORD_REGEX.test(newPassword)) {
       return NextResponse.json(
-        { error: "New password must be at least 8 characters long" },
+        {
+          error:
+            "New password must be at least 8 characters long and contain both letters and numbers.",
+        },
         { status: 400 }
       );
     }
@@ -31,12 +36,12 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
     const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isMatch) {
-      return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
+      return NextResponse.json({ error: "Current password is incorrect." }, { status: 401 });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -48,6 +53,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Change password error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

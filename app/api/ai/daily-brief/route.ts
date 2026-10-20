@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { buildSystemPrompt } from "@/lib/ai/guardrails";
 import { callModel } from "@/lib/ai/client";
 import { createMaskingAdapter } from "@/lib/ai/masking";
+import { requireUserId } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limiter";
 import crypto from "crypto";
 
 const TASK = "daily_brief" as const;
@@ -17,6 +19,14 @@ const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 export async function POST(req: Request) {
   try {
+    const userId = requireUserId(req);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required to generate daily brief." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const {
       healthScore = 78,
@@ -27,7 +37,7 @@ export async function POST(req: Request) {
       safetyCushion = 500000,
       financingNeed = 0,
       issues = [],
-      language = "Thai",
+      language = "English",
       forceRefresh = false,
     } = body;
 
@@ -60,6 +70,34 @@ export async function POST(req: Request) {
           cached: true,
         });
       }
+    } else {
+      // Force refresh requested: rate limit check to prevent cache busting abuse
+      const rateCheck = checkRateLimit(userId, "ai_brief");
+      if (!rateCheck.allowed) {
+        // Fall back to cached entry if available, otherwise return 429
+        const cached = briefCache.get(inputFingerprint);
+        if (cached) {
+          return NextResponse.json({
+            success: true,
+            summary: cached.summary,
+            asOf: new Date(cached.timestamp).toISOString(),
+            cached: true,
+            warning: rateCheck.message,
+          });
+        }
+
+        return NextResponse.json(
+          {
+            error: rateCheck.message,
+            code: "RATE_LIMIT_EXCEEDED",
+            resetInSeconds: rateCheck.resetInSeconds,
+          },
+          {
+            status: 429,
+            headers: { "Retry-After": String(rateCheck.resetInSeconds) },
+          }
+        );
+      }
     }
 
     // 1. Client/Server-side Data Masking for any party names in issues (PDPA Protection)
@@ -68,74 +106,63 @@ export async function POST(req: Request) {
       let maskedTitle = iss.title || "";
       let maskedDetail = iss.detail || "";
 
-      // Mask common counterparty tokens if found
-      if (iss.counterparty) {
-        const token = masking.mask("buyer", iss.counterparty, "Buyer");
-        maskedTitle = maskedTitle.replace(new RegExp(iss.counterparty, "g"), token);
-        maskedDetail = maskedDetail.replace(new RegExp(iss.counterparty, "g"), token);
+      // Mask buyer or vendor names if detected in titles
+      const knownParties = ["Guangzhou Motors", "Shenzhen EV Battery", "Dongguan Electronics", "Apex Craft Furniture", "BioHarvest"];
+      for (const p of knownParties) {
+        if (maskedTitle.includes(p)) {
+          const token = masking.mask("buyer", p, "Counterparty");
+          maskedTitle = maskedTitle.replaceAll(p, token);
+        }
+        if (maskedDetail.includes(p)) {
+          const token = masking.mask("buyer", p, "Counterparty");
+          maskedDetail = maskedDetail.replaceAll(p, token);
+        }
       }
 
       return {
-        severity: iss.severity,
+        ...iss,
         title: maskedTitle,
         detail: maskedDetail,
-        agent: iss.agent,
       };
     });
 
-    // 2. Build Guardrailed System Prompt for Daily Brief Narrative
-    const extraInstructions = `You are the Lead Copilot Agent for BizMateAI (an autonomous financial copilot for SME manufacturers).
-Your task is: "Explain the Daily Brief" (สรุปสถานการณ์ประจำวันหน้า Home).
-
-MANDATORY RULES:
-1. Explain the numbers as a natural, cohesive story in plain, conversational language.
-2. STRICTLY NO COMPLEX TECHNICAL JARGON (ห้ามใช้ศัพท์เทคนิคซับซ้อน เช่น standard deviation, credibility shrinkage, p90, dso ฯลฯ ให้แปลเป็นคำพูดที่เจ้าของโรงงานหรือผู้ประกอบการเข้าใจง่าย).
-3. STRICT LIMIT: No more than 3 concise lines/sentences (ความยาวไม่เกิน 3 บรรทัด).
-4. Tone: Confident, encouraging, professional, and practical.
-5. Language: ${language === "English" ? "English" : "Natural, polite Thai (ภาษาไทย)"}.
-6. Use only the provided calculated numbers:
-   - Health Score: ${healthScore}/100 (${mood}, Factory Level ${factoryLevel}/5)
-   - Current Cash: ¥${Number(cashNow).toLocaleString()}
-   - Runway: ~${runwayWeeks} weeks (Safety cushion ¥${Number(safetyCushion).toLocaleString()})
-   - Financing Need: ¥${Number(financingNeed).toLocaleString()}
-   - Priority Issues: ${maskedIssues.length > 0 ? JSON.stringify(maskedIssues.slice(0, 3)) : "None"}
-
-OUTPUT FORMAT:
-Output ONLY the clean 2-3 sentence summary paragraph. Do not include markdown headers, bullet lists, asterisks, or quotes.`;
+    // 2. Build Guardrailed System Prompt for Daily Brief Synthesis
+    const extraInstructions = `You are the Lead Financial Copilot for BizMateAI.
+Your role: Synthesize the current health and top operational priorities into a clear, executive daily brief.
+Target language: ${language}.
+Tone: Calm, clear, authoritative, and actionable. Avoid financial panic jargon.
+Crucial rules:
+- Ground all observations strictly in the provided health score, cash runway, and ranked issues.
+- Never hallucinate non-existent loans or suppliers.
+- Format with concise bullet points or bold headers: (1) Current Status, (2) Priority Attention Item, (3) Recommended Action.
+- Do not output preamble or conversational greetings. Jump directly into the brief.`;
 
     const systemPrompt = buildSystemPrompt(extraInstructions);
 
-    const userPrompt = `Please synthesize the factory daily brief based on Health Score ${healthScore} (${mood}), Cash ¥${Number(cashNow).toLocaleString()}, Runway ${runwayWeeks}w, and ${maskedIssues.length} active issues. Format in at most 3 concise, natural lines.`;
+    const promptPayload = {
+      healthScore,
+      mood,
+      factoryLevel,
+      cashNow,
+      runwayWeeks,
+      safetyCushion,
+      financingNeed,
+      issues: maskedIssues.slice(0, 3), // Focus on top 3 most critical items
+    };
 
-    // 3. Multimodal / Text LLM Call through audited client
-    let summaryText = "";
-    try {
-      const response = await callModel({
-        task: TASK,
-        systemPrompt,
-        userPrompt,
-      });
-      summaryText = response.text || "";
-    } catch (err: any) {
-      console.warn("LLM daily brief fallback:", err);
-      // Fallback deterministic brief in natural language
-      if (language === "English") {
-        const topIssue = issues[0]?.title
-          ? `Priority attention is required for "${issues[0].title}".`
-          : "No immediate payment bottlenecks are detected.";
-        summaryText = `Overall factory financial health remains ${mood} (${healthScore}/100) with liquidity runway covering ${runwayWeeks} weeks. ${topIssue} Maintain operational cushion above safety thresholds.`;
-      } else {
-        const topIssue = issues[0]?.title
-          ? `โดยมีเรื่องเร่งด่วนคือ "${issues[0].title}" ที่ควรรีบดำเนินการ`
-          : "และไม่มีรายการปัญหาค้างชำระที่น่ากังวล";
-        summaryText = `ภาพรวมสุขภาพโรงงานวันนี้อยู่ในเกณฑ์${mood === "Thriving" ? "ดีเยี่ยม" : mood === "Steady" ? "มั่นคง" : "ต้องเฝ้าระวัง"} (${healthScore}/100) มีสภาพคล่องเงินสดรองรับได้อีก ${runwayWeeks} สัปดาห์ ${topIssue} เพื่อรักษาสภาพคล่องให้อยู่เหนือเกณฑ์ปลอดภัย`;
-      }
-    }
+    const userPrompt = `Synthesize today's executive daily brief based on these company metrics:\n${JSON.stringify(promptPayload, null, 2)}`;
 
-    // 4. Unmask to restore any counterparty names if masked
-    const unmaskedReply = masking.unmask(summaryText.trim());
+    // 3. Multimodal / Text LLM Call through universal audited client
+    const { text, model } = await callModel({
+      task: TASK,
+      systemPrompt,
+      userPrompt,
+    });
 
-    // Save into server-side memory cache
+    // 4. Unmask to restore real party names before sending back to user
+    const unmaskedReply = masking.unmask(text);
+
+    // 5. Store in memory cache
     briefCache.set(inputFingerprint, {
       summary: unmaskedReply,
       timestamp: Date.now(),
@@ -144,11 +171,15 @@ Output ONLY the clean 2-3 sentence summary paragraph. Do not include markdown he
     return NextResponse.json({
       success: true,
       summary: unmaskedReply,
+      model,
       asOf: new Date().toISOString(),
       cached: false,
     });
-  } catch (err: any) {
-    console.error("Daily brief API error:", err);
-    return NextResponse.json({ error: err.message || "Failed to generate daily brief" }, { status: 500 });
+  } catch (error: any) {
+    console.error("daily-brief error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to generate daily brief" },
+      { status: 500 }
+    );
   }
 }

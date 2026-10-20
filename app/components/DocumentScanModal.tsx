@@ -190,7 +190,8 @@ export function DocumentScanModal({
           throw new Error(data.message || "Failed to parse spreadsheet");
         }
       } catch (err: any) {
-        setErrorMsg(`Excel extraction error: ${err.message}`);
+        const msg = String(err?.message || "Failed to process spreadsheet");
+        setErrorMsg(msg.toLowerCase().includes("limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("exceed") ? msg : `Excel extraction error: ${msg}`);
         setStep("upload");
         return;
       }

@@ -2,7 +2,7 @@
 // request the same way a real screen would, sends only the masked version to the model under the
 // core guardrails, then unmasks the reply before it would ever reach a screen. Not wired to any
 // production page; this is purely to verify the adapter and guardrails work before anything in
-// the UI depends on them.
+// the UI depends on them. Strictly disabled in production.
 
 import { NextResponse } from "next/server";
 import { MASKING_DEMO } from "@/app/data/trust-mock";
@@ -14,6 +14,13 @@ import { recordAiCall } from "@/lib/ai/call-log";
 const TASK = "chat" as const;
 
 export async function POST() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Dev endpoints are disabled in production mode." },
+      { status: 403 }
+    );
+  }
+
   const adapter = createMaskingAdapter();
 
   const byField = Object.fromEntries(MASKING_DEMO.mapping.map((m) => [m.field, m.real]));
@@ -50,10 +57,8 @@ export async function POST() {
       maskedReply: result.text,
       unmaskedReply,
     });
-  } catch (err) {
-    return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : "Model call failed." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ ok: false, error: errorMessage }, { status: 500 });
   }
 }
