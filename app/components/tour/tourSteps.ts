@@ -78,13 +78,6 @@ export const TOUR_STEPS: TourStep[] = [
     body: "This is where your verification status and compliance signals live, the things that make partners and lenders trust your numbers.",
   },
   {
-    id: "generator",
-    route: "/dashboard/generator",
-    target: "generator-panel",
-    title: "Document generator",
-    body: "Generate the formal documents you need, like statements or formal requests, straight from your verified data.",
-  },
-  {
     id: "agent-room",
     route: "/dashboard/agent-room",
     target: "agent-room-view",

@@ -101,18 +101,8 @@ const SECTIONS: DocSection[] = [
     imageAlt: "Trust and verification page",
   },
   {
-    id: "generator",
-    step: 9,
-    title: "Generate formal documents",
-    body: [
-      "Generate statements, formal requests, and other documents directly from your verified data, instead of building them by hand.",
-    ],
-    image: "generator.jpg",
-    imageAlt: "Document generator page",
-  },
-  {
     id: "agent-room",
-    step: 10,
+    step: 9,
     title: "Watch the agents work",
     body: [
       "The Agent Room replays exactly what each agent checked and proposed for a given run, step by step, so you can see the reasoning behind a recommendation.",
@@ -122,7 +112,7 @@ const SECTIONS: DocSection[] = [
   },
   {
     id: "inbox",
-    step: 11,
+    step: 10,
     title: "Approve everything in your Inbox",
     body: [
       "Every action an agent proposes, a reminder, a discount, a financing application, lands in your Inbox first. Nothing is sent or changed until you approve or decline it.",

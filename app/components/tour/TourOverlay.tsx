@@ -37,34 +37,35 @@ export function TourOverlay() {
 
     if (pathname !== step.route) return;
 
-    let cancelled = false;
-    let attempts = 0;
+    let rafId: number;
+    let lastRect: Rect | null = null;
 
-    const locate = () => {
-      if (cancelled) return;
+    const measure = () => {
       const el = document.querySelector(`[data-tour="${step.target}"]`);
       if (el) {
         const box = el.getBoundingClientRect();
-        setRect({ top: box.top, left: box.left, width: box.width, height: box.height });
-        return;
-      }
-      attempts += 1;
-      if (attempts < 30) {
-        setTimeout(locate, 150);
-      } else {
+        const next = { top: box.top, left: box.left, width: box.width, height: box.height };
+        const changed =
+          !lastRect ||
+          Math.abs(lastRect.top - next.top) > 0.5 ||
+          Math.abs(lastRect.left - next.left) > 0.5 ||
+          Math.abs(lastRect.width - next.width) > 0.5 ||
+          Math.abs(lastRect.height - next.height) > 0.5;
+        if (changed) {
+          lastRect = next;
+          setRect(next);
+        }
+      } else if (lastRect) {
+        lastRect = null;
         setRect(null);
       }
+      rafId = requestAnimationFrame(measure);
     };
 
-    locate();
-    const onScrollOrResize = () => locate();
-    window.addEventListener("scroll", onScrollOrResize, true);
-    window.addEventListener("resize", onScrollOrResize);
+    rafId = requestAnimationFrame(measure);
 
     return () => {
-      cancelled = true;
-      window.removeEventListener("scroll", onScrollOrResize, true);
-      window.removeEventListener("resize", onScrollOrResize);
+      cancelAnimationFrame(rafId);
     };
   }, [step, pathname, router]);
 
