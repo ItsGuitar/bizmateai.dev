@@ -154,10 +154,4 @@ bizmate/
 └── public/                   # Static assets, bank logos, visualization sprites
 ```
 
----
 
-## Author
-
-Its-Guitar
-- GitHub: https://github.com/Its-Guitar
-- Email: guitar999mc@gmail.com
