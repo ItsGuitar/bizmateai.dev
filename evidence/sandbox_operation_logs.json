@@ -1,0 +1,147 @@
+{
+  "type": "sandbox_operation_logs",
+  "product": "BizMateAI SME Finance Copilot",
+  "generatedAt": "2026-10-17T14:05:00.000Z",
+  "note": "Simulated-sandbox operation log for competition Deliverable 06 (non-on-chain topic: SME Finance Copilot). Entries are a scripted demo run, not live production traffic.",
+  "chain": {
+    "algorithm": "SHA-256",
+    "genesisHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "canonicalFields": [
+      "seq",
+      "ts",
+      "actor",
+      "action",
+      "detail",
+      "tier",
+      "approval",
+      "prevHash"
+    ]
+  },
+  "entries": [
+    {
+      "seq": 1,
+      "ts": "2026-10-17T06:00:00Z",
+      "actor": "lead",
+      "action": "forecast_run",
+      "detail": "Recomputed the 26-week cash forecast and health score",
+      "tier": 0,
+      "approval": null,
+      "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "cfdc6bdd5fdab9cb7d2b775e3e31ae479596c492ea6b286afb5947ae9e2c51ec"
+    },
+    {
+      "seq": 2,
+      "ts": "2026-10-17T08:02:00Z",
+      "actor": "receivables",
+      "action": "list_overdue",
+      "detail": "Scanned open invoices; flagged Shenzhen ElectroParts and Chiang Mai Furniture overdue",
+      "tier": 0,
+      "approval": null,
+      "prevHash": "cfdc6bdd5fdab9cb7d2b775e3e31ae479596c492ea6b286afb5947ae9e2c51ec",
+      "hash": "34d651c94eb8c5903c1d73b68c79cf994ea33d670646094af0c59ee4c9074abf"
+    },
+    {
+      "seq": 3,
+      "ts": "2026-10-17T08:03:00Z",
+      "actor": "receivables",
+      "action": "draft_reminder",
+      "detail": "Drafted a firm reminder for Shenzhen ElectroParts, step 3 of 5",
+      "tier": 1,
+      "approval": null,
+      "prevHash": "34d651c94eb8c5903c1d73b68c79cf994ea33d670646094af0c59ee4c9074abf",
+      "hash": "0fcff296ca181a23aa52f229dd4e3f5d0bc7e7c9fdc76e69d295c3a94c14fe7b"
+    },
+    {
+      "seq": 4,
+      "ts": "2026-10-17T08:05:00Z",
+      "actor": "guard",
+      "action": "guard_check",
+      "detail": "Checked the draft for prohibited language: passed",
+      "tier": 1,
+      "approval": null,
+      "prevHash": "0fcff296ca181a23aa52f229dd4e3f5d0bc7e7c9fdc76e69d295c3a94c14fe7b",
+      "hash": "e3bc28e6d821b8cf079bbc8f596ffb3e05d5005ddca98b9c5776a236fed142eb"
+    },
+    {
+      "seq": 5,
+      "ts": "2026-10-17T08:10:00Z",
+      "actor": "owner",
+      "action": "approve",
+      "detail": "Approved: send reminder to Shenzhen ElectroParts",
+      "tier": 2,
+      "approval": "appr-chase-1",
+      "prevHash": "e3bc28e6d821b8cf079bbc8f596ffb3e05d5005ddca98b9c5776a236fed142eb",
+      "hash": "063929f931cb02360a17d520bc5020c6231bd9364b36e5b1792dfcb72542611a"
+    },
+    {
+      "seq": 6,
+      "ts": "2026-10-17T08:10:05Z",
+      "actor": "receivables",
+      "action": "send_reminder",
+      "detail": "Sent the reminder to Shenzhen ElectroParts via LINE and email",
+      "tier": 2,
+      "approval": "appr-chase-1",
+      "prevHash": "063929f931cb02360a17d520bc5020c6231bd9364b36e5b1792dfcb72542611a",
+      "hash": "49920535406abceefff4db4449f74444744ccec94f38eaae4a99c7d2bed2eeea"
+    },
+    {
+      "seq": 7,
+      "ts": "2026-10-17T09:40:00Z",
+      "actor": "financing",
+      "action": "match_lenders",
+      "detail": "Matched 7 lender products against the Guangzhou Motors cash gap",
+      "tier": 0,
+      "approval": null,
+      "prevHash": "49920535406abceefff4db4449f74444744ccec94f38eaae4a99c7d2bed2eeea",
+      "hash": "b50ccc5fc08319c81405e878febe7171a9483be5e727d94eeeeec8d9cb4f3e65"
+    },
+    {
+      "seq": 8,
+      "ts": "2026-10-17T09:45:00Z",
+      "actor": "financing",
+      "action": "negotiate",
+      "detail": "Ran a sandbox negotiation for the government-guaranteed loan",
+      "tier": 1,
+      "approval": null,
+      "prevHash": "b50ccc5fc08319c81405e878febe7171a9483be5e727d94eeeeec8d9cb4f3e65",
+      "hash": "b0668bc3e4741b62eef97e85d5adc9e04431d159fbbffc11d84e36774af77b49"
+    },
+    {
+      "seq": 9,
+      "ts": "2026-10-17T09:50:00Z",
+      "actor": "owner",
+      "action": "decline",
+      "detail": "Declined: negotiated offer from WeBank Weiyedai",
+      "tier": 2,
+      "approval": "appr-nego-1",
+      "prevHash": "b0668bc3e4741b62eef97e85d5adc9e04431d159fbbffc11d84e36774af77b49",
+      "hash": "aa455fcdee0906ddc18d1f8838077cf059bc9bcae2da0416b169f08defb72524"
+    },
+    {
+      "seq": 10,
+      "ts": "2026-10-17T14:02:00Z",
+      "actor": "procurement",
+      "action": "lock_price",
+      "detail": "Locked November cold-rolled steel at ¥4,482 a tonne",
+      "tier": 0,
+      "approval": null,
+      "prevHash": "aa455fcdee0906ddc18d1f8838077cf059bc9bcae2da0416b169f08defb72524",
+      "hash": "ab17de90f6b1b627fd3c753a32fab4455ad87c21e46ecd44ef24d7dd31925c0e"
+    }
+  ],
+  "dailyMerkleRoots": [
+    {
+      "date": "2026-10-17",
+      "count": 10,
+      "root": "45b186db5987a3a90f6d47b31d1407567cf4bed24d448de0cf02256668ffdac8"
+    }
+  ],
+  "overallMerkleRoot": "45b186db5987a3a90f6d47b31d1407567cf4bed24d448de0cf02256668ffdac8",
+  "anchoring": {
+    "status": "simulated",
+    "network": "FISCO BCOS (consortium chain)",
+    "txHash": "0xSIMbcc752b9d2f4853569ca031aaf57159cc01efdd8a902af93db5e1517be5d560b",
+    "anchoredAt": "2026-10-17T14:02:00Z",
+    "note": "This is a simulated anchor for demo purposes, generated locally. No live FISCO BCOS network was contacted. The live Trust page (/dashboard/trust) exposes the same 'Simulate FISCO BCOS anchor' action interactively."
+  }
+}

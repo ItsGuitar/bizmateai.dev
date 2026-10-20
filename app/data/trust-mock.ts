@@ -48,7 +48,7 @@ export const SELF_ASSESSMENT: SelfAssessmentRow[] = [
   { risk: "Wrong numbers from the model", control: "All money math is deterministic and tested", leftToDo: "Back-test forecasts on real data" },
   { risk: "Prompt injection from files", control: "Data-only handling; read-only tools", leftToDo: "Scanner for hidden instructions" },
   { risk: "Bad or partial data", control: "Owner-confirmed mapping; row notes; confidence drops", leftToDo: "Cross-source duplicate detection" },
-  { risk: "Log tampering", control: "Hash chain + Merkle root; export", leftToDo: "Daily third-party anchoring" },
+  { risk: "Log tampering", control: "Hash chain + daily Merkle root; export; simulated FISCO BCOS anchor", leftToDo: "Real (non-simulated) third-party anchoring" },
   { risk: "Wrong lender terms", control: "Rates labelled illustrative", leftToDo: "Live product feed" },
 ];
 

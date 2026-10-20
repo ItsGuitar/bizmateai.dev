@@ -9,7 +9,8 @@ import { getSession, AuthUser } from "@/lib/auth-client";
 import { SUPPLIER_AGENTS, type SupplierAgentId } from "@/app/data/supplier-agents";
 import { AgentIcon } from "@/app/components/icons/AgentIcons";
 import { TIER_RULES, SELF_ASSESSMENT, MASKING_DEMO, type AuditEntrySeed } from "@/app/data/trust-mock";
-import { GENESIS_HASH, computeChain, merkleRootOf } from "@/lib/audit-chain";
+import { computeChain, merkleRootOf, sha256Hex } from "@/lib/audit-chain";
+import { downloadBlob } from "@/lib/download-file";
 
 interface LiveApproval {
   id: string;
@@ -58,6 +59,8 @@ export default function TrustPage() {
   const [editingSeq, setEditingSeq] = useState<number | null>(null);
   const [draftDetail, setDraftDetail] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [isAnchoring, setIsAnchoring] = useState(false);
+  const [anchorResult, setAnchorResult] = useState<{ txHash: string; merkleRoot: string; anchoredAt: string } | null>(null);
 
   useEffect(() => {
     const session = getSession();
@@ -194,27 +197,31 @@ export default function TrustPage() {
   };
 
   const handleExport = async () => {
-    if (!currentHashes) return;
     setIsExporting(true);
+    try {
+      const res = await fetch("/api/audit/export");
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      downloadBlob(blob, "sandbox_operation_logs.json");
+      setToastMessage("Exported sandbox_operation_logs.json with the full hash chain and Merkle roots.");
+    } catch (err: any) {
+      setToastMessage(err.message || "Could not export the audit log.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // A clearly-labelled simulation: no live FISCO BCOS network is contacted. It shows what
+  // anchoring the current Merkle root would produce, for the Section 9 bonus demo.
+  const handleSimulateAnchor = async () => {
+    if (!currentHashes) return;
+    setIsAnchoring(true);
     const merkleRoot = await merkleRootOf(currentHashes);
-    const payload = {
-      date: "2026-10-17",
-      entries: entries.map((e, i) => ({
-        ...e,
-        prevHash: i === 0 ? GENESIS_HASH : currentHashes[i - 1],
-        hash: currentHashes[i],
-      })),
-      merkleRoot,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "audit_log_2026-10-17.json";
-    a.click();
-    URL.revokeObjectURL(url);
-    setIsExporting(false);
-    setToastMessage(`Exported. Merkle root ${shortHash(merkleRoot)}.`);
+    const anchoredAt = new Date().toISOString();
+    const txHash = `0xSIM${await sha256Hex(`${merkleRoot}:${anchoredAt}`)}`;
+    setAnchorResult({ txHash, merkleRoot, anchoredAt });
+    setIsAnchoring(false);
+    setToastMessage("Simulated FISCO BCOS anchor created. This is a demo, not a real blockchain transaction.");
   };
 
   return (
@@ -441,6 +448,14 @@ export default function TrustPage() {
               )}
               <button
                 type="button"
+                onClick={handleSimulateAnchor}
+                disabled={isAnchoring || !currentHashes}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isAnchoring ? "Anchoring…" : "Simulate FISCO BCOS anchor"}
+              </button>
+              <button
+                type="button"
                 onClick={handleExport}
                 disabled={isExporting}
                 className="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors cursor-pointer disabled:opacity-50"
@@ -449,6 +464,18 @@ export default function TrustPage() {
               </button>
             </div>
           </div>
+
+          {anchorResult && (
+            <div className="mb-4 p-3 rounded-2xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-950/20">
+              <p className="text-[10px] font-mono uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 inline-block mb-1.5">
+                Simulated, not a real blockchain transaction
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Merkle root <span className="font-mono">{shortHash(anchorResult.merkleRoot)}</span> would anchor to FISCO BCOS as tx{" "}
+                <span className="font-mono">{shortHash(anchorResult.txHash)}</span> at {formatTime(anchorResult.anchoredAt)}.
+              </p>
+            </div>
+          )}
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
             Every action is hashed to the one before it. Edit an entry below to see the chain break.
           </p>

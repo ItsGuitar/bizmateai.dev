@@ -38,6 +38,45 @@ export async function computeChain(entries: AuditChainable[]): Promise<string[]>
   return hashes;
 }
 
+// A real binary Merkle tree: pair up hashes, hash each pair, repeat until one root remains.
+// An odd node out is paired with itself (standard duplicate-last padding) rather than left bare.
 export async function merkleRootOf(hashes: string[]): Promise<string> {
-  return sha256Hex(hashes.join(""));
+  if (hashes.length === 0) return GENESIS_HASH;
+  let level = hashes;
+  while (level.length > 1) {
+    const next: string[] = [];
+    for (let i = 0; i < level.length; i += 2) {
+      const left = level[i];
+      const right = i + 1 < level.length ? level[i + 1] : left;
+      next.push(await sha256Hex(left + right));
+    }
+    level = next;
+  }
+  return level[0];
+}
+
+export interface DailyMerkleRoot {
+  date: string;
+  count: number;
+  root: string;
+}
+
+// Groups entries by their ts's calendar date and computes one Merkle root per day, matching
+// NEW_DESIGN.md Section 8's "daily Merkle root" requirement.
+export async function dailyMerkleRoots(entries: AuditChainable[], hashes: string[]): Promise<DailyMerkleRoot[]> {
+  const byDate = new Map<string, string[]>();
+  entries.forEach((entry, i) => {
+    const date = entry.ts.slice(0, 10);
+    const list = byDate.get(date) ?? [];
+    list.push(hashes[i]);
+    byDate.set(date, list);
+  });
+  const roots = await Promise.all(
+    Array.from(byDate.entries()).map(async ([date, dayHashes]) => ({
+      date,
+      count: dayHashes.length,
+      root: await merkleRootOf(dayHashes),
+    }))
+  );
+  return roots.sort((a, b) => a.date.localeCompare(b.date));
 }
